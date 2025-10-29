@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Elosaúde",
+    "slug": "elosaude-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#1976D2"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.elosaude.app"
+    },
+    "android": {
+      "package": "com.elosaude.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-location",
+      "expo-asset",
+      "expo-font"
+    ]
+  }
+}

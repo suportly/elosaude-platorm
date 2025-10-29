@@ -1,0 +1,390 @@
+{
+  "info": {
+    "name": "Elosaúde API",
+    "description": "Complete API collection for Elosaúde Health Management System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Test Login (Any Credentials)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cpf\": \"12345678900\",\n  \"password\": \"testpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/accounts/test-login/",
+              "host": ["{{baseUrl}}"],
+              "path": ["accounts", "test-login", ""]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"accessToken\", jsonData.access);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/../auth/refresh/",
+              "host": ["{{baseUrl}}"],
+              "path": ["..", "auth", "refresh", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beneficiaries",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/beneficiaries/beneficiaries/me/",
+              "host": ["{{baseUrl}}"],
+              "path": ["beneficiaries", "beneficiaries", "me", ""]
+            }
+          }
+        },
+        {
+          "name": "Get My Digital Cards",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/beneficiaries/digital-cards/my_cards/",
+              "host": ["{{baseUrl}}"],
+              "path": ["beneficiaries", "digital-cards", "my_cards", ""]
+            }
+          }
+        },
+        {
+          "name": "List All Beneficiaries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/beneficiaries/beneficiaries/",
+              "host": ["{{baseUrl}}"],
+              "path": ["beneficiaries", "beneficiaries", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Providers",
+      "item": [
+        {
+          "name": "List Providers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/providers/providers/",
+              "host": ["{{baseUrl}}"],
+              "path": ["providers", "providers", ""]
+            }
+          }
+        },
+        {
+          "name": "Search by Location",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": -23.550520,\n  \"longitude\": -46.633308,\n  \"radius\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/providers/providers/search_by_location/",
+              "host": ["{{baseUrl}}"],
+              "path": ["providers", "providers", "search_by_location", ""]
+            }
+          }
+        },
+        {
+          "name": "List Specialties",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/providers/specialties/",
+              "host": ["{{baseUrl}}"],
+              "path": ["providers", "specialties", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Guides",
+      "item": [
+        {
+          "name": "List Guides",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/guides/tiss_guides/",
+              "host": ["{{baseUrl}}"],
+              "path": ["guides", "tiss_guides", ""]
+            }
+          }
+        },
+        {
+          "name": "Create Guide",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guide_type\": \"CONSULTATION\",\n  \"diagnosis\": \"Consulta de rotina\",\n  \"requesting_physician_name\": \"Dr. Silva\",\n  \"requesting_physician_crm\": \"12345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/guides/tiss_guides/",
+              "host": ["{{baseUrl}}"],
+              "path": ["guides", "tiss_guides", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reimbursements",
+      "item": [
+        {
+          "name": "List Reimbursements",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reimbursements/reimbursement_requests/",
+              "host": ["{{baseUrl}}"],
+              "path": ["reimbursements", "reimbursement_requests", ""]
+            }
+          }
+        },
+        {
+          "name": "Create Reimbursement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expense_type\": \"CONSULTATION\",\n  \"service_date\": \"2024-01-15\",\n  \"service_description\": \"Consulta médica\",\n  \"provider_name\": \"Dr. Silva\",\n  \"provider_cnpj_cpf\": \"12345678900\",\n  \"requested_amount\": 250.00,\n  \"bank_details\": {\n    \"bank\": \"001\",\n    \"agency\": \"1234\",\n    \"account\": \"56789-0\",\n    \"account_type\": \"checking\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reimbursements/reimbursement_requests/",
+              "host": ["{{baseUrl}}"],
+              "path": ["reimbursements", "reimbursement_requests", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Financial",
+      "item": [
+        {
+          "name": "List Invoices",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/financial/invoices/",
+              "host": ["{{baseUrl}}"],
+              "path": ["financial", "invoices", ""]
+            }
+          }
+        },
+        {
+          "name": "Usage History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/financial/usage_historys/",
+              "host": ["{{baseUrl}}"],
+              "path": ["financial", "usage_historys", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/notifications/",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "notifications", ""]
+            }
+          }
+        },
+        {
+          "name": "Mark as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_read\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications/notifications/:id/",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "notifications", ":id", ""],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

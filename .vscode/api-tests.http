@@ -1,0 +1,370 @@
+### Elosaúde API Tests
+### Use a extensão REST Client para executar estes testes
+### Clique em "Send Request" acima de cada seção
+
+@baseUrl = http://localhost:8000/api
+@authUrl = http://localhost:8000
+
+### ========================================
+### AUTHENTICATION
+### ========================================
+
+### 1. Test Login (Aceita qualquer credencial)
+# @name login
+POST {{authUrl}}/api/accounts/test-login/
+Content-Type: application/json
+
+{
+  "cpf": "12345678900",
+  "password": "test123"
+}
+
+### Extrair token da resposta
+@accessToken = {{login.response.body.access}}
+@refreshToken = {{login.response.body.refresh}}
+
+### 2. Refresh Token
+POST {{authUrl}}/api/auth/refresh/
+Content-Type: application/json
+
+{
+  "refresh": "{{refreshToken}}"
+}
+
+### ========================================
+### BENEFICIARIES
+### ========================================
+
+### 3. Get My Profile
+GET {{baseUrl}}/beneficiaries/beneficiaries/me/
+Authorization: Bearer {{accessToken}}
+
+### 4. List All Beneficiaries
+GET {{baseUrl}}/beneficiaries/beneficiaries/
+Authorization: Bearer {{accessToken}}
+
+### 5. Get Beneficiary Detail
+GET {{baseUrl}}/beneficiaries/beneficiaries/1/
+Authorization: Bearer {{accessToken}}
+
+### 6. Get My Digital Cards
+GET {{baseUrl}}/beneficiaries/digital-cards/my_cards/
+Authorization: Bearer {{accessToken}}
+
+### 7. List All Digital Cards
+GET {{baseUrl}}/beneficiaries/digital-cards/
+Authorization: Bearer {{accessToken}}
+
+### 8. List Health Plans
+GET {{baseUrl}}/beneficiaries/health-plans/
+Authorization: Bearer {{accessToken}}
+
+### 9. List Companies
+GET {{baseUrl}}/beneficiaries/companies/
+Authorization: Bearer {{accessToken}}
+
+### ========================================
+### PROVIDERS
+### ========================================
+
+### 10. List Providers
+GET {{baseUrl}}/providers/providers/
+Authorization: Bearer {{accessToken}}
+
+### 11. Search Providers by Location
+POST {{baseUrl}}/providers/providers/search_by_location/
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "latitude": -23.550520,
+  "longitude": -46.633308,
+  "radius": 10
+}
+
+### 12. List Specialties
+GET {{baseUrl}}/providers/specialties/
+Authorization: Bearer {{accessToken}}
+
+### 13. Get Provider Detail
+GET {{baseUrl}}/providers/providers/1/
+Authorization: Bearer {{accessToken}}
+
+### 14. Get Provider Reviews
+GET {{baseUrl}}/providers/providers/1/reviews/
+Authorization: Bearer {{accessToken}}
+
+### 15. List All Reviews
+GET {{baseUrl}}/providers/reviews/
+Authorization: Bearer {{accessToken}}
+
+### 16. Create Provider Review
+POST {{baseUrl}}/providers/reviews/
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "provider": 1,
+  "rating": 5,
+  "comment": "Excelente atendimento!"
+}
+
+### ========================================
+### GUIDES (TISS)
+### ========================================
+
+### 17. List Guides
+GET {{baseUrl}}/guides/tiss_guides/
+Authorization: Bearer {{accessToken}}
+
+### 18. Create Guide
+POST {{baseUrl}}/guides/tiss_guides/
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "beneficiary": 1,
+  "provider": 1,
+  "guide_type": "CONSULTATION",
+  "diagnosis": "Consulta de rotina",
+  "requesting_physician_name": "Dr. João Silva",
+  "requesting_physician_crm": "12345-SP"
+}
+
+### 19. Get Guide Detail
+GET {{baseUrl}}/guides/tiss_guides/1/
+Authorization: Bearer {{accessToken}}
+
+### 20. List Procedures
+GET {{baseUrl}}/guides/procedures/
+Authorization: Bearer {{accessToken}}
+
+### 21. Create Procedure
+POST {{baseUrl}}/guides/procedures/
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "code": "10101012",
+  "name": "Consulta médica em consultório",
+  "description": "Consulta médica",
+  "category": "Consultas",
+  "base_price": 150.00,
+  "requires_authorization": false
+}
+
+### 22. List Guide Attachments
+GET {{baseUrl}}/guides/guide_attachments/
+Authorization: Bearer {{accessToken}}
+
+### ========================================
+### REIMBURSEMENTS
+### ========================================
+
+### 23. List Reimbursements
+GET {{baseUrl}}/reimbursements/reimbursement_requests/
+Authorization: Bearer {{accessToken}}
+
+### 24. Create Reimbursement Request
+POST {{baseUrl}}/reimbursements/reimbursement_requests/
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "beneficiary": 1,
+  "expense_type": "CONSULTATION",
+  "service_date": "2024-01-15",
+  "service_description": "Consulta com dermatologista",
+  "provider_name": "Dr. Maria Santos",
+  "provider_cnpj_cpf": "12345678900",
+  "requested_amount": 250.00,
+  "bank_details": {
+    "bank": "001",
+    "agency": "1234",
+    "account": "56789-0",
+    "account_type": "checking"
+  }
+}
+
+### 25. Get Reimbursement Detail
+GET {{baseUrl}}/reimbursements/reimbursement_requests/1/
+Authorization: Bearer {{accessToken}}
+
+### 26. List Reimbursement Documents
+GET {{baseUrl}}/reimbursements/reimbursement_documents/
+Authorization: Bearer {{accessToken}}
+
+### 27. Filter Reimbursements by Status
+GET {{baseUrl}}/reimbursements/reimbursement_requests/?status=IN_ANALYSIS
+Authorization: Bearer {{accessToken}}
+
+### ========================================
+### FINANCIAL
+### ========================================
+
+### 28. List Invoices
+GET {{baseUrl}}/financial/invoices/
+Authorization: Bearer {{accessToken}}
+
+### 29. Get Invoice Detail
+GET {{baseUrl}}/financial/invoices/1/
+Authorization: Bearer {{accessToken}}
+
+### 30. Create Invoice
+POST {{baseUrl}}/financial/invoices/
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "beneficiary": 1,
+  "reference_month": "01/2024",
+  "amount": 500.00,
+  "due_date": "2024-02-10"
+}
+
+### 31. List Payment History
+GET {{baseUrl}}/financial/payment_historys/
+Authorization: Bearer {{accessToken}}
+
+### 32. List Usage History
+GET {{baseUrl}}/financial/usage_historys/
+Authorization: Bearer {{accessToken}}
+
+### 33. Get Usage History for Period
+GET {{baseUrl}}/financial/usage_historys/?period=01/2024
+Authorization: Bearer {{accessToken}}
+
+### 34. List Tax Statements
+GET {{baseUrl}}/financial/tax_statements/
+Authorization: Bearer {{accessToken}}
+
+### 35. Get Tax Statement for Year
+GET {{baseUrl}}/financial/tax_statements/?year=2024
+Authorization: Bearer {{accessToken}}
+
+### ========================================
+### NOTIFICATIONS
+### ========================================
+
+### 36. List Notifications
+GET {{baseUrl}}/notifications/notifications/
+Authorization: Bearer {{accessToken}}
+
+### 37. List Unread Notifications
+GET {{baseUrl}}/notifications/notifications/?is_read=false
+Authorization: Bearer {{accessToken}}
+
+### 38. Get Notification Detail
+GET {{baseUrl}}/notifications/notifications/1/
+Authorization: Bearer {{accessToken}}
+
+### 39. Mark Notification as Read
+PATCH {{baseUrl}}/notifications/notifications/1/
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "is_read": true
+}
+
+### 40. Create Notification
+POST {{baseUrl}}/notifications/notifications/
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "beneficiary": 1,
+  "notification_type": "SYSTEM_MESSAGE",
+  "priority": "MEDIUM",
+  "title": "Bem-vindo ao Elosaúde",
+  "message": "Seu cadastro foi realizado com sucesso!"
+}
+
+### 41. List Push Tokens
+GET {{baseUrl}}/notifications/push_tokens/
+Authorization: Bearer {{accessToken}}
+
+### 42. List System Messages
+GET {{baseUrl}}/notifications/system_messages/
+Authorization: Bearer {{accessToken}}
+
+### ========================================
+### SEARCH & FILTER EXAMPLES
+### ========================================
+
+### 43. Search Providers by Name
+GET {{baseUrl}}/providers/providers/?search=Silva
+Authorization: Bearer {{accessToken}}
+
+### 44. Filter Providers by Type
+GET {{baseUrl}}/providers/providers/?provider_type=DOCTOR
+Authorization: Bearer {{accessToken}}
+
+### 45. Filter Providers by City
+GET {{baseUrl}}/providers/providers/?city=São Paulo
+Authorization: Bearer {{accessToken}}
+
+### 46. Search Beneficiaries by CPF
+GET {{baseUrl}}/beneficiaries/beneficiaries/?search=123456789
+Authorization: Bearer {{accessToken}}
+
+### 47. Filter Guides by Status
+GET {{baseUrl}}/guides/tiss_guides/?status=AUTHORIZED
+Authorization: Bearer {{accessToken}}
+
+### 48. Filter Guides by Type
+GET {{baseUrl}}/guides/tiss_guides/?guide_type=CONSULTATION
+Authorization: Bearer {{accessToken}}
+
+### 49. Filter Invoices by Status
+GET {{baseUrl}}/financial/invoices/?status=OPEN
+Authorization: Bearer {{accessToken}}
+
+### 50. Sort Notifications by Date
+GET {{baseUrl}}/notifications/notifications/?ordering=-created_at
+Authorization: Bearer {{accessToken}}
+
+### ========================================
+### PAGINATION EXAMPLES
+### ========================================
+
+### 51. Get First Page of Providers
+GET {{baseUrl}}/providers/providers/?page=1
+Authorization: Bearer {{accessToken}}
+
+### 52. Get Second Page with Custom Page Size
+GET {{baseUrl}}/providers/providers/?page=2&page_size=10
+Authorization: Bearer {{accessToken}}
+
+### ========================================
+### COMBINED FILTERS
+### ========================================
+
+### 53. Search Doctors in São Paulo, Sorted by Rating
+GET {{baseUrl}}/providers/providers/?provider_type=DOCTOR&city=São Paulo&ordering=-rating
+Authorization: Bearer {{accessToken}}
+
+### 54. Get Pending Guides for Current Month
+GET {{baseUrl}}/guides/tiss_guides/?status=PENDING&request_date__gte=2024-01-01
+Authorization: Bearer {{accessToken}}
+
+### 55. Get Approved Reimbursements with Amount > 200
+GET {{baseUrl}}/reimbursements/reimbursement_requests/?status=APPROVED&requested_amount__gte=200
+Authorization: Bearer {{accessToken}}
+
+### ========================================
+### NOTES
+### ========================================
+
+# Como usar:
+# 1. Instale a extensão "REST Client" no VS Code
+# 2. Clique em "Send Request" acima de cada requisição
+# 3. O token é automaticamente extraído do login e reutilizado
+# 4. Ajuste os IDs conforme necessário (1, 2, 3, etc.)
+# 5. Para ver a resposta, ela aparece em uma nova aba ao lado
+
+# Dicas:
+# - Use Ctrl+Alt+R para executar a requisição sob o cursor
+# - Use Ctrl+Alt+E para executar todas as requisições do arquivo
+# - Variáveis são definidas com @nome = valor
+# - Acesse valores de resposta com {{requestName.response.body.campo}}

@@ -1,0 +1,49 @@
+{
+  "recommendations": [
+    // Python Extensions
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.black-formatter",
+    "ms-python.flake8",
+
+    // Django Extensions
+    "batisteo.vscode-django",
+
+    // JavaScript/TypeScript Extensions
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+
+    // React Native Extensions
+    "msjsdiag.vscode-react-native",
+    "dsznajder.es7-react-js-snippets",
+
+    // Docker Extensions
+    "ms-azuretools.vscode-docker",
+
+    // REST Client
+    "humao.rest-client",
+
+    // Git Extensions
+    "eamodio.gitlens",
+
+    // General Productivity
+    "wayou.vscode-todo-highlight",
+    "streetsidesoftware.code-spell-checker",
+    "usernamehw.errorlens",
+    "christian-kohler.path-intellisense",
+    "formulahendry.auto-rename-tag",
+    "formulahendry.auto-close-tag",
+
+    // Database
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg",
+
+    // Markdown
+    "yzhang.markdown-all-in-one",
+    "davidanson.vscode-markdownlint",
+
+    // Themes (Optional)
+    "pkief.material-icon-theme",
+    "github.github-vscode-theme"
+  ]
+}

@@ -1,0 +1,279 @@
+{
+  // Django Snippets
+  "Django Model": {
+    "prefix": "djmodel",
+    "scope": "python",
+    "body": [
+      "class ${1:ModelName}(models.Model):",
+      "    \"\"\"${2:Model description}\"\"\"",
+      "    ${3:field_name} = models.${4:CharField}(${5:max_length=100})",
+      "    created_at = models.DateTimeField(auto_now_add=True)",
+      "    updated_at = models.DateTimeField(auto_now=True)",
+      "",
+      "    class Meta:",
+      "        verbose_name = _('${6:Model Name}')",
+      "        verbose_name_plural = _('${7:Model Names}')",
+      "        ordering = ['${8:-created_at}']",
+      "",
+      "    def __str__(self):",
+      "        return ${9:f'{self.field_name}'}",
+      ""
+    ],
+    "description": "Create a Django model"
+  },
+
+  "Django Serializer": {
+    "prefix": "djserializer",
+    "scope": "python",
+    "body": [
+      "class ${1:ModelName}Serializer(serializers.ModelSerializer):",
+      "    class Meta:",
+      "        model = ${1:ModelName}",
+      "        fields = ${2:'__all__'}",
+      "        ${3:# extra_kwargs = {'field': {'read_only': True\\}}",
+      ""
+    ],
+    "description": "Create a Django REST serializer"
+  },
+
+  "Django ViewSet": {
+    "prefix": "djviewset",
+    "scope": "python",
+    "body": [
+      "class ${1:ModelName}ViewSet(viewsets.ModelViewSet):",
+      "    \"\"\"${2:ViewSet description}\"\"\"",
+      "    queryset = ${1:ModelName}.objects.all()",
+      "    serializer_class = ${1:ModelName}Serializer",
+      "    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]",
+      "    filterset_fields = [${3:'field1', 'field2'}]",
+      "    search_fields = [${4:'field1', 'field2'}]",
+      "    ordering_fields = [${5:'field1', 'created_at'}]",
+      ""
+    ],
+    "description": "Create a Django REST ViewSet"
+  },
+
+  "Django Custom Action": {
+    "prefix": "djaction",
+    "scope": "python",
+    "body": [
+      "@action(detail=${1:False}, methods=['${2:get}'])",
+      "def ${3:custom_action}(self, request${4:, pk=None}):",
+      "    \"\"\"${5:Action description}\"\"\"",
+      "    ${6:# Your code here}",
+      "    return Response(${7:data})",
+      ""
+    ],
+    "description": "Create a custom ViewSet action"
+  },
+
+  // React Native Snippets
+  "React Native Functional Component": {
+    "prefix": "rnfc",
+    "scope": "typescriptreact",
+    "body": [
+      "import React from 'react';",
+      "import { View, StyleSheet } from 'react-native';",
+      "import { Text } from 'react-native-paper';",
+      "",
+      "interface ${1:ComponentName}Props {",
+      "  ${2:// Add props here}",
+      "}",
+      "",
+      "export default function ${1:ComponentName}({ ${3:} }: ${1:ComponentName}Props) {",
+      "  return (",
+      "    <View style={styles.container}>",
+      "      <Text>${4:Component content}</Text>",
+      "    </View>",
+      "  );",
+      "}",
+      "",
+      "const styles = StyleSheet.create({",
+      "  container: {",
+      "    flex: 1,",
+      "    justifyContent: 'center',",
+      "    alignItems: 'center',",
+      "    padding: 20,",
+      "  },",
+      "});",
+      ""
+    ],
+    "description": "Create a React Native functional component"
+  },
+
+  "React Native Screen": {
+    "prefix": "rnscreen",
+    "scope": "typescriptreact",
+    "body": [
+      "import React from 'react';",
+      "import { View, StyleSheet, ScrollView } from 'react-native';",
+      "import { Text, Button } from 'react-native-paper';",
+      "",
+      "interface ${1:ScreenName}Props {",
+      "  navigation: any;",
+      "  route: any;",
+      "}",
+      "",
+      "export default function ${1:ScreenName}({ navigation, route }: ${1:ScreenName}Props) {",
+      "  return (",
+      "    <ScrollView style={styles.container}>",
+      "      <View style={styles.content}>",
+      "        <Text variant=\"headlineMedium\">${2:Screen Title}</Text>",
+      "        ${3:// Add content here}",
+      "      </View>",
+      "    </ScrollView>",
+      "  );",
+      "}",
+      "",
+      "const styles = StyleSheet.create({",
+      "  container: {",
+      "    flex: 1,",
+      "    backgroundColor: '#F5F5F5',",
+      "  },",
+      "  content: {",
+      "    padding: 20,",
+      "  },",
+      "});",
+      ""
+    ],
+    "description": "Create a React Native screen component"
+  },
+
+  "RTK Query API": {
+    "prefix": "rtkapi",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';",
+      "import { API_URL } from '../config/api';",
+      "import AsyncStorage from '@react-native-async-storage/async-storage';",
+      "",
+      "export const ${1:moduleName}Api = createApi({",
+      "  reducerPath: '${1:moduleName}Api',",
+      "  baseQuery: fetchBaseQuery({",
+      "    baseURL: API_URL,",
+      "    prepareHeaders: async (headers) => {",
+      "      const token = await AsyncStorage.getItem('accessToken');",
+      "      if (token) {",
+      "        headers.set('Authorization', `Bearer \\${token}`);",
+      "      }",
+      "      return headers;",
+      "    },",
+      "  }),",
+      "  tagTypes: ['${2:Tag}'],",
+      "  endpoints: (builder) => ({",
+      "    get${3:Items}: builder.query<${4:ItemType}[], void>({",
+      "      query: () => '/${5:endpoint}/',",
+      "      providesTags: ['${2:Tag}'],",
+      "    }),",
+      "  }),",
+      "});",
+      "",
+      "export const { useGet${3:Items}Query } = ${1:moduleName}Api;",
+      ""
+    ],
+    "description": "Create RTK Query API service"
+  },
+
+  "Redux Slice": {
+    "prefix": "reduxslice",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "import { createSlice, PayloadAction } from '@reduxjs/toolkit';",
+      "",
+      "interface ${1:SliceName}State {",
+      "  ${2:value}: ${3:string};",
+      "}",
+      "",
+      "const initialState: ${1:SliceName}State = {",
+      "  ${2:value}: ${4:''},",
+      "};",
+      "",
+      "const ${5:sliceName}Slice = createSlice({",
+      "  name: '${5:sliceName}',",
+      "  initialState,",
+      "  reducers: {",
+      "    set${6:Value}: (state, action: PayloadAction<${3:string}>) => {",
+      "      state.${2:value} = action.payload;",
+      "    },",
+      "    reset: (state) => {",
+      "      return initialState;",
+      "    },",
+      "  },",
+      "});",
+      "",
+      "export const { set${6:Value}, reset } = ${5:sliceName}Slice.actions;",
+      "export default ${5:sliceName}Slice.reducer;",
+      ""
+    ],
+    "description": "Create Redux Toolkit slice"
+  },
+
+  // TypeScript Snippets
+  "TypeScript Interface": {
+    "prefix": "tsinterface",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "interface ${1:InterfaceName} {",
+      "  ${2:property}: ${3:string};",
+      "}",
+      ""
+    ],
+    "description": "Create TypeScript interface"
+  },
+
+  "TypeScript Type": {
+    "prefix": "tstype",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "type ${1:TypeName} = {",
+      "  ${2:property}: ${3:string};",
+      "};",
+      ""
+    ],
+    "description": "Create TypeScript type"
+  },
+
+  // Test Snippets
+  "Django Test Case": {
+    "prefix": "djtest",
+    "scope": "python",
+    "body": [
+      "from django.test import TestCase",
+      "from .models import ${1:ModelName}",
+      "",
+      "",
+      "class ${1:ModelName}TestCase(TestCase):",
+      "    \"\"\"Test suite for ${1:ModelName} model\"\"\"",
+      "",
+      "    def setUp(self):",
+      "        \"\"\"Set up test data\"\"\"",
+      "        ${1:ModelName}.objects.create(${2:field='value'})",
+      "",
+      "    def test_${3:something}(self):",
+      "        \"\"\"Test ${3:something}\"\"\"",
+      "        ${4:# Your test code here}",
+      "        self.assertEqual(${5:expected}, ${6:actual})",
+      ""
+    ],
+    "description": "Create Django test case"
+  },
+
+  "React Native Test": {
+    "prefix": "rntest",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "import React from 'react';",
+      "import { render } from '@testing-library/react-native';",
+      "import ${1:ComponentName} from './${1:ComponentName}';",
+      "",
+      "describe('${1:ComponentName}', () => {",
+      "  it('${2:should render correctly}', () => {",
+      "    const { getByText } = render(<${1:ComponentName} />);",
+      "    ${3:// Your test code here}",
+      "  });",
+      "});",
+      ""
+    ],
+    "description": "Create React Native test"
+  }
+}

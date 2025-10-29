@@ -1,0 +1,179 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Django: Backend Server",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/manage.py",
+      "args": [
+        "runserver",
+        "0.0.0.0:8000"
+      ],
+      "django": true,
+      "justMyCode": false,
+      "envFile": "${workspaceFolder}/backend/.env",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/backend"
+    },
+    {
+      "name": "Django: Migrations",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/manage.py",
+      "args": [
+        "migrate"
+      ],
+      "django": true,
+      "justMyCode": false,
+      "envFile": "${workspaceFolder}/backend/.env",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/backend"
+    },
+    {
+      "name": "Django: Make Migrations",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/manage.py",
+      "args": [
+        "makemigrations"
+      ],
+      "django": true,
+      "justMyCode": false,
+      "envFile": "${workspaceFolder}/backend/.env",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/backend"
+    },
+    {
+      "name": "Django: Shell",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/manage.py",
+      "args": [
+        "shell"
+      ],
+      "django": true,
+      "justMyCode": false,
+      "envFile": "${workspaceFolder}/backend/.env",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/backend"
+    },
+    {
+      "name": "Django: Create Superuser",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/manage.py",
+      "args": [
+        "createsuperuser"
+      ],
+      "django": true,
+      "justMyCode": false,
+      "envFile": "${workspaceFolder}/backend/.env",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/backend"
+    },
+    {
+      "name": "Celery: Worker",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "celery",
+      "args": [
+        "-A",
+        "elosaude_backend",
+        "worker",
+        "-l",
+        "info"
+      ],
+      "justMyCode": false,
+      "envFile": "${workspaceFolder}/backend/.env",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/backend"
+    },
+    {
+      "name": "React Native: Start Metro",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "start"
+      ],
+      "cwd": "${workspaceFolder}/mobile",
+      "console": "integratedTerminal",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "React Native: Run Android",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "android"
+      ],
+      "cwd": "${workspaceFolder}/mobile",
+      "console": "integratedTerminal",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "React Native: Run iOS",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "ios"
+      ],
+      "cwd": "${workspaceFolder}/mobile",
+      "console": "integratedTerminal",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "Attach to Django in Docker",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/backend",
+          "remoteRoot": "/app"
+        }
+      ],
+      "justMyCode": false
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack: Django + React Native",
+      "configurations": [
+        "Django: Backend Server",
+        "React Native: Start Metro"
+      ],
+      "presentation": {
+        "hidden": false,
+        "group": "fullstack",
+        "order": 1
+      }
+    },
+    {
+      "name": "Backend: Django + Celery",
+      "configurations": [
+        "Django: Backend Server",
+        "Celery: Worker"
+      ],
+      "presentation": {
+        "hidden": false,
+        "group": "backend",
+        "order": 2
+      }
+    }
+  ]
+}
