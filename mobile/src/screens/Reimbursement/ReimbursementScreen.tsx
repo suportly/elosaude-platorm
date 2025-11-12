@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, FlatList, ScrollView } from 'react-native';
+import { View, StyleSheet, FlatList, ScrollView, RefreshControl } from 'react-native';
 import {
   Card,
   Title,
@@ -13,15 +13,28 @@ import {
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useGetReimbursementsQuery, useGetReimbursementSummaryQuery } from '../../store/services/api';
+import { Colors } from '../../config/theme';
 
 const ReimbursementScreen = ({ navigation }: any) => {
   const [selectedStatus, setSelectedStatus] = useState('Todos');
+  const [refreshing, setRefreshing] = useState(false);
 
-  const { data: reimbursements, isLoading, error } = useGetReimbursementsQuery({
+  const { data, isLoading, error, refetch } = useGetReimbursementsQuery({
     status: selectedStatus,
   });
 
-  const { data: summary } = useGetReimbursementSummaryQuery();
+  const reimbursements = data?.results || [];
+
+  const { data: summary, refetch: refetchSummary } = useGetReimbursementSummaryQuery();
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([refetch(), refetchSummary()]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const statuses = ['Todos', 'IN_ANALYSIS', 'APPROVED', 'DENIED', 'PAID'];
 
@@ -175,7 +188,16 @@ const ReimbursementScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
+      >
         {renderSummary()}
         
         <View style={styles.filterSection}>

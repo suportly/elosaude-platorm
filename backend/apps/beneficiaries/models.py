@@ -74,18 +74,18 @@ class Beneficiary(models.Model):
         ('OTHER', _('Other')),
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='beneficiary')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='beneficiary', null=True, blank=True)
     registration_number = models.CharField(max_length=50, unique=True, verbose_name=_('Registration Number'))
     cpf = models.CharField(max_length=11, unique=True, verbose_name=_('CPF'))
     full_name = models.CharField(max_length=200, verbose_name=_('Full Name'))
     birth_date = models.DateField(verbose_name=_('Birth Date'))
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, verbose_name=_('Gender'))
-    phone = models.CharField(max_length=20, verbose_name=_('Phone'))
-    email = models.EmailField(verbose_name=_('Email'))
-    address = models.TextField(verbose_name=_('Address'))
-    city = models.CharField(max_length=100, verbose_name=_('City'))
-    state = models.CharField(max_length=2, verbose_name=_('State'))
-    zip_code = models.CharField(max_length=8, verbose_name=_('ZIP Code'))
+    phone = models.CharField(max_length=20, blank=True, verbose_name=_('Phone'))
+    email = models.EmailField(blank=True, verbose_name=_('Email'))
+    address = models.TextField(blank=True, verbose_name=_('Address'))
+    city = models.CharField(max_length=100, blank=True, verbose_name=_('City'))
+    state = models.CharField(max_length=2, blank=True, verbose_name=_('State'))
+    zip_code = models.CharField(max_length=8, blank=True, verbose_name=_('ZIP Code'))
 
     beneficiary_type = models.CharField(max_length=20, choices=BENEFICIARY_TYPES, verbose_name=_('Type'))
     titular = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True,

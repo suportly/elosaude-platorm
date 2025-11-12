@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import {
   Text,
   TextInput,
   Button,
-  SegmentedButtons,
   HelperText,
   Card,
   ActivityIndicator,
@@ -107,17 +106,16 @@ export default function AddDependentScreen({ route, navigation }: any) {
   };
 
   const relationshipOptions = [
-    { value: 'SPOUSE', label: 'Cônjuge' },
-    { value: 'CHILD', label: 'Filho(a)' },
-    { value: 'PARENT', label: 'Pai/Mãe' },
-    { value: 'SIBLING', label: 'Irmão/Irmã' },
-    { value: 'OTHER', label: 'Outro' },
+    { value: 'SPOUSE', label: 'Cônjuge', icon: 'heart' },
+    { value: 'CHILD', label: 'Filho(a)', icon: 'baby-face' },
+    { value: 'PARENT', label: 'Pai/Mãe', icon: 'human-male-female' },
+    { value: 'SIBLING', label: 'Irmão(ã)', icon: 'account-group' },
+    { value: 'OTHER', label: 'Outro', icon: 'account' },
   ];
 
   const genderOptions = [
-    { value: 'MALE', label: 'Masculino', icon: 'human-male' },
-    { value: 'FEMALE', label: 'Feminino', icon: 'human-female' },
-    { value: 'OTHER', label: 'Outro', icon: 'gender-male-female' },
+    { value: 'MALE', label: 'Masculino', icon: 'gender-male' },
+    { value: 'FEMALE', label: 'Feminino', icon: 'gender-female' },
   ];
 
   return (
@@ -246,12 +244,34 @@ export default function AddDependentScreen({ route, navigation }: any) {
               control={control}
               name="gender"
               render={({ field: { onChange } }) => (
-                <SegmentedButtons
-                  value={gender}
-                  onValueChange={onChange}
-                  buttons={genderOptions}
-                  style={styles.segmentedButtons}
-                />
+                <View style={styles.genderContainer}>
+                  {genderOptions.map((option) => (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.genderOption,
+                        gender === option.value && styles.genderOptionSelected,
+                      ]}
+                      onPress={() => onChange(option.value)}
+                      activeOpacity={0.7}
+                    >
+                      <Icon
+                        name={option.icon}
+                        size={32}
+                        color={gender === option.value ? '#FFFFFF' : '#1976D2'}
+                      />
+                      <Text
+                        variant="bodyMedium"
+                        style={[
+                          styles.genderLabel,
+                          gender === option.value && styles.genderLabelSelected,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               )}
             />
             {errors.gender && (
@@ -272,15 +292,31 @@ export default function AddDependentScreen({ route, navigation }: any) {
               render={({ field: { onChange } }) => (
                 <View style={styles.relationshipContainer}>
                   {relationshipOptions.map((option) => (
-                    <Button
+                    <TouchableOpacity
                       key={option.value}
-                      mode={relationship === option.value ? 'contained' : 'outlined'}
+                      style={[
+                        styles.relationshipOption,
+                        relationship === option.value && styles.relationshipOptionSelected,
+                      ]}
                       onPress={() => onChange(option.value)}
-                      style={styles.relationshipButton}
-                      contentStyle={styles.relationshipButtonContent}
+                      activeOpacity={0.7}
                     >
-                      {option.label}
-                    </Button>
+                      <Icon
+                        name={option.icon}
+                        size={24}
+                        color={relationship === option.value ? '#FFFFFF' : '#1976D2'}
+                      />
+                      <Text
+                        variant="bodySmall"
+                        style={[
+                          styles.relationshipLabel,
+                          relationship === option.value && styles.relationshipLabelSelected,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
                   ))}
                 </View>
               )}
@@ -417,20 +453,63 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.text,
   },
-  segmentedButtons: {
-    marginBottom: 8,
+  genderContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  genderOption: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#1976D2',
+    backgroundColor: '#FFFFFF',
+    gap: 8,
+  },
+  genderOptionSelected: {
+    backgroundColor: '#1976D2',
+    borderColor: '#1976D2',
+  },
+  genderLabel: {
+    color: '#1976D2',
+    fontWeight: '600',
+  },
+  genderLabelSelected: {
+    color: '#FFFFFF',
   },
   relationshipContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
-  relationshipButton: {
-    flex: 1,
-    minWidth: '45%',
+  relationshipOption: {
+    width: '31%',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#1976D2',
+    backgroundColor: '#FFFFFF',
+    gap: 6,
   },
-  relationshipButtonContent: {
-    paddingVertical: 4,
+  relationshipOptionSelected: {
+    backgroundColor: '#1976D2',
+    borderColor: '#1976D2',
+  },
+  relationshipLabel: {
+    color: '#1976D2',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  relationshipLabelSelected: {
+    color: '#FFFFFF',
   },
   divider: {
     height: 1,

@@ -48,10 +48,20 @@ export default function HomeScreen({ navigation }: any) {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Main Modules Grid */}
+      {/* Welcome Section */}
+      <View style={styles.welcomeSection}>
+        <Text variant="headlineSmall" style={styles.welcomeText}>
+          Olá, {beneficiary?.full_name?.split(' ')[0] || 'Beneficiário'}
+        </Text>
+        <Text variant="bodyMedium" style={styles.welcomeSubtext}>
+          Bem-vindo ao seu plano de saúde
+        </Text>
+      </View>
+
+      {/* Main Modules Grid - 2x2 Complete */}
       <View style={styles.modulesContainer}>
         <Text variant="titleMedium" style={styles.sectionTitle}>
-          Módulos Principais
+          Acesso Rápido
         </Text>
 
         <View style={styles.grid}>
@@ -68,24 +78,48 @@ export default function HomeScreen({ navigation }: any) {
             onPress={() => navigation.navigate('Network')}
           />
           <ModuleCard
-            title="Guia Médico"
+            title="Guias Médicas"
             icon="file-document-multiple"
             color="#FF9800"
             onPress={() => navigation.navigate('Guides')}
           />
           <ModuleCard
-            title="Reembolso"
-            icon="cash-refund"
-            color="#9C27B0"
-            onPress={() => navigation.navigate('Reimbursements')}
+            title="Minha Saúde"
+            icon="heart-pulse"
+            color="#E91E63"
+            onPress={() => navigation.navigate('HealthRecords')}
           />
         </View>
       </View>
 
-      {/* Quick Links */}
-      <View style={styles.quickLinksContainer}>
+      {/* Plan Status Card - Enhanced */}
+      <Card style={styles.statusCard}>
+        <Card.Content>
+          <View style={styles.statusHeader}>
+            <View style={styles.statusHeaderLeft}>
+              <Icon name="shield-check" size={28} color="#4CAF50" />
+              <View style={styles.statusHeaderText}>
+                <Text variant="titleMedium" style={styles.statusTitle}>
+                  {beneficiary?.health_plan || 'Plano Básico'}
+                </Text>
+                <Text variant="bodySmall" style={styles.statusSubtitle}>
+                  Matrícula: {beneficiary?.registration_number}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.statusBadge}>
+              <Text variant="labelSmall" style={styles.statusBadgeText}>
+                {beneficiary?.status === 'ACTIVE' ? 'ATIVO' : beneficiary?.status}
+              </Text>
+            </View>
+          </View>
+        </Card.Content>
+      </Card>
+
+      {/* Quick Actions - 4 useful shortcuts */}
+      <View style={styles.quickActionsContainer}>
         <Text variant="titleMedium" style={styles.sectionTitle}>
-          Atalhos Rápidos
+          Serviços
         </Text>
 
         <View style={styles.quickLinksGrid}>
@@ -95,38 +129,45 @@ export default function HomeScreen({ navigation }: any) {
             onPress={() => navigation.navigate('Invoices')}
           />
           <QuickLink
-            title="Demonstrativo IR"
+            title="Informe de IR"
             icon="file-chart-outline"
             onPress={() => navigation.navigate('TaxStatements')}
           />
           <QuickLink
-            title="Posição Financeira"
-            icon="currency-usd"
-            onPress={() => navigation.navigate('Invoices')}
+            title="Dependentes"
+            icon="account-group"
+            onPress={() => navigation.navigate('Dependents')}
           />
           <QuickLink
-            title="Telemedicina 24h"
-            icon="video-outline"
-            onPress={() => console.log('Telemedicina')}
+            title="Alterar Senha"
+            icon="lock-reset"
+            onPress={() => navigation.navigate('ChangePassword')}
           />
         </View>
       </View>
 
-      {/* Info Card */}
-      <Card style={styles.infoCard}>
+      {/* Help Card */}
+      <Card style={styles.helpCard}>
         <Card.Content>
-          <View style={styles.infoHeader}>
-            <Icon name="information-outline" size={24} color="#1976D2" />
-            <Text variant="titleSmall" style={styles.infoTitle}>
-              Seu Plano
-            </Text>
+          <View style={styles.helpContent}>
+            <Icon name="help-circle-outline" size={32} color="#1976D2" />
+            <View style={styles.helpText}>
+              <Text variant="titleSmall" style={styles.helpTitle}>
+                Precisa de Ajuda?
+              </Text>
+              <Text variant="bodySmall" style={styles.helpSubtitle}>
+                Nossa central de atendimento está disponível
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.helpButton}
+              onPress={() => navigation.navigate('Contact')}
+            >
+              <Text variant="labelMedium" style={styles.helpButtonText}>
+                Contato
+              </Text>
+            </TouchableOpacity>
           </View>
-          <Text variant="bodyMedium">
-            {beneficiary?.health_plan || 'Plano Básico'}
-          </Text>
-          <Text variant="bodySmall" style={styles.infoSubtitle}>
-            Status: {beneficiary?.status === 'ACTIVE' ? 'Ativo' : beneficiary?.status}
-          </Text>
         </Card.Content>
       </Card>
     </ScrollView>
@@ -138,27 +179,30 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F5F5',
   },
-  header: {
-    backgroundColor: '#1976D2',
+  welcomeSection: {
+    backgroundColor: '#FFFFFF',
     padding: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    paddingTop: 16,
+    paddingBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
   },
-  greeting: {
-    color: '#FFFFFF',
+  welcomeText: {
     fontWeight: 'bold',
+    color: '#1976D2',
   },
-  subGreeting: {
-    color: '#E3F2FD',
+  welcomeSubtext: {
+    color: '#757575',
     marginTop: 4,
   },
   modulesContainer: {
     padding: 16,
+    paddingTop: 20,
   },
   sectionTitle: {
     marginBottom: 16,
     fontWeight: 'bold',
+    color: '#212121',
   },
   grid: {
     flexDirection: 'row',
@@ -170,7 +214,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   card: {
-    elevation: 2,
+    elevation: 3,
+    borderRadius: 12,
   },
   cardContent: {
     alignItems: 'center',
@@ -179,9 +224,50 @@ const styles = StyleSheet.create({
   cardTitle: {
     marginTop: 12,
     textAlign: 'center',
+    fontWeight: '600',
   },
-  quickLinksContainer: {
+  statusCard: {
+    margin: 16,
+    marginTop: 0,
+    elevation: 2,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  statusHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statusHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  statusHeaderText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  statusTitle: {
+    fontWeight: 'bold',
+    color: '#212121',
+  },
+  statusSubtitle: {
+    color: '#757575',
+    marginTop: 2,
+  },
+  statusBadge: {
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  statusBadgeText: {
+    color: '#2E7D32',
+    fontWeight: 'bold',
+  },
+  quickActionsContainer: {
     padding: 16,
+    paddingTop: 8,
   },
   quickLinksGrid: {
     flexDirection: 'row',
@@ -192,30 +278,49 @@ const styles = StyleSheet.create({
     width: '48%',
     backgroundColor: '#FFFFFF',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: 12,
     alignItems: 'center',
-    elevation: 1,
+    elevation: 2,
   },
   quickLinkText: {
     marginTop: 8,
     textAlign: 'center',
+    fontSize: 12,
+    fontWeight: '500',
   },
-  infoCard: {
+  helpCard: {
     margin: 16,
+    marginTop: 8,
     marginBottom: 24,
+    elevation: 2,
+    borderRadius: 12,
+    backgroundColor: '#E3F2FD',
   },
-  infoHeader: {
+  helpContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
   },
-  infoTitle: {
-    marginLeft: 8,
+  helpText: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  helpTitle: {
     fontWeight: 'bold',
+    color: '#1976D2',
   },
-  infoSubtitle: {
-    marginTop: 4,
-    color: '#757575',
+  helpSubtitle: {
+    color: '#424242',
+    marginTop: 2,
+  },
+  helpButton: {
+    backgroundColor: '#1976D2',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  helpButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
 });

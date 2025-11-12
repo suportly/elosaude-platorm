@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.db import models
+from apps.common.pagination import StandardResultsSetPagination, SmallResultsSetPagination
 from .models import Notification, PushToken, SystemMessage
 from .serializers import NotificationSerializer, PushTokenSerializer, SystemMessageSerializer
 
@@ -11,6 +12,7 @@ from .serializers import NotificationSerializer, PushTokenSerializer, SystemMess
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
+    pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['notification_type', 'priority', 'is_read']
     ordering_fields = ['created_at', 'priority']
@@ -35,6 +37,12 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
         # Order by newest first
         queryset = queryset.order_by('-created_at')
+
+        # Apply pagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
@@ -68,6 +76,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
 class PushTokenViewSet(viewsets.ModelViewSet):
     queryset = PushToken.objects.all()
     serializer_class = PushTokenSerializer
+    pagination_class = SmallResultsSetPagination
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['device_type', 'is_active']
 
@@ -116,6 +125,7 @@ class PushTokenViewSet(viewsets.ModelViewSet):
 class SystemMessageViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = SystemMessage.objects.all()
     serializer_class = SystemMessageSerializer
+    pagination_class = SmallResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['message_type', 'is_active']
     ordering_fields = ['start_date', 'created_at']

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, FlatList, Linking } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, FlatList, Linking, RefreshControl } from 'react-native';
 import {
   Card,
   Title,
@@ -12,15 +12,43 @@ import {
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useGetProvidersQuery } from '../../store/services/api';
+import { Colors } from '../../config/theme';
 
-const NetworkScreen = () => {
+const NetworkScreen = ({ navigation }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
 
-  const { data: providers, isLoading, error } = useGetProvidersQuery({
+  const { data, isLoading, error, refetch, isFetching } = useGetProvidersQuery({
     search: searchQuery,
     specialty: selectedSpecialty,
+    page,
   });
+
+  const providers = data?.results || [];
+  const hasMore = data ? data.current_page < data.total_pages : false;
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    setPage(1);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const loadMore = () => {
+    if (!isFetching && hasMore) {
+      setPage((prev) => prev + 1);
+    }
+  };
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, selectedSpecialty]);
 
   const specialties = [
     'Todos',
@@ -182,6 +210,24 @@ const NetworkScreen = () => {
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[Colors.primary]}
+              tintColor={Colors.primary}
+            />
+          }
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isFetching && page > 1 ? (
+              <View style={styles.footerLoader}>
+                <ActivityIndicator size="small" color="#20a490" />
+                <Text style={styles.footerText}>Carregando mais...</Text>
+              </View>
+            ) : null
+          }
         />
       ) : (
         <View style={styles.centerContainer}>
@@ -315,6 +361,16 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 14,
     color: '#999',
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  footerText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#666',
   },
 });
 

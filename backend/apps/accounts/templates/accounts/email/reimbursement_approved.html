@@ -1,0 +1,77 @@
+{% extends "accounts/email/base_email.html" %}
+
+{% block title %}Reembolso Aprovado - Elosaúde{% endblock %}
+
+{% block subtitle %}Reembolso Aprovado{% endblock %}
+
+{% block content %}
+<h2>Seu reembolso foi aprovado, {{ user_name }}!</h2>
+
+<p>Temos uma ótima notícia: seu pedido de reembolso foi analisado e <strong style="color: #4CAF50;">APROVADO</strong>.</p>
+
+<div style="background-color: #E8F5E9; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #4CAF50;">
+    <h3 style="color: #2E7D32; margin: 0 0 15px 0;">💰 Valor Aprovado</h3>
+    <div style="font-size: 36px; font-weight: bold; color: #2E7D32; margin: 10px 0;">
+        R$ {{ approved_amount }}
+    </div>
+    <p style="margin: 10px 0 0 0; color: #666;">
+        O valor será creditado em até 5 dias úteis
+    </p>
+</div>
+
+<div style="background-color: #f0f9f7; padding: 20px; border-radius: 8px; margin: 25px 0;">
+    <h4 style="color: #20a490; margin: 0 0 15px 0;">Informações do Reembolso</h4>
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 8px 0; color: #666;"><strong>Protocolo:</strong></td>
+            <td style="padding: 8px 0;">{{ protocol_number }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #666;"><strong>Tipo de Despesa:</strong></td>
+            <td style="padding: 8px 0;">{{ expense_type }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #666;"><strong>Data do Serviço:</strong></td>
+            <td style="padding: 8px 0;">{{ service_date }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #666;"><strong>Prestador:</strong></td>
+            <td style="padding: 8px 0;">{{ provider_name }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #666;"><strong>Valor Solicitado:</strong></td>
+            <td style="padding: 8px 0;">R$ {{ requested_amount }}</td>
+        </tr>
+        <tr style="background-color: #E8F5E9;">
+            <td style="padding: 8px 0; color: #2E7D32;"><strong>Valor Aprovado:</strong></td>
+            <td style="padding: 8px 0; font-weight: bold; color: #2E7D32;">R$ {{ approved_amount }}</td>
+        </tr>
+    </table>
+</div>
+
+<div style="background-color: #FFF9C4; padding: 20px; border-radius: 8px; border-left: 4px solid #FBC02D;">
+    <h4 style="color: #F57F17; margin: 0 0 10px 0;">🏦 Dados Bancários</h4>
+    <p style="margin: 5px 0; color: #666;">
+        <strong>Banco:</strong> {{ bank_name }}<br>
+        <strong>Agência:</strong> {{ agency }}<br>
+        <strong>Conta:</strong> {{ account }}<br>
+        <strong>Tipo:</strong> {{ account_type }}
+    </p>
+</div>
+
+<div class="info-box">
+    <p><strong>📱 No aplicativo você pode:</strong></p>
+    <p>• Ver todos os detalhes do reembolso<br>
+    • Baixar o comprovante em PDF<br>
+    • Acompanhar o pagamento</p>
+</div>
+
+<center>
+    <a href="elosaude://reimbursements/{{ reimbursement_id }}" class="email-button">Ver Reembolso no App</a>
+</center>
+
+<p style="margin-top: 30px;">
+    Agradecemos pela confiança!<br>
+    <strong>Equipe Elosaúde</strong>
+</p>
+{% endblock %}

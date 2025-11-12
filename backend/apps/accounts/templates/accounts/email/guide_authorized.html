@@ -1,0 +1,60 @@
+{% extends "accounts/email/base_email.html" %}
+
+{% block title %}Guia Autorizada - Elosaúde{% endblock %}
+
+{% block subtitle %}Guia Autorizada{% endblock %}
+
+{% block content %}
+<h2>Boa notícia, {{ user_name }}!</h2>
+
+<p>Sua guia foi <strong style="color: #4CAF50;">AUTORIZADA</strong> e você já pode realizar seu procedimento.</p>
+
+<div style="background-color: #E8F5E9; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #4CAF50;">
+    <h3 style="color: #2E7D32; margin: 0 0 15px 0;">✓ Detalhes da Autorização</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 8px 0; color: #666;"><strong>Número da Guia:</strong></td>
+            <td style="padding: 8px 0;">{{ guide_number }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #666;"><strong>Protocolo:</strong></td>
+            <td style="padding: 8px 0;">{{ protocol_number }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #666;"><strong>Procedimento:</strong></td>
+            <td style="padding: 8px 0;">{{ procedure_name }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #666;"><strong>Prestador:</strong></td>
+            <td style="padding: 8px 0;">{{ provider_name }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #666;"><strong>Validade:</strong></td>
+            <td style="padding: 8px 0;">{{ validity_date }}</td>
+        </tr>
+    </table>
+</div>
+
+<div class="info-box">
+    <p><strong>📱 No app você pode:</strong></p>
+    <p>• Visualizar a guia completa<br>
+    • Baixar o PDF da autorização<br>
+    • Compartilhar com o prestador</p>
+</div>
+
+<div class="warning-box">
+    <p><strong>⚠️ Importante</strong></p>
+    <p>• Leve um documento com foto e sua carteirinha<br>
+    • Verifique se o prestador está na rede credenciada<br>
+    • A guia é válida até {{ validity_date }}</p>
+</div>
+
+<center>
+    <a href="elosaude://guides/{{ guide_id }}" class="email-button">Ver Guia no App</a>
+</center>
+
+<p style="margin-top: 30px;">
+    Bom atendimento!<br>
+    <strong>Equipe Elosaúde</strong>
+</p>
+{% endblock %}

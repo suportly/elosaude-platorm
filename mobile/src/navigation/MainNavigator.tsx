@@ -14,6 +14,7 @@ import TaxStatementsScreen from '../screens/Financial/TaxStatementsScreen';
 import NotificationsScreen from '../screens/Notifications/NotificationsScreen';
 import DependentsScreen from '../screens/Dependents/DependentsScreen';
 import AddDependentScreen from '../screens/Dependents/AddDependentScreen';
+import DependentDetailScreen from '../screens/Dependents/DependentDetailScreen';
 import ChangePasswordScreen from '../screens/Profile/ChangePasswordScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import PlanDetailsScreen from '../screens/Plan/PlanDetailsScreen';
@@ -25,7 +26,6 @@ import AboutScreen from '../screens/Support/AboutScreen';
 import HealthRecordsScreen from '../screens/Health/HealthRecordsScreen';
 import VaccinationCardScreen from '../screens/Health/VaccinationCardScreen';
 import GuidesStack from './GuidesStack';
-import ReimbursementStack from './ReimbursementStack';
 import { useGetNotificationsQuery } from '../store/services/api';
 import { Badge, Text } from 'react-native-paper';
 
@@ -152,160 +152,157 @@ export default function MainNavigator() {
         })}
       />
       <Tab.Screen
-        name="Reimbursements"
-        component={ReimbursementStack}
-        options={({ navigation }) => ({
-          title: 'Reembolso',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          headerShown: true,
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="cash-refund" size={size} color={color} />
-          ),
-        })}
-      />
-      <Tab.Screen
         name="Invoices"
         component={InvoicesScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Faturas',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
       />
       <Tab.Screen
         name="TaxStatements"
         component={TaxStatementsScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Informes IR',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
       />
       <Tab.Screen
         name="Notifications"
         component={NotificationsScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Notificações',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
       />
       <Tab.Screen
         name="ProviderDetail"
         component={ProviderDetailScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Detalhes do Prestador',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
       />
       <Tab.Screen
         name="Dependents"
         component={DependentsScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Dependentes',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
       />
       <Tab.Screen
         name="AddDependent"
         component={AddDependentScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Adicionar Dependente',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
+      />
+      <Tab.Screen
+        name="DependentDetail"
+        component={DependentDetailScreen}
+        options={({ navigation }) => ({
+          title: 'Detalhes do Dependente',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null, // Hide from tab bar
+        })}
       />
       <Tab.Screen
         name="ChangePassword"
         component={ChangePasswordScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Alterar Senha',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Editar Perfil',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
       />
       <Tab.Screen
         name="PlanDetails"
         component={PlanDetailsScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Detalhes do Plano',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
       />
       <Tab.Screen
         name="HelpCenter"
         component={HelpCenterScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Central de Ajuda',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
       />
       <Tab.Screen
         name="Contact"
         component={ContactScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Fale Conosco',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
       />
       <Tab.Screen
         name="Terms"
         component={TermsScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Termos e Condições',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
       />
       <Tab.Screen
         name="Privacy"
         component={PrivacyScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Política de Privacidade',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
       />
       <Tab.Screen
         name="About"
         component={AboutScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Sobre',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
       />
       <Tab.Screen
         name="HealthRecords"
         component={HealthRecordsScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Registros de Saúde',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
       />
       <Tab.Screen
         name="VaccinationCard"
         component={VaccinationCardScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Cartão de Vacinação',
-          headerTitle: () => <HeaderLogo />,
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarButton: () => null, // Hide from tab bar
-        }}
+        })}
       />
       <Tab.Screen
         name="More"

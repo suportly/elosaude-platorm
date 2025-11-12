@@ -22,7 +22,10 @@ class BeneficiarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Beneficiary
         fields = '__all__'
-        extra_kwargs = {'user': {'read_only': True}}
+        extra_kwargs = {
+            'user': {'read_only': True},
+            'registration_number': {'required': False}
+        }
 
     def get_dependents_count(self, obj):
         if obj.beneficiary_type == 'TITULAR':

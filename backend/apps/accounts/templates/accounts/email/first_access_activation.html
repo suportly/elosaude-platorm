@@ -1,0 +1,67 @@
+{% extends "accounts/email/base_email.html" %}
+
+{% block title %}Bem-vindo ao Elosaúde!{% endblock %}
+
+{% block subtitle %}Ative sua conta{% endblock %}
+
+{% block content %}
+<h2>Bem-vindo(a) ao Elosaúde, {{ user_name }}!</h2>
+
+<p>É um prazer ter você conosco! Sua conta foi criada com sucesso e agora você tem acesso a todos os serviços do seu plano de saúde na palma da sua mão.</p>
+
+<p>Para começar a usar o aplicativo, você precisa ativar sua conta usando o código abaixo:</p>
+
+<center>
+    <div style="background-color: #f0f9f7; padding: 30px 20px; border-radius: 12px; margin: 30px 0; border: 2px solid #20a490;">
+        <div style="font-size: 42px; font-weight: bold; color: #20a490; letter-spacing: 8px; font-family: 'Courier New', monospace;">
+            {{ activation_code }}
+        </div>
+        <div style="color: #666666; font-size: 14px; margin-top: 15px;">
+            🎉 Código de Ativação
+        </div>
+    </div>
+</center>
+
+<div class="info-box">
+    <p><strong>📱 Como ativar sua conta</strong></p>
+    <p>1. Baixe o aplicativo Elosaúde (iOS ou Android)<br>
+    2. Na tela inicial, selecione "Primeiro Acesso"<br>
+    3. Digite seu CPF e o código acima<br>
+    4. Crie sua senha de acesso<br>
+    5. Pronto! Comece a usar</p>
+</div>
+
+<h3 style="color: #20a490; margin-top: 30px;">🎯 O que você pode fazer no app:</h3>
+
+<ul style="margin: 15px 0; padding-left: 20px; line-height: 1.8;">
+    <li><strong>Carteirinha Digital:</strong> Tenha sua carteirinha sempre à mão</li>
+    <li><strong>Rede Credenciada:</strong> Encontre médicos, clínicas e hospitais</li>
+    <li><strong>Guias e Autorizações:</strong> Acompanhe suas solicitações</li>
+    <li><strong>Reembolsos:</strong> Solicite e acompanhe seus reembolsos</li>
+    <li><strong>Faturas:</strong> Visualize e pague suas mensalidades</li>
+    <li><strong>Extrato de Utilização:</strong> Veja seu histórico de uso</li>
+</ul>
+
+<center style="margin: 35px 0;">
+    <a href="https://apps.apple.com/br/app/elosaude" style="display: inline-block; margin: 0 10px;">
+        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download na App Store" style="height: 40px;">
+    </a>
+    <a href="https://play.google.com/store/apps/details?id=com.elosaude" style="display: inline-block; margin: 0 10px;">
+        <img src="https://play.google.com/intl/en_us/badges/static/images/badges/pt-br_badge_web_generic.png" alt="Disponível no Google Play" style="height: 60px;">
+    </a>
+</center>
+
+<div class="info-box">
+    <p><strong>💡 Dica</strong></p>
+    <p>Ative as notificações do app para receber avisos importantes sobre autorizações, vencimento de faturas e novidades do seu plano!</p>
+</div>
+
+<p style="margin-top: 30px;">
+    Qualquer dúvida, estamos à disposição através dos nossos canais de atendimento.
+</p>
+
+<p>
+    Seja muito bem-vindo(a)!<br>
+    <strong>Equipe Elosaúde</strong>
+</p>
+{% endblock %}

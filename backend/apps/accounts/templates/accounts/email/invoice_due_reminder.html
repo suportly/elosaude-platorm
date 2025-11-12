@@ -1,0 +1,72 @@
+{% extends "accounts/email/base_email.html" %}
+
+{% block title %}Lembrete de Pagamento - Elosaúde{% endblock %}
+
+{% block subtitle %}Lembrete de Pagamento{% endblock %}
+
+{% block content %}
+<h2>Olá, {{ user_name }}!</h2>
+
+<p>Este é um lembrete amigável sobre a fatura do seu plano de saúde.</p>
+
+<div style="background-color: #FFF3E0; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #FF9800;">
+    <h3 style="color: #E65100; margin: 0 0 15px 0;">📅 Fatura Vencendo</h3>
+    <div style="font-size: 36px; font-weight: bold; color: #E65100; margin: 10px 0;">
+        R$ {{ invoice_amount }}
+    </div>
+    <p style="margin: 10px 0 0 0; color: #666;">
+        Vencimento: <strong>{{ due_date }}</strong> ({{ days_remaining }} dias)
+    </p>
+</div>
+
+<div style="background-color: #f0f9f7; padding: 20px; border-radius: 8px; margin: 25px 0;">
+    <h4 style="color: #20a490; margin: 0 0 15px 0;">Detalhes da Fatura</h4>
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 8px 0; color: #666;"><strong>Mês de Referência:</strong></td>
+            <td style="padding: 8px 0;">{{ reference_month }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #666;"><strong>Vencimento:</strong></td>
+            <td style="padding: 8px 0;">{{ due_date }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #666;"><strong>Valor:</strong></td>
+            <td style="padding: 8px 0; font-weight: bold;">R$ {{ invoice_amount }}</td>
+        </tr>
+    </table>
+</div>
+
+<h3 style="color: #20a490; margin-top: 30px;">💳 Formas de Pagamento</h3>
+
+<div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin: 15px 0;">
+    <p style="margin: 5px 0;"><strong>📱 Pague pelo App:</strong> Acesse "Faturas" e escolha sua forma de pagamento preferida</p>
+</div>
+
+<div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin: 15px 0;">
+    <p style="margin: 5px 0;"><strong>🏦 Boleto Bancário:</strong></p>
+    <p style="font-size: 12px; color: #666; font-family: 'Courier New', monospace; word-break: break-all; margin: 10px 0;">
+        {{ digitable_line }}
+    </p>
+</div>
+
+<div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin: 15px 0;">
+    <p style="margin: 5px 0;"><strong>⚡ PIX:</strong> Copie o código QR no aplicativo para pagamento instantâneo</p>
+</div>
+
+<center>
+    <a href="elosaude://invoices/{{ invoice_id }}" class="email-button">Pagar Agora no App</a>
+</center>
+
+<div class="warning-box">
+    <p><strong>⚠️ Importante</strong></p>
+    <p>• Mantenha seu plano em dia para garantir a cobertura<br>
+    • Faturas vencidas estão sujeitas a juros e multa<br>
+    • Em caso de dificuldade, entre em contato conosco</p>
+</div>
+
+<p style="margin-top: 30px;">
+    Estamos à disposição para ajudar!<br>
+    <strong>Equipe Elosaúde</strong>
+</p>
+{% endblock %}

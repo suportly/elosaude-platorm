@@ -1,14 +1,50 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-native';
 import { Text, Card, Chip, ActivityIndicator, Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useGetReimbursementQuery } from '../../store/services/api';
 import { Colors } from '../../config/theme';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import { downloadAndSharePDF, sanitizeFilename } from '../../utils/pdfDownloader';
+import { API_URL } from '../../config/api';
 
 export default function ReimbursementDetailScreen({ route, navigation }: any) {
   const { reimbursementId } = route.params;
   const { data: reimbursement, isLoading, error, refetch } = useGetReimbursementQuery(reimbursementId);
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadReceipt = async () => {
+    if (!reimbursement) {
+      Alert.alert('Erro', 'Dados do reembolso não disponíveis');
+      return;
+    }
+
+    setDownloading(true);
+
+    try {
+      const filename = sanitizeFilename(
+        `comprovante_reembolso_${reimbursement.protocol_number}`
+      );
+
+      const pdfUrl = `${API_URL}/reimbursements/reimbursement-requests/${reimbursement.id}/receipt-pdf/`;
+      await downloadAndSharePDF({
+        url: pdfUrl,
+        filename,
+        onProgress: (progress) => {
+          console.log(`Download progress: ${(progress * 100).toFixed(0)}%`);
+        },
+      });
+    } catch (error) {
+      console.error('Error downloading receipt:', error);
+      Alert.alert(
+        'Erro ao Baixar',
+        'Não foi possível baixar o comprovante. Tente novamente mais tarde.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -95,7 +131,17 @@ export default function ReimbursementDetailScreen({ route, navigation }: any) {
   const isDenied = reimbursement.status === 'DENIED';
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={isLoading}
+          onRefresh={refetch}
+          colors={[Colors.primary]}
+          tintColor={Colors.primary}
+        />
+      }
+    >
       {/* Status Card */}
       <Card style={[styles.statusCard, { borderLeftColor: statusColor, borderLeftWidth: 4 }]}>
         <Card.Content>
@@ -211,9 +257,11 @@ export default function ReimbursementDetailScreen({ route, navigation }: any) {
             mode="contained"
             icon="download"
             style={styles.actionButton}
-            onPress={() => console.log('Download Comprovante')}
+            onPress={handleDownloadReceipt}
+            loading={downloading}
+            disabled={downloading}
           >
-            Baixar Comprovante
+            {downloading ? 'Baixando...' : 'Baixar Comprovante'}
           </Button>
         </View>
       )}

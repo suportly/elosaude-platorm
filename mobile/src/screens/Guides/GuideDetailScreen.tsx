@@ -1,14 +1,50 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-native';
 import { Text, Card, Chip, ActivityIndicator, Button, Divider } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useGetGuideQuery } from '../../store/services/api';
 import { Colors } from '../../config/theme';
 import { formatDate } from '../../utils/formatters';
+import { downloadAndSharePDF, sanitizeFilename } from '../../utils/pdfDownloader';
+import { API_URL } from '../../config/api';
 
 export default function GuideDetailScreen({ route, navigation }: any) {
   const { guideId } = route.params;
   const { data: guide, isLoading, error, refetch } = useGetGuideQuery(guideId);
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadGuide = async () => {
+    if (!guide) {
+      Alert.alert('Erro', 'Dados da guia não disponíveis');
+      return;
+    }
+
+    setDownloading(true);
+
+    try {
+      const filename = sanitizeFilename(
+        `guia_${guide.guide_number}_${guide.protocol_number}`
+      );
+
+      const pdfUrl = `${API_URL}/guides/guides/${guide.id}/pdf/`;
+      await downloadAndSharePDF({
+        url: pdfUrl,
+        filename,
+        onProgress: (progress) => {
+          console.log(`Download progress: ${(progress * 100).toFixed(0)}%`);
+        },
+      });
+    } catch (error) {
+      console.error('Error downloading guide:', error);
+      Alert.alert(
+        'Erro ao Baixar',
+        'Não foi possível baixar a guia. Tente novamente mais tarde.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -85,7 +121,17 @@ export default function GuideDetailScreen({ route, navigation }: any) {
   const isAuthorized = guide.status === 'AUTHORIZED';
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={isLoading}
+          onRefresh={refetch}
+          colors={[Colors.primary]}
+          tintColor={Colors.primary}
+        />
+      }
+    >
       {/* Status Card */}
       <Card style={[styles.statusCard, { borderLeftColor: statusColor, borderLeftWidth: 4 }]}>
         <Card.Content>
@@ -229,17 +275,21 @@ export default function GuideDetailScreen({ route, navigation }: any) {
             mode="contained"
             icon="download"
             style={styles.actionButton}
-            onPress={() => console.log('Download PDF')}
+            onPress={handleDownloadGuide}
+            loading={downloading}
+            disabled={downloading}
           >
-            Baixar Guia (PDF)
+            {downloading ? 'Baixando...' : 'Baixar Guia (PDF)'}
           </Button>
           <Button
             mode="outlined"
             icon="share-variant"
             style={styles.actionButton}
-            onPress={() => console.log('Share')}
+            onPress={handleDownloadGuide}
+            loading={downloading}
+            disabled={downloading}
           >
-            Compartilhar
+            {downloading ? 'Compartilhando...' : 'Compartilhar'}
           </Button>
         </View>
       )}

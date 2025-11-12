@@ -1,8 +1,21 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { RootState } from '../index';
 import { API_URL } from '../../config/api';
+import { updateTokens, logout } from '../slices/authSlice';
+import { Mutex } from 'async-mutex';
 
 // Define types for API responses
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  total_pages: number;
+  current_page: number;
+  page_size: number;
+  results: T[];
+}
+
 export interface LoginResponse {
   access: string;
   refresh: string;
@@ -155,19 +168,85 @@ export interface Notification {
   created_at: string;
 }
 
+// Create a mutex to prevent multiple refresh requests
+const mutex = new Mutex();
+
+// Base query configuration
+const baseQuery = fetchBaseQuery({
+  baseUrl: API_URL,
+  prepareHeaders: (headers, { getState }) => {
+    const token = (getState() as RootState).auth.accessToken;
+    if (token) {
+      headers.set('authorization', `Bearer ${token}`);
+    }
+    return headers;
+  },
+});
+
+// Base query with automatic token refresh
+const baseQueryWithReauth: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  // Wait until the mutex is available without locking it
+  await mutex.waitForUnlock();
+
+  let result = await baseQuery(args, api, extraOptions);
+
+  if (result.error && result.error.status === 401) {
+    // Check if mutex is locked (another request is already refreshing)
+    if (!mutex.isLocked()) {
+      const release = await mutex.acquire();
+
+      try {
+        const refreshToken = (api.getState() as RootState).auth.refreshToken;
+
+        if (!refreshToken) {
+          // No refresh token available, logout
+          api.dispatch(logout());
+          return result;
+        }
+
+        // Try to refresh the token
+        const refreshResult = await baseQuery(
+          {
+            url: '/auth/refresh/',
+            method: 'POST',
+            body: { refresh: refreshToken },
+          },
+          api,
+          extraOptions
+        );
+
+        if (refreshResult.data) {
+          // Store the new tokens
+          const tokens = refreshResult.data as { access: string; refresh?: string };
+          api.dispatch(updateTokens(tokens));
+
+          // Retry the original request with new token
+          result = await baseQuery(args, api, extraOptions);
+        } else {
+          // Refresh failed, logout user
+          api.dispatch(logout());
+        }
+      } finally {
+        release();
+      }
+    } else {
+      // Wait for the mutex to be available, then retry the request
+      await mutex.waitForUnlock();
+      result = await baseQuery(args, api, extraOptions);
+    }
+  }
+
+  return result;
+};
+
 // Create the API service
 export const api = createApi({
   reducerPath: 'api',
-  baseQuery: fetchBaseQuery({
-    baseUrl: API_URL,
-    prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as RootState).auth.accessToken;
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ['Beneficiary', 'Beneficiaries', 'DigitalCard', 'Providers', 'Guides', 'Reimbursements', 'Invoices', 'TaxStatements', 'Notifications', 'HealthRecords', 'Vaccinations'],
   endpoints: (builder) => ({
     // Auth
@@ -231,19 +310,38 @@ export const api = createApi({
 
     // Providers
     getProviders: builder.query<
-      Provider[],
-      { search?: string; specialty?: string | null; provider_type?: string }
+      PaginatedResponse<Provider>,
+      { search?: string; specialty?: string | null; provider_type?: string; page?: number }
     >({
       query: (params) => {
         const searchParams = new URLSearchParams();
         if (params.search) searchParams.append('search', params.search);
         if (params.specialty) searchParams.append('specialties__name', params.specialty);
         if (params.provider_type) searchParams.append('provider_type', params.provider_type);
+        if (params.page) searchParams.append('page', params.page.toString());
         searchParams.append('is_active', 'true');
 
         return `/providers/providers/?${searchParams.toString()}`;
       },
       providesTags: ['Providers'],
+      // Merge incoming pages into cache for infinite scroll
+      serializeQueryArgs: ({ endpointName, queryArgs }) => {
+        const { page, ...rest } = queryArgs;
+        return { endpointName, ...rest };
+      },
+      merge: (currentCache, newItems, { arg }) => {
+        if (arg.page && arg.page > 1) {
+          // Append new results to existing ones
+          return {
+            ...newItems,
+            results: [...currentCache.results, ...newItems.results],
+          };
+        }
+        return newItems;
+      },
+      forceRefetch: ({ currentArg, previousArg }) => {
+        return currentArg?.page !== previousArg?.page;
+      },
     }),
 
     getProvider: builder.query<Provider, number>({
@@ -252,25 +350,44 @@ export const api = createApi({
     }),
 
     // Guides
-    getGuides: builder.query<Guide[], { status?: string }>({
+    getGuides: builder.query<PaginatedResponse<Guide>, { status?: string; page?: number }>({
       query: (params) => {
         const searchParams = new URLSearchParams();
         if (params.status && params.status !== 'Todas') {
           searchParams.append('status', params.status);
         }
-        return `/guides/guides/my_guides/?${searchParams.toString()}`;
+        if (params.page) {
+          searchParams.append('page', params.page.toString());
+        }
+        return `/guides/my_guides/?${searchParams.toString()}`;
       },
       providesTags: ['Guides'],
+      serializeQueryArgs: ({ endpointName, queryArgs }) => {
+        const { page, ...rest } = queryArgs;
+        return { endpointName, ...rest };
+      },
+      merge: (currentCache, newItems, { arg }) => {
+        if (arg.page && arg.page > 1) {
+          return {
+            ...newItems,
+            results: [...currentCache.results, ...newItems.results],
+          };
+        }
+        return newItems;
+      },
+      forceRefetch: ({ currentArg, previousArg }) => {
+        return currentArg?.page !== previousArg?.page;
+      },
     }),
 
     getGuide: builder.query<Guide, number>({
-      query: (id) => `/guides/guides/${id}/`,
+      query: (id) => `/guides/${id}/`,
       providesTags: ['Guides'],
     }),
 
     createGuide: builder.mutation<Guide, any>({
       query: (data) => ({
-        url: '/guides/guides/',
+        url: '/guides/',
         method: 'POST',
         body: data,
       }),
@@ -278,15 +395,34 @@ export const api = createApi({
     }),
 
     // Reimbursements
-    getReimbursements: builder.query<Reimbursement[], { status?: string }>({
+    getReimbursements: builder.query<PaginatedResponse<Reimbursement>, { status?: string; page?: number }>({
       query: (params) => {
         const searchParams = new URLSearchParams();
         if (params.status && params.status !== 'Todos') {
           searchParams.append('status', params.status);
         }
+        if (params.page) {
+          searchParams.append('page', params.page.toString());
+        }
         return `/reimbursements/requests/my_reimbursements/?${searchParams.toString()}`;
       },
       providesTags: ['Reimbursements'],
+      serializeQueryArgs: ({ endpointName, queryArgs }) => {
+        const { page, ...rest } = queryArgs;
+        return { endpointName, ...rest };
+      },
+      merge: (currentCache, newItems, { arg }) => {
+        if (arg.page && arg.page > 1) {
+          return {
+            ...newItems,
+            results: [...currentCache.results, ...newItems.results],
+          };
+        }
+        return newItems;
+      },
+      forceRefetch: ({ currentArg, previousArg }) => {
+        return currentArg?.page !== previousArg?.page;
+      },
     }),
 
     getReimbursement: builder.query<Reimbursement, number>({
@@ -309,15 +445,34 @@ export const api = createApi({
     }),
 
     // Invoices
-    getInvoices: builder.query<Invoice[], { status?: string }>({
+    getInvoices: builder.query<PaginatedResponse<Invoice>, { status?: string; page?: number }>({
       query: (params) => {
         const searchParams = new URLSearchParams();
         if (params.status && params.status !== 'Todas') {
           searchParams.append('status', params.status);
         }
+        if (params.page) {
+          searchParams.append('page', params.page.toString());
+        }
         return `/financial/invoices/my_invoices/?${searchParams.toString()}`;
       },
       providesTags: ['Invoices'],
+      serializeQueryArgs: ({ endpointName, queryArgs }) => {
+        const { page, ...rest } = queryArgs;
+        return { endpointName, ...rest };
+      },
+      merge: (currentCache, newItems, { arg }) => {
+        if (arg.page && arg.page > 1) {
+          return {
+            ...newItems,
+            results: [...currentCache.results, ...newItems.results],
+          };
+        }
+        return newItems;
+      },
+      forceRefetch: ({ currentArg, previousArg }) => {
+        return currentArg?.page !== previousArg?.page;
+      },
     }),
 
     getInvoice: builder.query<Invoice, number>({
@@ -326,9 +481,28 @@ export const api = createApi({
     }),
 
     // Tax Statements
-    getTaxStatements: builder.query<TaxStatement[], void>({
-      query: () => '/financial/tax-statements/my_statements/',
+    getTaxStatements: builder.query<PaginatedResponse<TaxStatement>, { page?: number }>({
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+        if (params.page) {
+          searchParams.append('page', params.page.toString());
+        }
+        return `/financial/tax-statements/my_statements/?${searchParams.toString()}`;
+      },
       providesTags: ['TaxStatements'],
+      serializeQueryArgs: ({ endpointName }) => endpointName,
+      merge: (currentCache, newItems, { arg }) => {
+        if (arg.page && arg.page > 1) {
+          return {
+            ...newItems,
+            results: [...currentCache.results, ...newItems.results],
+          };
+        }
+        return newItems;
+      },
+      forceRefetch: ({ currentArg, previousArg }) => {
+        return currentArg?.page !== previousArg?.page;
+      },
     }),
 
     getTaxStatement: builder.query<TaxStatement, number>({
@@ -337,15 +511,34 @@ export const api = createApi({
     }),
 
     // Notifications
-    getNotifications: builder.query<Notification[], { is_read?: boolean }>({
+    getNotifications: builder.query<PaginatedResponse<Notification>, { is_read?: boolean; page?: number }>({
       query: (params) => {
         const searchParams = new URLSearchParams();
         if (params.is_read !== undefined) {
           searchParams.append('is_read', params.is_read.toString());
         }
+        if (params.page) {
+          searchParams.append('page', params.page.toString());
+        }
         return `/notifications/notifications/my_notifications/?${searchParams.toString()}`;
       },
       providesTags: ['Notifications'],
+      serializeQueryArgs: ({ endpointName, queryArgs }) => {
+        const { page, ...rest } = queryArgs;
+        return { endpointName, ...rest };
+      },
+      merge: (currentCache, newItems, { arg }) => {
+        if (arg.page && arg.page > 1) {
+          return {
+            ...newItems,
+            results: [...currentCache.results, ...newItems.results],
+          };
+        }
+        return newItems;
+      },
+      forceRefetch: ({ currentArg, previousArg }) => {
+        return currentArg?.page !== previousArg?.page;
+      },
     }),
 
     markNotificationAsRead: builder.mutation<Notification, number>({

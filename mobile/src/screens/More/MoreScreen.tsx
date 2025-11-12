@@ -103,14 +103,6 @@ const MoreScreen = () => {
           />
           <Divider />
           <List.Item
-            title="Telemedicina"
-            description="Agendar consultas virtuais"
-            left={(props) => <List.Icon {...props} icon="video" color="#4CAF50" />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => Alert.alert('Em breve', 'Telemedicina estará disponível em breve.')}
-          />
-          <Divider />
-          <List.Item
             title="Cartão de Vacinação"
             description="Ver seu histórico de vacinações"
             left={(props) => <List.Icon {...props} icon="needle" color="#4CAF50" />}

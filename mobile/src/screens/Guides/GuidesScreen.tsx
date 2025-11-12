@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View, RefreshControl, Alert } from 'react-native';
 import {
   ActivityIndicator,
   Button,
@@ -12,13 +12,57 @@ import {
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useGetGuidesQuery } from '../../store/services/api';
+import { Colors } from '../../config/theme';
+import { downloadAndSharePDF, sanitizeFilename } from '../../utils/pdfDownloader';
+import { API_URL } from '../../config/api';
 
 const GuidesScreen = ({ navigation }: any) => {
   const [selectedStatus, setSelectedStatus] = useState('Todas');
+  const [refreshing, setRefreshing] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
-  const { data: guides, isLoading, error } = useGetGuidesQuery({
+  const { data, isLoading, error, refetch } = useGetGuidesQuery({
     status: selectedStatus,
   });
+
+  const guides = data?.results || [];
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleDownloadGuide = async (guide: any) => {
+    setDownloadingId(guide.id);
+
+    try {
+      const filename = sanitizeFilename(
+        `guia_${guide.guide_number}_${guide.protocol_number}`
+      );
+
+      const pdfUrl = `${API_URL}/guides/guides/${guide.id}/pdf/`;
+      await downloadAndSharePDF({
+        url: pdfUrl,
+        filename,
+        onProgress: (progress) => {
+          console.log(`Download progress: ${(progress * 100).toFixed(0)}%`);
+        },
+      });
+    } catch (error) {
+      console.error('Error downloading guide:', error);
+      Alert.alert(
+        'Erro ao Baixar',
+        'Não foi possível baixar a guia. Tente novamente mais tarde.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const statuses = ['Todas', 'PENDING', 'AUTHORIZED', 'DENIED', 'EXPIRED'];
 
@@ -102,8 +146,13 @@ const GuidesScreen = ({ navigation }: any) => {
           Detalhes
         </Button>
         {item.status === 'AUTHORIZED' && (
-          <Button icon="download" onPress={() => console.log('Baixar PDF', item.id)}>
-            Baixar
+          <Button
+            icon="download"
+            onPress={() => handleDownloadGuide(item)}
+            loading={downloadingId === item.id}
+            disabled={downloadingId === item.id}
+          >
+            {downloadingId === item.id ? 'Baixando...' : 'Baixar'}
           </Button>
         )}
       </Card.Actions>
@@ -159,6 +208,14 @@ const GuidesScreen = ({ navigation }: any) => {
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[Colors.primary]}
+              tintColor={Colors.primary}
+            />
+          }
         />
       ) : (
         <View style={styles.centerContainer}>

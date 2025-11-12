@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, RefreshControl } from 'react-native';
 import {
   Text,
   Card,
@@ -45,6 +45,16 @@ export default function DependentsScreen({ navigation }: any) {
   const [removeDependentMutation, { isLoading: isRemoving }] = useRemoveDependentMutation();
   const [selectedDependent, setSelectedDependent] = useState<any>(null);
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const getRelationshipLabel = (relationship: string) => {
     switch (relationship) {
@@ -188,7 +198,7 @@ export default function DependentsScreen({ navigation }: any) {
           >
             Editar
           </Button>
-          <Button icon="eye" onPress={() => console.log('View', dependent.id)}>
+          <Button icon="eye" onPress={() => navigation.navigate('DependentDetail', { dependent })}>
             Ver Detalhes
           </Button>
         </Card.Actions>
@@ -220,7 +230,18 @@ export default function DependentsScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
+      >
         {/* Info Card */}
         <Card style={styles.infoCard}>
           <Card.Content style={styles.infoCardContent}>

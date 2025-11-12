@@ -1,0 +1,28 @@
+{% extends "accounts/email/base_email.html" %}
+
+{% block title %}{{ notification_title }} - Elosaúde{% endblock %}
+
+{% block subtitle %}{{ notification_subtitle|default:"Notificação" }}{% endblock %}
+
+{% block content %}
+<h2>Olá, {{ user_name }}!</h2>
+
+{{ notification_message|safe }}
+
+{% if action_url %}
+<center>
+    <a href="{{ action_url }}" class="email-button">{{ action_text|default:"Ver Detalhes" }}</a>
+</center>
+{% endif %}
+
+{% if additional_info %}
+<div class="info-box">
+    {{ additional_info|safe }}
+</div>
+{% endif %}
+
+<p style="margin-top: 30px;">
+    Atenciosamente,<br>
+    <strong>Equipe Elosaúde</strong>
+</p>
+{% endblock %}

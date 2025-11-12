@@ -1,13 +1,54 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-native';
 import { Text, Card, ActivityIndicator, Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useGetTaxStatementsQuery, TaxStatement } from '../../store/services/api';
 import { Colors } from '../../config/theme';
 import { formatCurrency } from '../../utils/formatters';
+import { downloadAndSharePDF, sanitizeFilename } from '../../utils/pdfDownloader';
+import { API_URL } from '../../config/api';
 
 export default function TaxStatementsScreen() {
   const { data: taxStatements, isLoading, error, refetch } = useGetTaxStatementsQuery();
+  const [refreshing, setRefreshing] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleDownloadStatement = async (statement: TaxStatement) => {
+    setDownloadingId(statement.id);
+
+    try {
+      const filename = sanitizeFilename(
+        `informe_rendimentos_${statement.year}`
+      );
+
+      const pdfUrl = `${API_URL}/financial/tax-statements/${statement.id}/pdf/`;
+      await downloadAndSharePDF({
+        url: pdfUrl,
+        filename,
+        onProgress: (progress) => {
+          console.log(`Download progress: ${(progress * 100).toFixed(0)}%`);
+        },
+      });
+    } catch (error) {
+      console.error('Error downloading statement:', error);
+      Alert.alert(
+        'Erro ao Baixar',
+        'Não foi possível baixar o informe. Tente novamente mais tarde.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const renderMonthlyBreakdown = (breakdown: { [key: string]: number }) => {
     const monthNames = [
@@ -84,17 +125,21 @@ export default function TaxStatementsScreen() {
               mode="contained"
               style={styles.actionButton}
               icon="download"
-              onPress={() => console.log('Download PDF', statement.id)}
+              onPress={() => handleDownloadStatement(statement)}
+              loading={downloadingId === statement.id}
+              disabled={downloadingId === statement.id}
             >
-              Baixar Informe
+              {downloadingId === statement.id ? 'Baixando...' : 'Baixar Informe'}
             </Button>
             <Button
               mode="outlined"
               style={styles.actionButton}
               icon="share-variant"
-              onPress={() => console.log('Share', statement.id)}
+              onPress={() => handleDownloadStatement(statement)}
+              loading={downloadingId === statement.id}
+              disabled={downloadingId === statement.id}
             >
-              Compartilhar
+              {downloadingId === statement.id ? 'Compartilhando...' : 'Compartilhar'}
             </Button>
           </View>
 
@@ -133,7 +178,18 @@ export default function TaxStatementsScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.listContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
+      >
         <View style={styles.headerSection}>
           <Icon name="file-chart-outline" size={48} color={Colors.primary} />
           <Text variant="headlineSmall" style={styles.headerTitle}>

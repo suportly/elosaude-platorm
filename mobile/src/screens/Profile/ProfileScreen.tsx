@@ -6,6 +6,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { TextInput, Button, Card, Title, HelperText } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
@@ -15,6 +16,7 @@ import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { RootState } from '../../store';
 import { useGetBeneficiaryQuery, useUpdateProfileMutation } from '../../store/services/api';
+import { Colors } from '../../config/theme';
 
 // Validation schema
 const schema = yup.object({
@@ -46,9 +48,19 @@ const ProfileScreen = () => {
   const navigation = useNavigation();
   const beneficiary = useSelector((state: RootState) => state.auth.beneficiary);
 
-  const { data: beneficiaryData, isLoading: isLoadingBeneficiary } = useGetBeneficiaryQuery();
+  const { data: beneficiaryData, isLoading: isLoadingBeneficiary, refetch } = useGetBeneficiaryQuery();
 
   const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const {
     control,
@@ -127,7 +139,17 @@ const ProfileScreen = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
+      >
         <Card style={styles.card}>
           <Card.Content>
             <Title style={styles.title}>Editar Perfil</Title>

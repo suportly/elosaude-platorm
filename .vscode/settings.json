@@ -15,7 +15,7 @@
   ],
 
   // Django Settings
-  "python.languageServer": "Pylance",
+  "python.languageServer": "None",
   "python.analysis.typeCheckingMode": "basic",
 
   // JavaScript/TypeScript Settings

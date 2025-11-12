@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, Linking, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, Linking, Platform, RefreshControl } from 'react-native';
 import { Text, Card, Chip, ActivityIndicator, Button, Divider } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useGetProviderQuery } from '../../store/services/api';
@@ -77,7 +77,17 @@ export default function ProviderDetailScreen({ route, navigation }: any) {
   const hasLocation = provider.latitude && provider.longitude;
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={isLoading}
+          onRefresh={refetch}
+          colors={[Colors.primary]}
+          tintColor={Colors.primary}
+        />
+      }
+    >
       {/* Location Card */}
       {hasLocation && (
         <Card style={styles.locationCard}>

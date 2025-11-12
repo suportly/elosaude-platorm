@@ -9,6 +9,7 @@ import {
   List,
   Chip,
   ActivityIndicator,
+  ProgressBar,
 } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -20,6 +21,7 @@ import { DatePickerModal } from 'react-native-paper-dates';
 import DocumentUploader, { UploadedDocument } from '../../components/DocumentUploader';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
+import { uploadFiles, validateFiles, UploadedFileResponse } from '../../utils/fileUploader';
 
 const EXPENSE_TYPES = [
   { value: 'CONSULTATION', label: 'Consulta' },
@@ -53,9 +55,12 @@ interface FormData {
 
 const CreateReimbursementScreen = ({ navigation }: any) => {
   const beneficiary = useSelector((state: RootState) => state.auth.beneficiary);
+  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const [createReimbursement, { isLoading }] = useCreateReimbursementMutation();
 
   const {
@@ -82,31 +87,6 @@ const CreateReimbursementScreen = ({ navigation }: any) => {
     setValue('documents', newDocuments);
   };
 
-  const pickDocument = async () => {
-    // Replaced by DocumentUploader component
-    Alert.alert(
-      'Info',
-      'Use o botão "Adicionar Documento" abaixo',
-      [{ text: 'OK' }]
-    );
-    
-    // Placeholder for now
-    const mockDoc = {
-      id: Date.now(),
-      name: 'documento_' + Date.now() + '.pdf',
-      uri: 'mock://document',
-      type: 'INVOICE',
-    };
-    setDocuments([...documents, mockDoc]);
-    setValue('documents', [...documents, mockDoc]);
-  };
-
-  const removeDocument = (id: number) => {
-    const updated = documents.filter((doc) => doc.id !== id);
-    setDocuments(updated);
-    setValue('documents', updated);
-  };
-
   const onSubmit = async (data: FormData) => {
     try {
       if (!beneficiary) {
@@ -114,16 +94,68 @@ const CreateReimbursementScreen = ({ navigation }: any) => {
         return;
       }
 
+      if (!accessToken) {
+        Alert.alert('Erro', 'Sessão expirada. Por favor, faça login novamente.');
+        return;
+      }
+
+      // Validate documents before submission
+      if (documents.length === 0) {
+        Alert.alert(
+          'Documentos Necessários',
+          'Por favor, anexe pelo menos um documento (nota fiscal, receita ou recibo).'
+        );
+        return;
+      }
+
+      // Validate file sizes and types
+      const validation = validateFiles(documents);
+      if (!validation.valid) {
+        Alert.alert(
+          'Erro de Validação',
+          validation.errors.join('\n')
+        );
+        return;
+      }
+
+      // Step 1: Upload documents
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      const uploadedFiles = await uploadFiles(
+        {
+          documents,
+          uploadType: 'REIMBURSEMENT',
+          onProgress: (progress) => {
+            setUploadProgress(progress);
+          },
+          onError: (error) => {
+            console.error('Upload error:', error);
+          },
+        },
+        accessToken
+      );
+
+      if (!uploadedFiles || uploadedFiles.length === 0) {
+        setIsUploading(false);
+        Alert.alert('Erro', 'Falha ao enviar documentos. Tente novamente.');
+        return;
+      }
+
+      setIsUploading(false);
+
+      // Step 2: Create reimbursement with uploaded document IDs
       const payload = {
         ...data,
         beneficiary: beneficiary.id,
         requested_amount: data.requested_amount.toString(),
         service_date: data.service_date.toISOString().split('T')[0],
         bank_details: JSON.stringify(data.bank_details),
+        documents: uploadedFiles.map((file: UploadedFileResponse) => file.id),
       };
 
       await createReimbursement(payload).unwrap();
-      
+
       Alert.alert(
         'Sucesso',
         'Solicitação de reembolso enviada com sucesso!',
@@ -134,8 +166,13 @@ const CreateReimbursementScreen = ({ navigation }: any) => {
           },
         ]
       );
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível enviar a solicitação. Tente novamente.');
+    } catch (error: any) {
+      setIsUploading(false);
+      console.error('Reimbursement submission error:', error);
+      Alert.alert(
+        'Erro',
+        error?.data?.error || 'Não foi possível enviar a solicitação. Tente novamente.'
+      );
     }
   };
 
@@ -345,10 +382,10 @@ const CreateReimbursementScreen = ({ navigation }: any) => {
 
       {/* Documents */}
       <Card style={styles.section}>
-        <Card.Title title="Documentos" titleStyle={styles.sectionTitle} />
+        <Card.Title title="Documentos *" titleStyle={styles.sectionTitle} />
         <Card.Content>
           <Text style={styles.helperText}>
-            Anexe nota fiscal, receita médica e/ou recibos
+            Anexe nota fiscal, receita médica e/ou recibos (obrigatório)
           </Text>
 
           <DocumentUploader
@@ -361,6 +398,22 @@ const CreateReimbursementScreen = ({ navigation }: any) => {
           {errors.documents && (
             <HelperText type="error">{errors.documents.message}</HelperText>
           )}
+
+          {isUploading && (
+            <View style={styles.uploadProgressContainer}>
+              <Text style={styles.uploadProgressText}>
+                Enviando documentos...
+              </Text>
+              <ProgressBar
+                progress={uploadProgress}
+                color="#20a490"
+                style={styles.uploadProgressBar}
+              />
+              <Text style={styles.uploadProgressPercentage}>
+                {Math.round(uploadProgress * 100)}%
+              </Text>
+            </View>
+          )}
         </Card.Content>
       </Card>
 
@@ -368,15 +421,20 @@ const CreateReimbursementScreen = ({ navigation }: any) => {
         <Button
           mode="contained"
           onPress={handleSubmit(onSubmit)}
-          loading={isLoading}
-          disabled={isLoading}
+          loading={isLoading || isUploading}
+          disabled={isLoading || isUploading}
           style={styles.submitButton}
           buttonColor="#20a490"
         >
-          Enviar Solicitação
+          {isUploading ? 'Enviando Documentos...' : isLoading ? 'Enviando...' : 'Enviar Solicitação'}
         </Button>
 
-        <Button mode="outlined" onPress={() => navigation.goBack()} style={styles.cancelButton}>
+        <Button
+          mode="outlined"
+          onPress={() => navigation.goBack()}
+          style={styles.cancelButton}
+          disabled={isLoading || isUploading}
+        >
           Cancelar
         </Button>
       </View>
@@ -448,6 +506,28 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     marginBottom: 12,
+  },
+  uploadProgressContainer: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: '#F0F9F7',
+    borderRadius: 8,
+  },
+  uploadProgressText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#20a490',
+    marginBottom: 8,
+  },
+  uploadProgressBar: {
+    height: 8,
+    borderRadius: 4,
+    marginBottom: 4,
+  },
+  uploadProgressPercentage: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'right',
   },
 });
 

@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Avg
+from apps.common.pagination import StandardResultsSetPagination, SmallResultsSetPagination
 from .models import Specialty, AccreditedProvider, ProviderReview
 from .serializers import (
     SpecialtySerializer, AccreditedProviderSerializer,
@@ -13,6 +14,7 @@ from .serializers import (
 class SpecialtyViewSet(viewsets.ModelViewSet):
     queryset = Specialty.objects.all()
     serializer_class = SpecialtySerializer
+    pagination_class = SmallResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['is_active']
     search_fields = ['name', 'description']
@@ -22,6 +24,7 @@ class SpecialtyViewSet(viewsets.ModelViewSet):
 class AccreditedProviderViewSet(viewsets.ModelViewSet):
     queryset = AccreditedProvider.objects.prefetch_related('specialties', 'reviews').all()
     serializer_class = AccreditedProviderSerializer
+    pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['provider_type', 'is_active', 'accepts_telemedicine', 'accepts_emergency', 'city', 'state']
     search_fields = ['name', 'trade_name', 'city', 'specialties__name']
@@ -74,6 +77,7 @@ class AccreditedProviderViewSet(viewsets.ModelViewSet):
 class ProviderReviewViewSet(viewsets.ModelViewSet):
     queryset = ProviderReview.objects.select_related('provider', 'beneficiary').all()
     serializer_class = ProviderReviewSerializer
+    pagination_class = SmallResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['provider', 'beneficiary', 'rating']
     ordering_fields = ['created_at', 'rating']

@@ -1,16 +1,88 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Clipboard, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Clipboard, Alert, RefreshControl } from 'react-native';
 import { Text, Card, Chip, ActivityIndicator, Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useGetInvoicesQuery, Invoice } from '../../store/services/api';
 import { Colors } from '../../config/theme';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import { downloadAndSharePDF, sanitizeFilename } from '../../utils/pdfDownloader';
+import { API_URL } from '../../config/api';
 
 export default function InvoicesScreen({ navigation }: any) {
   const [selectedStatus, setSelectedStatus] = useState('Todas');
-  const { data: invoices, isLoading, error, refetch } = useGetInvoicesQuery({
+  const [refreshing, setRefreshing] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+
+  const { data, isLoading, error, refetch } = useGetInvoicesQuery({
     status: selectedStatus,
   });
+
+  const invoices = data?.results || [];
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleDownloadInvoice = async (invoice: Invoice) => {
+    setDownloadingId(invoice.id);
+
+    try {
+      const filename = sanitizeFilename(
+        `fatura_${invoice.reference_month}_${invoice.reference_year}`
+      );
+
+      const pdfUrl = `${API_URL}/financial/invoices/${invoice.id}/pdf/`;
+      await downloadAndSharePDF({
+        url: pdfUrl,
+        filename,
+        onProgress: (progress) => {
+          console.log(`Download progress: ${(progress * 100).toFixed(0)}%`);
+        },
+      });
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      Alert.alert(
+        'Erro ao Baixar',
+        'Não foi possível baixar a fatura. Tente novamente mais tarde.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handleDownloadReceipt = async (invoice: Invoice) => {
+    setDownloadingId(invoice.id);
+
+    try {
+      const filename = sanitizeFilename(
+        `comprovante_${invoice.reference_month}_${invoice.reference_year}`
+      );
+
+      const pdfUrl = `${API_URL}/financial/invoices/${invoice.id}/receipt-pdf/`;
+      await downloadAndSharePDF({
+        url: pdfUrl,
+        filename,
+        onProgress: (progress) => {
+          console.log(`Download progress: ${(progress * 100).toFixed(0)}%`);
+        },
+      });
+    } catch (error) {
+      console.error('Error downloading receipt:', error);
+      Alert.alert(
+        'Erro ao Baixar',
+        'Não foi possível baixar o comprovante. Tente novamente mais tarde.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -130,9 +202,11 @@ export default function InvoicesScreen({ navigation }: any) {
                   mode="contained"
                   style={styles.actionButton}
                   icon="download"
-                  onPress={() => console.log('Download PDF')}
+                  onPress={() => handleDownloadInvoice(invoice)}
+                  loading={downloadingId === invoice.id}
+                  disabled={downloadingId === invoice.id}
                 >
-                  Baixar Boleto
+                  {downloadingId === invoice.id ? 'Baixando...' : 'Baixar Boleto'}
                 </Button>
               </View>
             </>
@@ -144,9 +218,11 @@ export default function InvoicesScreen({ navigation }: any) {
                 mode="outlined"
                 style={styles.actionButton}
                 icon="download"
-                onPress={() => console.log('Download Comprovante')}
+                onPress={() => handleDownloadReceipt(invoice)}
+                loading={downloadingId === invoice.id}
+                disabled={downloadingId === invoice.id}
               >
-                Comprovante
+                {downloadingId === invoice.id ? 'Baixando...' : 'Comprovante'}
               </Button>
             </View>
           )}
@@ -206,7 +282,18 @@ export default function InvoicesScreen({ navigation }: any) {
       </ScrollView>
 
       {/* Invoices List */}
-      <ScrollView style={styles.listContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
+      >
         {invoices && invoices.length > 0 ? (
           invoices.map((invoice) => renderInvoice(invoice))
         ) : (

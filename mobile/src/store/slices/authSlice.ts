@@ -70,6 +70,24 @@ const authSlice = createSlice({
       AsyncStorage.setItem('user', JSON.stringify(action.payload.user));
       AsyncStorage.setItem('beneficiary', JSON.stringify(action.payload.beneficiary));
     },
+    updateTokens: (
+      state,
+      action: PayloadAction<{
+        access: string;
+        refresh?: string;
+      }>
+    ) => {
+      state.accessToken = action.payload.access;
+      if (action.payload.refresh) {
+        state.refreshToken = action.payload.refresh;
+      }
+
+      // Update AsyncStorage
+      AsyncStorage.setItem('accessToken', action.payload.access);
+      if (action.payload.refresh) {
+        AsyncStorage.setItem('refreshToken', action.payload.refresh);
+      }
+    },
     logout: (state) => {
       state.user = null;
       state.beneficiary = null;
@@ -86,5 +104,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, logout, setLoading } = authSlice.actions;
+export const { setCredentials, updateTokens, logout, setLoading } = authSlice.actions;
 export default authSlice.reducer;
