@@ -27,15 +27,17 @@ const GUIDE_TYPES = [
   { value: 'EMERGENCY', label: 'Emergência' },
 ];
 
+type GuideType = 'SP_SADT' | 'CONSULTATION' | 'HOSPITALIZATION' | 'EMERGENCY';
+
 interface FormData {
-  guide_type: string;
+  guide_type: GuideType;
   provider: number;
   diagnosis: string;
-  observations: string;
+  observations?: string;
   requesting_physician_name: string;
   requesting_physician_crm: string;
-  procedure_ids: number[];
-  quantities: number[];
+  procedure_ids: (number | undefined)[];
+  quantities?: (number | undefined)[] | undefined;
 }
 
 const CreateGuideScreen = ({ navigation }: any) => {
@@ -60,6 +62,7 @@ const CreateGuideScreen = ({ navigation }: any) => {
   } = useForm<FormData>({
     resolver: yupResolver(guideSchema),
     defaultValues: {
+      observations: '',
       procedure_ids: [],
       quantities: [],
     },
@@ -154,12 +157,12 @@ const CreateGuideScreen = ({ navigation }: any) => {
                 style={styles.searchBar}
               />
 
-              {showProviderList && providers && (
+              {showProviderList && providers?.results && (
                 <View style={styles.providerList}>
                   {loadingProviders ? (
                     <ActivityIndicator />
                   ) : (
-                    providers.slice(0, 5).map((provider) => (
+                    providers.results.slice(0, 5).map((provider) => (
                       <List.Item
                         key={provider.id}
                         title={provider.name}
