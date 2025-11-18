@@ -4,6 +4,7 @@ import { RootState } from '../index';
 import { API_URL } from '../../config/api';
 import { updateTokens, logout } from '../slices/authSlice';
 import { Mutex } from 'async-mutex';
+import type { OracleCardsResponse, OracleTestConnectionResponse } from '../../types/oracle';
 
 // Define types for API responses
 export interface PaginatedResponse<T> {
@@ -34,18 +35,6 @@ export interface LoginResponse {
     company: string;
     health_plan: string;
   };
-}
-
-export interface DigitalCard {
-  id: number;
-  card_number: string;
-  beneficiary: number;
-  issue_date: string;
-  expiry_date: string;
-  qr_code: string;
-  qr_code_data: string;
-  version: number;
-  is_active: boolean;
 }
 
 export interface Provider {
@@ -247,7 +236,7 @@ const baseQueryWithReauth: BaseQueryFn<
 export const api = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Beneficiary', 'Beneficiaries', 'DigitalCard', 'Providers', 'Guides', 'Reimbursements', 'Invoices', 'TaxStatements', 'Notifications', 'HealthRecords', 'Vaccinations'],
+  tagTypes: ['Beneficiary', 'Beneficiaries', 'Providers', 'Guides', 'Reimbursements', 'Invoices', 'TaxStatements', 'Notifications', 'HealthRecords', 'Vaccinations', 'OracleCards'],
   endpoints: (builder) => ({
     // Auth
     login: builder.mutation<LoginResponse, { cpf: string; password: string }>({
@@ -256,7 +245,7 @@ export const api = createApi({
         method: 'POST',
         body: credentials,
       }),
-      invalidatesTags: ['Beneficiary', 'DigitalCard'],
+      invalidatesTags: ['Beneficiary'],
     }),
 
     // Test Login (mantido para compatibilidade)
@@ -266,7 +255,7 @@ export const api = createApi({
         method: 'POST',
         body: credentials,
       }),
-      invalidatesTags: ['Beneficiary', 'DigitalCard'],
+      invalidatesTags: ['Beneficiary'],
     }),
 
     // Beneficiary
@@ -300,12 +289,6 @@ export const api = createApi({
         body: data,
       }),
       invalidatesTags: ['Beneficiary'],
-    }),
-
-    // Digital Card
-    getDigitalCard: builder.query<DigitalCard[], void>({
-      query: () => '/beneficiaries/digital-cards/my_cards/',
-      providesTags: ['DigitalCard'],
     }),
 
     // Providers
@@ -632,6 +615,16 @@ export const api = createApi({
       query: () => '/health/vaccinations/overdue/',
       providesTags: ['Vaccinations'],
     }),
+
+    // Oracle Cards Integration
+    getOracleCards: builder.query<OracleCardsResponse, void>({
+      query: () => '/oracle-cards/my_oracle_cards/',
+      providesTags: ['OracleCards'],
+    }),
+
+    testOracleConnection: builder.query<OracleTestConnectionResponse, void>({
+      query: () => '/oracle-cards/test_connection/',
+    }),
   }),
 });
 
@@ -641,7 +634,6 @@ export const {
   useGetBeneficiaryQuery,
   useUpdateBeneficiaryMutation,
   useUpdateProfileMutation,
-  useGetDigitalCardQuery,
   useGetProvidersQuery,
   useGetProviderQuery,
   useGetGuidesQuery,
@@ -669,4 +661,6 @@ export const {
   useGetVaccinationsQuery,
   useGetUpcomingVaccinationsQuery,
   useGetOverdueVaccinationsQuery,
+  useGetOracleCardsQuery,
+  useTestOracleConnectionQuery,
 } = api;

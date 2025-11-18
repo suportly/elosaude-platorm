@@ -1,104 +1,61 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions, FlatList, RefreshControl, Alert } from 'react-native';
-import { Card, Title, Paragraph, Button, ActivityIndicator, Divider, Badge, Chip } from 'react-native-paper';
+import React, { useRef, useState } from 'react';
+import { Dimensions, FlatList, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Button, Card, Chip, Divider, Paragraph, Title } from 'react-native-paper';
 import QRCode from 'react-native-qrcode-svg';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
-import { useGetDigitalCardQuery, useGetBeneficiaryQuery } from '../../store/services/api';
 import { Colors } from '../../config/theme';
-import { downloadAndSharePDF, sanitizeFilename } from '../../utils/pdfDownloader';
-import { API_URL } from '../../config/api';
+import { useGetOracleCardsQuery } from '../../store/services/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_PADDING = 8; // Padding between cards
-const CARD_WIDTH = SCREEN_WIDTH - 32; // 16px padding on each side
-const CARD_ITEM_WIDTH = CARD_WIDTH + (CARD_PADDING * 2); // Total width including padding
+const CARD_PADDING = 8;
+const CARD_WIDTH = SCREEN_WIDTH - 32;
+const CARD_ITEM_WIDTH = CARD_WIDTH + (CARD_PADDING * 2);
 
 const DigitalCardScreen = () => {
-  const { data: cardDataArray, isLoading: isLoadingCard, error: cardError, refetch: refetchCard } = useGetDigitalCardQuery();
-  const { data: beneficiaryData, isLoading: isLoadingBeneficiary, error: beneficiaryError, refetch: refetchBeneficiary } = useGetBeneficiaryQuery();
+  const { data: oracleCards, isLoading, error, refetch } = useGetOracleCardsQuery();
 
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showQR, setShowQR] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [downloading, setDownloading] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([refetchCard(), refetchBeneficiary()]);
+      await refetch();
     } finally {
       setRefreshing(false);
     }
   };
 
-  const handleDownloadCard = async () => {
-    if (!cardData || !beneficiaryData) {
-      Alert.alert('Erro', 'Dados da carteirinha não disponíveis');
-      return;
-    }
-
-    setDownloading(true);
-
-    try {
-      // Generate filename with beneficiary name and card number
-      const filename = sanitizeFilename(
-        `carteirinha_${beneficiaryData.full_name}_${cardData.card_number}`
-      );
-
-      const pdfUrl = `${API_URL}/beneficiaries/digital-cards/${cardData.id}/pdf/`;
-      await downloadAndSharePDF({
-        url: pdfUrl,
-        filename,
-        onProgress: (progress) => {
-          console.log(`Download progress: ${(progress * 100).toFixed(0)}%`);
-        },
-      });
-    } catch (error) {
-      console.error('Error downloading card:', error);
-      Alert.alert(
-        'Erro ao Baixar',
-        'Não foi possível baixar a carteirinha. Tente novamente mais tarde.',
-        [{ text: 'OK' }]
-      );
-    } finally {
-      setDownloading(false);
-    }
-  };
-
-  // Sort cards: active first, then by issue date (newest first)
-  const sortedCards = cardDataArray
-    ? [...cardDataArray].sort((a, b) => {
-        if (a.is_active && !b.is_active) return -1;
-        if (!a.is_active && b.is_active) return 1;
-        return new Date(b.issue_date).getTime() - new Date(a.issue_date).getTime();
-      })
+  // Combine all Oracle cards into a single array for the main carousel
+  const allCards = oracleCards
+    ? [
+        ...oracleCards.carteirinha.map((card: any) => ({ ...card, _type: 'CARTEIRINHA' })),
+        ...oracleCards.unimed.map((card: any) => ({ ...card, _type: 'UNIMED' })),
+        ...oracleCards.reciprocidade.map((card: any) => ({ ...card, _type: 'RECIPROCIDADE' })),
+      ]
     : [];
 
-  const cardData = sortedCards[currentCardIndex];
-
-  const isLoading = isLoadingCard || isLoadingBeneficiary;
-  const error = cardError || beneficiaryError;
+  const currentCard = allCards[currentCardIndex];
 
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#1976D2" />
-        <Paragraph style={styles.loadingText}>Carregando carteirinha digital...</Paragraph>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Paragraph style={styles.loadingText}>Carregando carteirinhas...</Paragraph>
       </View>
     );
   }
 
-  if (error || !sortedCards || sortedCards.length === 0 || !beneficiaryData) {
+  if (error || !oracleCards || allCards.length === 0) {
     return (
       <View style={styles.centerContainer}>
         <Paragraph style={styles.errorText}>
-          {sortedCards?.length === 0
-            ? 'Nenhuma carteirinha digital encontrada'
-            : 'Não foi possível carregar a carteirinha digital'}
+          {allCards.length === 0
+            ? 'Nenhuma carteirinha encontrada'
+            : 'Não foi possível carregar as carteirinhas'}
         </Paragraph>
-        <Button mode="contained" onPress={() => { refetchCard(); refetchBeneficiary(); }}>
+        <Button mode="contained" onPress={refetch}>
           Tentar Novamente
         </Button>
       </View>
@@ -108,45 +65,82 @@ const DigitalCardScreen = () => {
   const handleScroll = (event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;
     const index = Math.round(offsetX / CARD_ITEM_WIDTH);
-    if (index !== currentCardIndex && index >= 0 && index < sortedCards.length) {
+    if (index !== currentCardIndex && index >= 0 && index < allCards.length) {
       setCurrentCardIndex(index);
     }
   };
 
-  const renderCard = ({ item, index }: { item: any; index: number }) => {
-    const isActive = item.is_active;
-    const issueDate = item.issue_date ? new Date(item.issue_date).toLocaleDateString('pt-BR') : 'N/A';
-    const expiryDate = item.expiry_date ? new Date(item.expiry_date).toLocaleDateString('pt-BR') : 'N/A';
+  const renderCard = ({ item }: { item: any }) => {
+    const cardType = item._type;
+    let cardInfo: any = {};
+
+    // Extract card information based on type
+    if (cardType === 'CARTEIRINHA') {
+      cardInfo = {
+        title: 'Elosaúde',
+        name: item.NOME_DO_BENEFICIARIO || item.NM_SOCIAL,
+        registration: item.MATRICULA,
+        plan: item.PRIMARIO || item.SEGMENTACAO,
+        cpf: item.NR_CPF ? String(item.NR_CPF).padStart(11, '0').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '',
+        cns: item.NR_CNS,
+        birthDate: item.NASCTO,
+        cardNumber: item.MATRICULA,
+        company: item.EMPRESA,
+        contractType: item.CONTRATACAO,
+        validity: item.VALIDADE,
+        layout: item.LAYOUT,
+        segmentation: item.SEGMENTACAO,
+      };
+    } else if (cardType === 'UNIMED') {
+      cardInfo = {
+        title: 'Unimed',
+        name: item.NOME_DO_BENEFICIARIO || item.nm_social,
+        registration: item.MATRICULA_UNIMED,
+        plan: item.PLANO || item.SEGMENTACAO,
+        cpf: item.CPF ? String(item.CPF).padStart(11, '0').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '',
+        cns: item.NR_CNS,
+        birthDate: item.nascto,
+        cardNumber: item.MATRICULA_UNIMED,
+        coverage: item.ABRANGENCIA,
+        accommodation: item.ACOMODACAO,
+        network: item.Rede_Atendimento,
+        validity: item.Validade,
+        segmentation: item.SEGMENTACAO,
+      };
+    } else { // RECIPROCIDADE
+      cardInfo = {
+        title: item.PRESTADOR_RECIPROCIDADE || 'Reciprocidade',
+        name: item.NOME_BENEFICIARIO || item.NM_SOCIAL,
+        registration: item.CD_MATRICULA_RECIPROCIDADE,
+        plan: item.PLANO_ELOSAUDE,
+        cpf: item.NR_CPF ? String(item.NR_CPF).padStart(11, '0').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '',
+        cns: item.NR_CNS,
+        birthDate: item.NASCTO,
+        cardNumber: item.CD_MATRICULA_RECIPROCIDADE,
+        provider: item.PRESTADOR_RECIPROCIDADE,
+        adhesionDate: item.DT_ADESAO,
+        validity: item.DT_VALIDADE_CARTEIRA,
+      };
+    }
+
+    // Generate QR code data with card information
+    const qrData = JSON.stringify({
+      type: cardType,
+      name: cardInfo.name,
+      registration: cardInfo.registration,
+      cpf: cardInfo.cpf,
+      cns: cardInfo.cns,
+      cardNumber: cardInfo.cardNumber,
+    });
 
     return (
       <View style={[styles.cardContainer, { width: CARD_ITEM_WIDTH }]}>
-        <Card
-          style={[
-            styles.card,
-            !isActive && styles.inactiveCard
-          ]}
-          elevation={4}
-        >
+        <Card style={styles.card} elevation={4}>
           <Card.Content>
-            {/* Card Status Badge */}
-            <View style={styles.badgeContainer}>
-              {isActive ? (
-                <Chip icon="check-circle" style={styles.activeBadge} textStyle={styles.badgeText}>
-                  ATIVA
-                </Chip>
-              ) : (
-                <Chip icon="information" style={styles.inactiveBadge} textStyle={styles.badgeText}>
-                  INATIVA
-                </Chip>
-              )}
-              <Chip style={styles.versionChip} textStyle={styles.versionText}>
-                Versão {item.version}
-              </Chip>
-            </View>
-
-            {/* Header with Logo */}
+            {/* Card Type Badge */}
+            {/* Header */}
             <View style={styles.cardHeader}>
-              <Title style={styles.planName}>{beneficiaryData.health_plan_name || 'Elosaúde'}</Title>
+              <Title style={styles.planName}>{cardInfo.title}</Title>
             </View>
 
             <Divider style={styles.divider} />
@@ -154,45 +148,89 @@ const DigitalCardScreen = () => {
             {/* Beneficiary Info */}
             <View style={styles.infoSection}>
               <Paragraph style={styles.label}>Nome</Paragraph>
-              <Title style={styles.value}>{beneficiaryData.full_name}</Title>
+              <Title style={styles.value}>{cardInfo.name}</Title>
             </View>
 
             <View style={styles.infoRow}>
               <View style={styles.infoItem}>
                 <Paragraph style={styles.label}>Matrícula</Paragraph>
-                <Paragraph style={styles.value}>{beneficiaryData.registration_number}</Paragraph>
+                <Paragraph style={styles.value}>{cardInfo.registration || 'N/A'}</Paragraph>
               </View>
               <View style={styles.infoItem}>
                 <Paragraph style={styles.label}>Plano</Paragraph>
-                <Paragraph style={styles.value}>{beneficiaryData.health_plan_name}</Paragraph>
+                <Paragraph style={styles.value}>{cardInfo.plan || 'N/A'}</Paragraph>
               </View>
             </View>
 
-            <View style={styles.infoRow}>
-              <View style={styles.infoItem}>
-                <Paragraph style={styles.label}>Data de Emissão</Paragraph>
-                <Paragraph style={styles.value}>{issueDate}</Paragraph>
+            {cardInfo.cpf && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoItem}>
+                  <Paragraph style={styles.label}>CPF</Paragraph>
+                  <Paragraph style={styles.value}>{cardInfo.cpf}</Paragraph>
+                </View>
+                <View style={styles.infoItem}>
+                  <Paragraph style={styles.label}>Data de Nascimento</Paragraph>
+                  <Paragraph style={styles.value}>{cardInfo.birthDate || 'N/A'}</Paragraph>
+                </View>
               </View>
-              <View style={styles.infoItem}>
-                <Paragraph style={styles.label}>Validade</Paragraph>
-                <Paragraph style={styles.value}>{expiryDate}</Paragraph>
-              </View>
-            </View>
+            )}
 
-            <View style={styles.infoRow}>
-              <View style={styles.infoItem}>
-                <Paragraph style={styles.label}>Número do Cartão</Paragraph>
-                <Paragraph style={styles.value}>{item.card_number || 'N/A'}</Paragraph>
+            {cardInfo.cns && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoItem}>
+                  <Paragraph style={styles.label}>CNS</Paragraph>
+                  <Paragraph style={styles.value}>{cardInfo.cns}</Paragraph>
+                </View>
               </View>
-            </View>
+            )}
+
+            {/* Type-specific information */}
+            {cardType === 'UNIMED' && (
+              <>
+                {cardInfo.coverage && (
+                  <View style={styles.infoRow}>
+                    <View style={styles.infoItem}>
+                      <Paragraph style={styles.label}>Abrangência</Paragraph>
+                      <Paragraph style={styles.value}>{cardInfo.coverage}</Paragraph>
+                    </View>
+                    {cardInfo.accommodation && (
+                      <View style={styles.infoItem}>
+                        <Paragraph style={styles.label}>Acomodação</Paragraph>
+                        <Paragraph style={styles.value}>{cardInfo.accommodation}</Paragraph>
+                      </View>
+                    )}
+                  </View>
+                )}
+              </>
+            )}
+
+            {cardType === 'RECIPROCIDADE' && cardInfo.provider && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoItem}>
+                  <Paragraph style={styles.label}>Prestador</Paragraph>
+                  <Paragraph style={styles.value}>{cardInfo.provider}</Paragraph>
+                </View>
+              </View>
+            )}
+
+            {cardInfo.segmentation && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoItem}>
+                  <Paragraph style={styles.label}>Segmentação</Paragraph>
+                  <Paragraph style={styles.value}>{cardInfo.segmentation}</Paragraph>
+                </View>
+              </View>
+            )}
 
             <Divider style={styles.divider} />
 
             {/* QR Code */}
-            {showQR && item.qr_code_data && (
+            {showQR && (
               <View style={styles.qrContainer}>
-                <QRCode value={item.qr_code_data} size={200} />
-                <Paragraph style={styles.qrLabel}>Apresente este QR code nos prestadores credenciados</Paragraph>
+                <QRCode value={qrData} size={200} />
+                <Paragraph style={styles.qrLabel}>
+                  Apresente este QR code nos prestadores credenciados
+                </Paragraph>
               </View>
             )}
           </Card.Content>
@@ -215,20 +253,21 @@ const DigitalCardScreen = () => {
     >
       <View style={styles.content}>
         {/* Card Counter */}
-        {sortedCards.length > 1 && (
-          <View style={styles.counterContainer}>
-            <Paragraph style={styles.counterText}>
-              Carteirinha {currentCardIndex + 1} de {sortedCards.length}
-            </Paragraph>
-          </View>
-        )}
+        <View style={styles.counterContainer}>
+          <Paragraph style={styles.counterText}>
+            Carteirinha {currentCardIndex + 1} de {allCards.length}
+          </Paragraph>
+          <Paragraph style={styles.summaryText}>
+            Total: {oracleCards.total_cards} carteirinha{oracleCards.total_cards !== 1 ? 's' : ''}
+          </Paragraph>
+        </View>
 
         {/* Digital Card Carousel */}
         <FlatList
           ref={flatListRef}
-          data={sortedCards}
+          data={allCards}
           renderItem={renderCard}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item, index) => `${item._type}-${index}`}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
@@ -240,9 +279,9 @@ const DigitalCardScreen = () => {
         />
 
         {/* Page Indicators */}
-        {sortedCards.length > 1 && (
+        {allCards.length > 1 && (
           <View style={styles.indicatorContainer}>
-            {sortedCards.map((_, index) => (
+            {allCards.map((_, index) => (
               <View
                 key={index}
                 style={[
@@ -264,24 +303,41 @@ const DigitalCardScreen = () => {
           >
             {showQR ? 'Ocultar QR Code' : 'Mostrar QR Code'}
           </Button>
-          <Button
-            mode="contained"
-            icon="download"
-            onPress={handleDownloadCard}
-            loading={downloading}
-            disabled={downloading}
-            style={styles.button}
-          >
-            {downloading ? 'Baixando...' : 'Baixar Carteirinha'}
-          </Button>
         </View>
+
+        {/* Card Type Summary */}
+        <Card style={styles.summaryCard}>
+          <Card.Content>
+            <Title style={styles.summaryTitle}>Suas Carteirinhas</Title>
+            <View style={styles.summaryRow}>
+              <View style={styles.summaryItem}>
+                <Chip style={styles.badgeElosaude} textStyle={styles.badgeText}>
+                  Elosaúde
+                </Chip>
+                <Paragraph style={styles.summaryCount}>{oracleCards.carteirinha.length}</Paragraph>
+              </View>
+              <View style={styles.summaryItem}>
+                <Chip style={styles.badgeUnimed} textStyle={styles.badgeText}>
+                  Unimed
+                </Chip>
+                <Paragraph style={styles.summaryCount}>{oracleCards.unimed.length}</Paragraph>
+              </View>
+              <View style={styles.summaryItem}>
+                <Chip style={styles.badgeReciprocidade} textStyle={styles.badgeText}>
+                  Reciprocidade
+                </Chip>
+                <Paragraph style={styles.summaryCount}>{oracleCards.reciprocidade.length}</Paragraph>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
 
         {/* Additional Info */}
         <Card style={styles.infoCard}>
           <Card.Content>
             <Title style={styles.infoTitle}>Informações Importantes</Title>
             <Paragraph style={styles.infoParagraph}>
-              • Sempre apresente esta carteirinha digital nos prestadores
+              • Sempre apresente a carteirinha adequada nos prestadores
             </Paragraph>
             <Paragraph style={styles.infoParagraph}>
               • Mantenha seus dados cadastrais atualizados
@@ -290,7 +346,7 @@ const DigitalCardScreen = () => {
               • Em caso de perda ou roubo, entre em contato imediatamente
             </Paragraph>
             <Paragraph style={styles.infoParagraph}>
-              • Esta carteirinha é pessoal e intransferível
+              • Estas carteirinhas são pessoais e intransferíveis
             </Paragraph>
           </Card.Content>
         </Card>
@@ -330,7 +386,12 @@ const styles = StyleSheet.create({
   counterText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1976D2',
+    color: Colors.primary,
+  },
+  summaryText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
   },
   carouselContent: {
     paddingHorizontal: 8,
@@ -343,34 +404,32 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
   },
-  inactiveCard: {
-    opacity: 0.75,
-    backgroundColor: '#f9f9f9',
-  },
   badgeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
   },
+  typeBadge: {
+    flex: 1,
+    marginRight: 8,
+  },
+  badgeElosaude: {
+    backgroundColor: Colors.primary,
+  },
+  badgeUnimed: {
+    backgroundColor: '#00A859',
+  },
+  badgeReciprocidade: {
+    backgroundColor: '#FF6B35',
+  },
   activeBadge: {
     backgroundColor: '#4CAF50',
   },
-  inactiveBadge: {
-    backgroundColor: '#9E9E9E',
-  },
   badgeText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 'bold',
-  },
-  versionChip: {
-    backgroundColor: '#E3F2FD',
-  },
-  versionText: {
-    color: '#1976D2',
-    fontSize: 12,
-    fontWeight: '600',
   },
   cardHeader: {
     alignItems: 'center',
@@ -379,7 +438,7 @@ const styles = StyleSheet.create({
   planName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1976D2',
+    color: Colors.primary,
   },
   divider: {
     marginVertical: 12,
@@ -430,19 +489,48 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   activeIndicator: {
-    backgroundColor: '#1976D2',
+    backgroundColor: Colors.primary,
     width: 24,
   },
   actionButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     marginTop: 16,
     marginBottom: 16,
     paddingHorizontal: 16,
   },
   button: {
     flex: 1,
-    marginHorizontal: 4,
+    maxWidth: 200,
+  },
+  summaryCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: Colors.primary,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  summaryItem: {
+    alignItems: 'center',
+    minWidth: 100,
+    flex: 1,
+  },
+  summaryCount: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 8,
+    color: '#333',
   },
   infoCard: {
     backgroundColor: '#fff',
@@ -453,7 +541,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 12,
-    color: '#1976D2',
+    color: Colors.primary,
   },
   infoParagraph: {
     fontSize: 14,

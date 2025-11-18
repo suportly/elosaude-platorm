@@ -43,6 +43,7 @@ urlpatterns = [
     path('api/notifications/', include('apps.notifications.urls')),
     path('api/uploads/', include('apps.uploads.urls')),
     path('api/health/', include('apps.health_records.urls')),
+    path('api/', include('apps.oracle_integration.urls')),
 ]
 
 if settings.DEBUG:

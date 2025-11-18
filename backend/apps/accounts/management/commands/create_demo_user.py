@@ -1,7 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from apps.beneficiaries.models import Beneficiary, Company, HealthPlan, DigitalCard
-from datetime import datetime, timedelta
+from apps.beneficiaries.models import Beneficiary, Company, HealthPlan
 
 
 class Command(BaseCommand):
@@ -9,7 +8,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Demo user credentials
-        demo_cpf = '12345678900'
+        demo_cpf = '95197494972'
         demo_password = 'Demo@123'
 
         self.stdout.write('Criando usuário de demonstração...')
@@ -93,14 +92,6 @@ class Command(BaseCommand):
         )
         self.stdout.write(self.style.SUCCESS(f'Beneficiário criado: {beneficiary.full_name}'))
         self.stdout.write(f'Número de registro: {beneficiary.registration_number}')
-
-        # Create digital card
-        digital_card = DigitalCard.objects.create(
-            beneficiary=beneficiary,
-            expiry_date=datetime.now().date() + timedelta(days=365),
-            is_active=True,
-        )
-        self.stdout.write(self.style.SUCCESS(f'Carteirinha digital criada: {digital_card.card_number}'))
 
         # Print credentials
         self.stdout.write('')

@@ -182,15 +182,6 @@ def test_login(request):
             status='ACTIVE'
         )
 
-        # Create digital card for beneficiary
-        from apps.beneficiaries.models import DigitalCard
-        from datetime import datetime, timedelta
-
-        DigitalCard.objects.create(
-            beneficiary=beneficiary,
-            expiry_date=datetime.now().date() + timedelta(days=365)
-        )
-
     # Generate JWT tokens
     refresh = RefreshToken.for_user(user)
 

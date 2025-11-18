@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'apps.notifications',
     'apps.uploads',
     'apps.health_records',
+    'apps.oracle_integration',
 ]
 
 MIDDLEWARE = [
@@ -93,8 +94,12 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD', default='postgres'),
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='5432'),
-    }
+    },
 }
+
+# NOTE: Oracle 11g (11.2.0.4.0) is not supported by Django (requires Oracle 19+)
+# Oracle integration uses direct connection via oracledb library
+# See: apps.oracle_integration.connection.OracleConnection
 
 
 # Password validation

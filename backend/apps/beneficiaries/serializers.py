@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Company, HealthPlan, Beneficiary, DigitalCard
+from .models import Company, HealthPlan, Beneficiary
 
 
 class CompanySerializer(serializers.ModelSerializer):
@@ -33,21 +33,10 @@ class BeneficiarySerializer(serializers.ModelSerializer):
         return 0
 
 
-class DigitalCardSerializer(serializers.ModelSerializer):
-    beneficiary_name = serializers.CharField(source='beneficiary.full_name', read_only=True)
-    beneficiary_cpf = serializers.CharField(source='beneficiary.cpf', read_only=True)
-    health_plan = serializers.CharField(source='beneficiary.health_plan.name', read_only=True)
-
-    class Meta:
-        model = DigitalCard
-        fields = '__all__'
-
-
 class BeneficiaryDetailSerializer(BeneficiarySerializer):
     """Detailed serializer with nested data"""
     company = CompanySerializer(read_only=True)
     health_plan = HealthPlanSerializer(read_only=True)
-    digital_cards = DigitalCardSerializer(many=True, read_only=True)
     dependents = BeneficiarySerializer(many=True, read_only=True)
 
     class Meta(BeneficiarySerializer.Meta):

@@ -1,9 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
-import qrcode
-from io import BytesIO
-from django.core.files import File
 import random
 import string
 
@@ -124,61 +121,3 @@ class Beneficiary(models.Model):
         prefix = 'ELO'
         number = ''.join(random.choices(string.digits, k=8))
         return f"{prefix}{number}"
-
-
-class DigitalCard(models.Model):
-    """Digital health card"""
-    beneficiary = models.ForeignKey(Beneficiary, on_delete=models.CASCADE, related_name='digital_cards')
-    card_number = models.CharField(max_length=50, unique=True, verbose_name=_('Card Number'))
-    version = models.IntegerField(default=1, verbose_name=_('Version'))
-    issue_date = models.DateField(auto_now_add=True, verbose_name=_('Issue Date'))
-    expiry_date = models.DateField(verbose_name=_('Expiry Date'))
-    qr_code = models.ImageField(upload_to='qrcodes/', null=True, blank=True, verbose_name=_('QR Code'))
-    qr_code_data = models.TextField(verbose_name=_('QR Code Data'))
-    is_active = models.BooleanField(default=True, verbose_name=_('Active'))
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = _('Digital Card')
-        verbose_name_plural = _('Digital Cards')
-        ordering = ['-issue_date']
-
-    def __str__(self):
-        return f"{self.beneficiary.full_name} - {self.card_number}"
-
-    def save(self, *args, **kwargs):
-        if not self.card_number:
-            self.card_number = self.generate_card_number()
-
-        if not self.qr_code_data:
-            self.qr_code_data = f"ELOSAUDE:{self.beneficiary.registration_number}:{self.card_number}"
-
-        super().save(*args, **kwargs)
-
-        # Generate QR code
-        if not self.qr_code:
-            self.generate_qr_code()
-
-    def generate_qr_code(self):
-        """Generate QR code image"""
-        qr = qrcode.QRCode(version=1, box_size=10, border=5)
-        qr.add_data(self.qr_code_data)
-        qr.make(fit=True)
-
-        img = qr.make_image(fill_color="black", back_color="white")
-        buffer = BytesIO()
-        img.save(buffer, format='PNG')
-
-        filename = f'qr_{self.card_number}.png'
-        self.qr_code.save(filename, File(buffer), save=False)
-        self.save(update_fields=['qr_code'])
-
-    @staticmethod
-    def generate_card_number():
-        """Generate unique card number"""
-        prefix = ''.join(random.choices(string.digits, k=4))
-        middle = ''.join(random.choices(string.digits, k=4))
-        suffix = ''.join(random.choices(string.digits, k=4))
-        checksum = ''.join(random.choices(string.digits, k=4))
-        return f"{prefix} {middle} {suffix} {checksum}"

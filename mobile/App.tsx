@@ -1,18 +1,18 @@
-import React, { useEffect } from 'react';
-import { Provider } from 'react-redux';
-import { Provider as PaperProvider } from 'react-native-paper';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import * as Sentry from '@sentry/react-native';
-import { store } from './src/store';
-import AppNavigator from './src/navigation/AppNavigator';
-import ErrorBoundary from './src/components/ErrorBoundary';
+import { StatusBar } from 'expo-status-bar';
+import React from 'react';
+import { Provider as PaperProvider } from 'react-native-paper';
 import { registerTranslation } from 'react-native-paper-dates';
 import pt from 'react-native-paper-dates/src/translations/pt';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider } from 'react-redux';
+import ErrorBoundary from './src/components/ErrorBoundary';
+import AppNavigator from './src/navigation/AppNavigator';
+import { store } from './src/store';
 
 // Initialize Sentry
 Sentry.init({
-  dsn: 'https://your-sentry-dsn@sentry.io/your-project-id', // TODO: Replace with actual DSN from sentry.io
+  dsn: 'https://d170b79ee0b3621263149d731ec6cb0e@o4509759668682752.ingest.us.sentry.io/4510382904442880', // TODO: Replace with actual DSN from sentry.io
   // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
   // We recommend adjusting this value in production
   tracesSampleRate: __DEV__ ? 1.0 : 0.2,

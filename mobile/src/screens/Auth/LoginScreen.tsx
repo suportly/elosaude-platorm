@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import {
   Alert,
@@ -10,7 +11,6 @@ import {
 } from 'react-native';
 import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
 import { Colors } from '../../config/theme';
 import { useLoginMutation } from '../../store/services/api';
 import { setCredentials } from '../../store/slices/authSlice';
@@ -258,7 +258,7 @@ export default function LoginScreen() {
               👤 Credenciais de Demonstração
             </Text>
             <Text variant="bodySmall" style={styles.testInfo}>
-              CPF: 123.456.789-00
+              CPF: 951.974.949-72
             </Text>
             <Text variant="bodySmall" style={styles.testInfo}>
               Senha: Demo@123

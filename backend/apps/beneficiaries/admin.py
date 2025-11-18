@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Company, HealthPlan, Beneficiary, DigitalCard
+from .models import Company, HealthPlan, Beneficiary
 
 
 @admin.register(Company)
@@ -45,11 +45,3 @@ class BeneficiaryAdmin(admin.ModelAdmin):
             'fields': ('created_at', 'updated_at')
         }),
     )
-
-
-@admin.register(DigitalCard)
-class DigitalCardAdmin(admin.ModelAdmin):
-    list_display = ['card_number', 'beneficiary', 'version', 'issue_date', 'expiry_date', 'is_active']
-    list_filter = ['is_active', 'version']
-    search_fields = ['card_number', 'beneficiary__full_name']
-    readonly_fields = ['qr_code', 'created_at', 'updated_at']
