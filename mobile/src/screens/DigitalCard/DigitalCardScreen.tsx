@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Dimensions, FlatList, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Button, Card, Chip, Divider, Paragraph, Title } from 'react-native-paper';
+import { ActivityIndicator, Button, Card, Divider, Paragraph, Title } from 'react-native-paper';
 import QRCode from 'react-native-qrcode-svg';
 import { Colors } from '../../config/theme';
 import { useGetOracleCardsQuery } from '../../store/services/api';
@@ -304,33 +304,6 @@ const DigitalCardScreen = () => {
             {showQR ? 'Ocultar QR Code' : 'Mostrar QR Code'}
           </Button>
         </View>
-
-        {/* Card Type Summary */}
-        <Card style={styles.summaryCard}>
-          <Card.Content>
-            <Title style={styles.summaryTitle}>Suas Carteirinhas</Title>
-            <View style={styles.summaryRow}>
-              <View style={styles.summaryItem}>
-                <Chip style={styles.badgeElosaude} textStyle={styles.badgeText}>
-                  Elosaúde
-                </Chip>
-                <Paragraph style={styles.summaryCount}>{oracleCards.carteirinha.length}</Paragraph>
-              </View>
-              <View style={styles.summaryItem}>
-                <Chip style={styles.badgeUnimed} textStyle={styles.badgeText}>
-                  Unimed
-                </Chip>
-                <Paragraph style={styles.summaryCount}>{oracleCards.unimed.length}</Paragraph>
-              </View>
-              <View style={styles.summaryItem}>
-                <Chip style={styles.badgeReciprocidade} textStyle={styles.badgeText}>
-                  Reciprocidade
-                </Chip>
-                <Paragraph style={styles.summaryCount}>{oracleCards.reciprocidade.length}</Paragraph>
-              </View>
-            </View>
-          </Card.Content>
-        </Card>
 
         {/* Additional Info */}
         <Card style={styles.infoCard}>

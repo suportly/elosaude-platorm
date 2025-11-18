@@ -195,14 +195,17 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     backgroundColor: '#FFFFFF',
-    paddingBottom: 8,
+    maxHeight: 52,
   },
   filterContent: {
     paddingHorizontal: 16,
+    paddingVertical: 8,
     gap: 8,
+    alignItems: 'center',
   },
   filterChip: {
     marginRight: 8,
+    height: 36,
   },
   scrollView: {
     flex: 1,

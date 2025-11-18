@@ -28,7 +28,7 @@ class ProcedureViewSet(viewsets.ModelViewSet):
 
 
 class TISSGuideViewSet(viewsets.ModelViewSet):
-    queryset = TISSGuide.objects.select_related('beneficiary', 'provider').prefetch_related('guideprocedure_set__procedure', 'attachments').all()
+    queryset = TISSGuide.objects.select_related('beneficiary', 'provider').prefetch_related('guide_procedures__procedure', 'attachments').all()
     serializer_class = TISSGuideSerializer
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -46,26 +46,30 @@ class TISSGuideViewSet(viewsets.ModelViewSet):
         '''Get guides for current user'''
         try:
             beneficiary = request.user.beneficiary
-            guides = self.queryset.filter(beneficiary=beneficiary)
+        except AttributeError:
+            # User doesn't have a beneficiary profile, return empty list
+            return Response({
+                'count': 0,
+                'next': None,
+                'previous': None,
+                'results': []
+            })
 
-            # Apply filters
-            status_filter = request.query_params.get('status')
-            if status_filter and status_filter != 'Todas':
-                guides = guides.filter(status=status_filter)
+        guides = self.queryset.filter(beneficiary=beneficiary)
 
-            # Apply pagination
-            page = self.paginate_queryset(guides)
-            if page is not None:
-                serializer = self.get_serializer(page, many=True)
-                return self.get_paginated_response(serializer.data)
+        # Apply filters
+        status_filter = request.query_params.get('status')
+        if status_filter and status_filter != 'Todas':
+            guides = guides.filter(status=status_filter)
 
-            serializer = self.get_serializer(guides, many=True)
-            return Response(serializer.data)
-        except Exception as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        # Apply pagination
+        page = self.paginate_queryset(guides)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(guides, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
     def authorize(self, request, pk=None):

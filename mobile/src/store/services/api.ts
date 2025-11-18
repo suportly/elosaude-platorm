@@ -342,7 +342,7 @@ export const api = createApi({
         if (params.page) {
           searchParams.append('page', params.page.toString());
         }
-        return `/guides/my_guides/?${searchParams.toString()}`;
+        return `/guides/guides/my_guides/?${searchParams.toString()}`;
       },
       providesTags: ['Guides'],
       serializeQueryArgs: ({ endpointName, queryArgs }) => {
@@ -364,13 +364,13 @@ export const api = createApi({
     }),
 
     getGuide: builder.query<Guide, number>({
-      query: (id) => `/guides/${id}/`,
+      query: (id) => `/guides/guides/${id}/`,
       providesTags: ['Guides'],
     }),
 
     createGuide: builder.mutation<Guide, any>({
       query: (data) => ({
-        url: '/guides/',
+        url: '/guides/guides/',
         method: 'POST',
         body: data,
       }),
