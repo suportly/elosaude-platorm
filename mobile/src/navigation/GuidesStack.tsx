@@ -40,7 +40,7 @@ export default function GuidesStack() {
           headerStyle: {
             backgroundColor: '#FFFFFF',
           },
-          headerTintColor: Colors.primary,
+          headerTintColor: Colors.primary.main,
         }}
       />
       <Stack.Screen
@@ -53,7 +53,7 @@ export default function GuidesStack() {
           headerStyle: {
             backgroundColor: '#FFFFFF',
           },
-          headerTintColor: Colors.primary,
+          headerTintColor: Colors.primary.main,
         }}
       />
     </Stack.Navigator>

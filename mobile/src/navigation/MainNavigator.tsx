@@ -1,9 +1,30 @@
+/**
+ * MainNavigator - Navegação Principal
+ *
+ * Bottom Tab Navigation otimizada para usuários 35-65 anos:
+ * - Ícones grandes (24px) com labels sempre visíveis
+ * - Touch targets de 48px mínimo
+ * - Feedback visual claro para item ativo
+ * - Badge de notificações acessível
+ */
+
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
-import { Image, TouchableOpacity, View } from 'react-native';
+import { Image, TouchableOpacity, View, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Colors } from '../config/theme';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Text } from 'react-native-paper';
+import {
+  Colors,
+  Typography,
+  Spacing,
+  BorderRadius,
+  Shadows,
+  ComponentSizes,
+} from '../config/theme';
+import { CountBadge } from '../components/ui/StatusBadge';
+
+// Screens
 import DigitalCardScreen from '../screens/DigitalCard/DigitalCardScreen';
 import HomeScreen from '../screens/Home/HomeScreen';
 import MoreScreen from '../screens/More/MoreScreen';
@@ -27,118 +48,215 @@ import HealthRecordsScreen from '../screens/Health/HealthRecordsScreen';
 import VaccinationCardScreen from '../screens/Health/VaccinationCardScreen';
 import GuidesStack from './GuidesStack';
 import { useGetNotificationsQuery } from '../store/services/api';
-import { Badge, Text } from 'react-native-paper';
 
 const Tab = createBottomTabNavigator();
 
-// Logo component for header
-const HeaderLogo = () => (
-  <View style={{ paddingVertical: 8 }}>
-    <Image
-      source={require('../../assets/images/elosaude_logo.png')}
-      style={{
-        width: 120,
-        height: 35,
-        resizeMode: 'contain',
-      }}
-    />
-  </View>
-);
+// =============================================================================
+// HEADER COMPONENTS
+// =============================================================================
 
-// Header with logo and notification button
 const HeaderWithNotification = ({ navigation }: any) => {
   const { data: notifications } = useGetNotificationsQuery({ is_read: false });
-  const unreadCount = notifications?.length || 0;
+  const unreadCount = notifications?.results?.length || 0;
 
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingRight: 16, paddingVertical: 8 }}>
-      <Image
-        source={require('../../assets/images/elosaude_logo.png')}
-        style={{
-          width: 120,
-          height: 35,
-          resizeMode: 'contain',
-        }}
-      />
-      <TouchableOpacity onPress={() => navigation.navigate('Notifications')} style={{ position: 'relative' }}>
-        <Icon name="bell-outline" size={24} color={Colors.primary} />
+    <View style={headerStyles.container}>
+      <View style={headerStyles.logoContainer}>
+        <Image
+          source={require('../../assets/images/elosaude_logo.png')}
+          style={headerStyles.logo}
+          resizeMode="contain"
+        />
+      </View>
+
+      <TouchableOpacity
+        style={headerStyles.notificationButton}
+        onPress={() => navigation.navigate('Notifications')}
+        accessibilityLabel={`Notificações${unreadCount > 0 ? `, ${unreadCount} não lidas` : ''}`}
+        accessibilityRole="button"
+      >
+        <MaterialCommunityIcons
+          name={unreadCount > 0 ? 'bell-ring' : 'bell-outline'}
+          size={24}
+          color={unreadCount > 0 ? Colors.primary.main : Colors.text.secondary}
+        />
         {unreadCount > 0 && (
-          <Badge
-            size={16}
-            style={{
-              position: 'absolute',
-              top: -4,
-              right: -4,
-              backgroundColor: Colors.error,
-            }}
-          >
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </Badge>
+          <View style={headerStyles.badgeContainer}>
+            <CountBadge count={unreadCount} size="small" />
+          </View>
         )}
       </TouchableOpacity>
     </View>
   );
 };
 
+const headerStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingRight: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  logoContainer: {
+    flex: 1,
+  },
+  logo: {
+    width: 120,
+    height: 36,
+  },
+  notificationButton: {
+    width: ComponentSizes.touchTarget,
+    height: ComponentSizes.touchTarget,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: ComponentSizes.touchTarget / 2,
+    backgroundColor: Colors.surface.muted,
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+  },
+});
+
+// =============================================================================
+// TAB BAR ICON COMPONENT
+// =============================================================================
+
+interface TabIconProps {
+  name: string;
+  nameOutline: string;
+  color: string;
+  focused: boolean;
+}
+
+const TabIcon: React.FC<TabIconProps> = ({ name, nameOutline, color, focused }) => {
+  return (
+    <View style={tabIconStyles.container}>
+      <MaterialCommunityIcons
+        name={(focused ? name : nameOutline) as any}
+        size={ComponentSizes.bottomNav.iconSize}
+        color={color}
+      />
+      {focused && <View style={[tabIconStyles.indicator, { backgroundColor: color }]} />}
+    </View>
+  );
+};
+
+const tabIconStyles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  indicator: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginTop: 4,
+  },
+});
+
+// =============================================================================
+// MAIN NAVIGATOR
+// =============================================================================
+
 export default function MainNavigator() {
   const insets = useSafeAreaInsets();
+
+  // Calculate safe tab bar height
+  const tabBarHeight = ComponentSizes.bottomNav.height + (insets.bottom > 0 ? insets.bottom : Spacing.sm);
 
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: '#757575',
+        tabBarActiveTintColor: Colors.primary.main,
+        tabBarInactiveTintColor: Colors.text.tertiary,
         tabBarStyle: {
-          paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
-          paddingTop: 8,
-          height: insets.bottom > 0 ? 60 + insets.bottom : 70,
+          height: tabBarHeight,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : Spacing.sm,
+          paddingTop: Spacing.sm,
+          backgroundColor: Colors.surface.card,
+          borderTopWidth: 1,
+          borderTopColor: Colors.border.light,
+          ...Shadows.bottomNav,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          marginBottom: 4,
+          fontSize: ComponentSizes.bottomNav.labelSize,
+          fontWeight: Typography.weights.medium,
+          marginTop: 2,
+        },
+        tabBarItemStyle: {
+          paddingTop: Spacing.xs,
         },
         headerStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: Colors.surface.card,
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 1,
+          borderBottomColor: Colors.border.light,
         },
-        headerTintColor: '#fff',
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontSize: Typography.sizes.h4,
+          fontWeight: Typography.weights.semibold,
+          color: Colors.text.primary,
         },
+        headerTintColor: Colors.text.primary,
       }}
     >
+      {/* Main Tabs (Visible) */}
       <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={({ navigation }) => ({
           title: 'Início',
           headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="home-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              name="home"
+              nameOutline="home-outline"
+              color={color}
+              focused={focused}
+            />
           ),
         })}
       />
+
       <Tab.Screen
         name="DigitalCard"
         component={DigitalCardScreen}
         options={({ navigation }) => ({
           title: 'Carteirinha',
           headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="card-account-details-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              name="card-account-details"
+              nameOutline="card-account-details-outline"
+              color={color}
+              focused={focused}
+            />
           ),
         })}
       />
+
       <Tab.Screen
         name="Network"
         component={NetworkScreen}
         options={({ navigation }) => ({
           title: 'Rede',
           headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="hospital-box-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              name="hospital-box"
+              nameOutline="hospital-box-outline"
+              color={color}
+              focused={focused}
+            />
           ),
         })}
       />
+
       <Tab.Screen
         name="Guides"
         component={GuidesStack}
@@ -146,173 +264,202 @@ export default function MainNavigator() {
           title: 'Guias',
           headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           headerShown: true,
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="file-document-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              name="file-document"
+              nameOutline="file-document-outline"
+              color={color}
+              focused={focused}
+            />
           ),
         })}
       />
-      <Tab.Screen
-        name="Invoices"
-        component={InvoicesScreen}
-        options={({ navigation }) => ({
-          title: 'Faturas',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="TaxStatements"
-        component={TaxStatementsScreen}
-        options={({ navigation }) => ({
-          title: 'Informes IR',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="Notifications"
-        component={NotificationsScreen}
-        options={({ navigation }) => ({
-          title: 'Notificações',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="ProviderDetail"
-        component={ProviderDetailScreen}
-        options={({ navigation }) => ({
-          title: 'Detalhes do Prestador',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="Dependents"
-        component={DependentsScreen}
-        options={({ navigation }) => ({
-          title: 'Dependentes',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="AddDependent"
-        component={AddDependentScreen}
-        options={({ navigation }) => ({
-          title: 'Adicionar Dependente',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="DependentDetail"
-        component={DependentDetailScreen}
-        options={({ navigation }) => ({
-          title: 'Detalhes do Dependente',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="ChangePassword"
-        component={ChangePasswordScreen}
-        options={({ navigation }) => ({
-          title: 'Alterar Senha',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={({ navigation }) => ({
-          title: 'Editar Perfil',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="PlanDetails"
-        component={PlanDetailsScreen}
-        options={({ navigation }) => ({
-          title: 'Detalhes do Plano',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="HelpCenter"
-        component={HelpCenterScreen}
-        options={({ navigation }) => ({
-          title: 'Central de Ajuda',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="Contact"
-        component={ContactScreen}
-        options={({ navigation }) => ({
-          title: 'Fale Conosco',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="Terms"
-        component={TermsScreen}
-        options={({ navigation }) => ({
-          title: 'Termos e Condições',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="Privacy"
-        component={PrivacyScreen}
-        options={({ navigation }) => ({
-          title: 'Política de Privacidade',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="About"
-        component={AboutScreen}
-        options={({ navigation }) => ({
-          title: 'Sobre',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="HealthRecords"
-        component={HealthRecordsScreen}
-        options={({ navigation }) => ({
-          title: 'Registros de Saúde',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
-      <Tab.Screen
-        name="VaccinationCard"
-        component={VaccinationCardScreen}
-        options={({ navigation }) => ({
-          title: 'Cartão de Vacinação',
-          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarButton: () => null, // Hide from tab bar
-        })}
-      />
+
       <Tab.Screen
         name="More"
         component={MoreScreen}
         options={({ navigation }) => ({
           title: 'Mais',
           headerTitle: () => <HeaderWithNotification navigation={navigation} />,
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="menu" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              name="menu"
+              nameOutline="menu"
+              color={color}
+              focused={focused}
+            />
           ),
+        })}
+      />
+
+      {/* Hidden Screens (not in tab bar) */}
+      <Tab.Screen
+        name="Invoices"
+        component={InvoicesScreen}
+        options={({ navigation }) => ({
+          title: 'Faturas',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="TaxStatements"
+        component={TaxStatementsScreen}
+        options={({ navigation }) => ({
+          title: 'Informes IR',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={({ navigation }) => ({
+          title: 'Notificações',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="ProviderDetail"
+        component={ProviderDetailScreen}
+        options={({ navigation }) => ({
+          title: 'Detalhes do Prestador',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="Dependents"
+        component={DependentsScreen}
+        options={({ navigation }) => ({
+          title: 'Dependentes',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="AddDependent"
+        component={AddDependentScreen}
+        options={({ navigation }) => ({
+          title: 'Adicionar Dependente',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="DependentDetail"
+        component={DependentDetailScreen}
+        options={({ navigation }) => ({
+          title: 'Detalhes do Dependente',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="ChangePassword"
+        component={ChangePasswordScreen}
+        options={({ navigation }) => ({
+          title: 'Alterar Senha',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={({ navigation }) => ({
+          title: 'Editar Perfil',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="PlanDetails"
+        component={PlanDetailsScreen}
+        options={({ navigation }) => ({
+          title: 'Detalhes do Plano',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="HelpCenter"
+        component={HelpCenterScreen}
+        options={({ navigation }) => ({
+          title: 'Central de Ajuda',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="Contact"
+        component={ContactScreen}
+        options={({ navigation }) => ({
+          title: 'Fale Conosco',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="Terms"
+        component={TermsScreen}
+        options={({ navigation }) => ({
+          title: 'Termos e Condições',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="Privacy"
+        component={PrivacyScreen}
+        options={({ navigation }) => ({
+          title: 'Política de Privacidade',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="About"
+        component={AboutScreen}
+        options={({ navigation }) => ({
+          title: 'Sobre',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="HealthRecords"
+        component={HealthRecordsScreen}
+        options={({ navigation }) => ({
+          title: 'Registros de Saúde',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
+        })}
+      />
+
+      <Tab.Screen
+        name="VaccinationCard"
+        component={VaccinationCardScreen}
+        options={({ navigation }) => ({
+          title: 'Cartão de Vacinação',
+          headerTitle: () => <HeaderWithNotification navigation={navigation} />,
+          tabBarButton: () => null,
         })}
       />
     </Tab.Navigator>

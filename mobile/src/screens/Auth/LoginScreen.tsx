@@ -1,5 +1,16 @@
+/**
+ * LoginScreen - Tela de Login
+ *
+ * Redesign UX/UI otimizado para usuários 35-65 anos:
+ * - Formulário simples e claro
+ * - Inputs de 56px de altura
+ * - Mensagens de erro amigáveis
+ * - CTA primário destacado
+ * - Links secundários acessíveis
+ */
+
 import { useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   Alert,
   Image,
@@ -8,137 +19,149 @@ import {
   ScrollView,
   StyleSheet,
   View,
+  Animated,
+  TouchableOpacity,
 } from 'react-native';
-import { Button, HelperText, Text, TextInput } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
-import { Colors } from '../../config/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  Colors,
+  Typography,
+  Spacing,
+  BorderRadius,
+  Shadows,
+  ComponentSizes,
+} from '../../config/theme';
+import { Input, Button } from '../../components/ui';
 import { useLoginMutation } from '../../store/services/api';
 import { setCredentials } from '../../store/slices/authSlice';
 
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+const formatCPF = (value: string): string => {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length <= 11) {
+    return numbers
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  }
+  return value.slice(0, 14);
+};
+
+const validateCPF = (cpf: string): boolean => {
+  const numbers = cpf.replace(/\D/g, '');
+  return numbers.length === 11;
+};
+
+const getErrorMessage = (error: any): { title: string; message: string } => {
+  if (error?.status === 'FETCH_ERROR' || error?.error?.includes('Network request failed')) {
+    return {
+      title: 'Sem conexão',
+      message: 'Verifique sua conexão com a internet e tente novamente.',
+    };
+  }
+
+  if (error?.data?.non_field_errors) {
+    const errors = error.data.non_field_errors;
+    return {
+      title: 'CPF ou senha incorretos',
+      message: Array.isArray(errors) ? errors[0] : errors,
+    };
+  }
+
+  if (error?.data?.cpf) {
+    return {
+      title: 'CPF inválido',
+      message: Array.isArray(error.data.cpf) ? error.data.cpf[0] : error.data.cpf,
+    };
+  }
+
+  if (error?.data?.password) {
+    return {
+      title: 'Senha incorreta',
+      message: Array.isArray(error.data.password) ? error.data.password[0] : error.data.password,
+    };
+  }
+
+  if (error?.data?.error) {
+    return {
+      title: 'Erro no login',
+      message: error.data.error,
+    };
+  }
+
+  if (error?.data?.detail) {
+    return {
+      title: 'Erro no login',
+      message: error.data.detail,
+    };
+  }
+
+  if (error?.status >= 500) {
+    return {
+      title: 'Servidor indisponível',
+      message: 'Tente novamente em alguns minutos.',
+    };
+  }
+
+  return {
+    title: 'Não foi possível entrar',
+    message: 'Verifique suas credenciais e tente novamente.',
+  };
+};
+
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
+
 export default function LoginScreen() {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const insets = useSafeAreaInsets();
+
   const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [cpfError, setCpfError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+
   const [login, { isLoading }] = useLoginMutation();
-  const dispatch = useDispatch();
 
-  const formatCPF = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 11) {
-      return numbers
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    }
-    return cpf;
-  };
+  const passwordInputRef = useRef<any>(null);
 
-  const handleCPFChange = (text: string) => {
+  const handleCPFChange = useCallback((text: string) => {
     const formatted = formatCPF(text);
     setCpf(formatted);
-    // Clear error when user starts typing
     if (cpfError) setCpfError('');
-  };
+  }, [cpfError]);
 
-  const handlePasswordChange = (text: string) => {
+  const handlePasswordChange = useCallback((text: string) => {
     setPassword(text);
-    // Clear error when user starts typing
     if (passwordError) setPasswordError('');
-  };
+  }, [passwordError]);
 
-  const validateCPF = (cpf: string): boolean => {
-    const numbers = cpf.replace(/\D/g, '');
-    if (numbers.length !== 11) {
-      setCpfError('CPF deve conter 11 dígitos');
-      return false;
-    }
-    return true;
-  };
-
-  const getErrorMessage = (error: any): { title: string; message: string } => {
-    // Network error
-    if (error?.status === 'FETCH_ERROR' || error?.error?.includes('Network request failed')) {
-      return {
-        title: 'Erro de Conexão',
-        message: 'Não foi possível conectar ao servidor. Verifique sua conexão com a internet e tente novamente.',
-      };
-    }
-
-    // Validation errors from DRF
-    if (error?.data?.non_field_errors) {
-      const errors = error.data.non_field_errors;
-      return {
-        title: 'Erro no Login',
-        message: Array.isArray(errors) ? errors[0] : errors,
-      };
-    }
-
-    // Field-specific errors
-    if (error?.data?.cpf) {
-      return {
-        title: 'CPF Inválido',
-        message: Array.isArray(error.data.cpf) ? error.data.cpf[0] : error.data.cpf,
-      };
-    }
-
-    if (error?.data?.password) {
-      return {
-        title: 'Senha Inválida',
-        message: Array.isArray(error.data.password) ? error.data.password[0] : error.data.password,
-      };
-    }
-
-    // Generic error message
-    if (error?.data?.error) {
-      return {
-        title: 'Erro no Login',
-        message: error.data.error,
-      };
-    }
-
-    if (error?.data?.detail) {
-      return {
-        title: 'Erro no Login',
-        message: error.data.detail,
-      };
-    }
-
-    // 500 Server Error
-    if (error?.status >= 500) {
-      return {
-        title: 'Erro no Servidor',
-        message: 'O servidor está temporariamente indisponível. Por favor, tente novamente mais tarde.',
-      };
-    }
-
-    // Default error
-    return {
-      title: 'Erro no Login',
-      message: 'Não foi possível realizar o login. Por favor, verifique suas credenciais e tente novamente.',
-    };
-  };
-
-  const handleLogin = async () => {
+  const handleLogin = useCallback(async () => {
     // Reset errors
     setCpfError('');
     setPasswordError('');
 
     // Validate fields
     if (!cpf.trim()) {
-      setCpfError('CPF é obrigatório');
+      setCpfError('Digite seu CPF');
+      return;
+    }
+
+    if (!validateCPF(cpf)) {
+      setCpfError('CPF deve ter 11 dígitos');
       return;
     }
 
     if (!password.trim()) {
-      setPasswordError('Senha é obrigatória');
-      return;
-    }
-
-    // Validate CPF format
-    if (!validateCPF(cpf)) {
+      setPasswordError('Digite sua senha');
       return;
     }
 
@@ -156,7 +179,6 @@ export default function LoginScreen() {
     } catch (error: any) {
       const { title, message } = getErrorMessage(error);
 
-      // Set field-specific errors if available
       if (error?.data?.cpf) {
         setCpfError(Array.isArray(error.data.cpf) ? error.data.cpf[0] : error.data.cpf);
       }
@@ -166,183 +188,288 @@ export default function LoginScreen() {
 
       Alert.alert(title, message);
     }
-  };
+  }, [cpf, password, login, dispatch]);
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.logoContainer}>
-          <Image
-            source={require('../../../assets/images/elosaude_logo.png')}
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
-          <Text variant="bodyMedium" style={styles.subtitle}>
-            Gestão de Plano de Saúde
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContainer,
+          { paddingTop: insets.top + Spacing.lg },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.headerSection}>
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('../../../assets/images/elosaude_logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={styles.welcomeTitle}>Bem-vindo de volta</Text>
+          <Text style={styles.welcomeSubtitle}>
+            Entre com seu CPF e senha para acessar sua conta
           </Text>
         </View>
 
+        {/* Form */}
         <View style={styles.formContainer}>
-          <TextInput
+          <Input
             label="CPF"
             value={cpf}
             onChangeText={handleCPFChange}
+            error={cpfError}
+            leftIcon="account-outline"
             keyboardType="numeric"
             maxLength={14}
-            mode="outlined"
-            style={styles.input}
-            left={<TextInput.Icon icon="account" />}
-            error={!!cpfError}
+            placeholder="000.000.000-00"
+            returnKeyType="next"
+            onSubmitEditing={() => passwordInputRef.current?.focus()}
+            autoCapitalize="none"
+            autoCorrect={false}
             disabled={isLoading}
+            accessibilityLabel="CPF"
+            accessibilityHint="Digite seu CPF com 11 dígitos"
           />
-          <HelperText type="error" visible={!!cpfError}>
-            {cpfError}
-          </HelperText>
 
-          <TextInput
+          <Input
+            ref={passwordInputRef}
             label="Senha"
             value={password}
             onChangeText={handlePasswordChange}
-            secureTextEntry={!showPassword}
-            mode="outlined"
-            style={styles.input}
-            left={<TextInput.Icon icon="lock" />}
-            right={
-              <TextInput.Icon
-                icon={showPassword ? 'eye-off' : 'eye'}
-                onPress={() => setShowPassword(!showPassword)}
-              />
-            }
-            error={!!passwordError}
+            error={passwordError}
+            leftIcon="lock-outline"
+            secureTextEntry
+            placeholder="Digite sua senha"
+            returnKeyType="done"
+            onSubmitEditing={handleLogin}
+            autoCapitalize="none"
+            autoCorrect={false}
             disabled={isLoading}
+            accessibilityLabel="Senha"
+            accessibilityHint="Digite sua senha de acesso"
           />
-          <HelperText type="error" visible={!!passwordError}>
-            {passwordError}
-          </HelperText>
 
           <Button
-            mode="contained"
+            title="Entrar"
             onPress={handleLogin}
             loading={isLoading}
             disabled={isLoading}
+            fullWidth
+            size="large"
             style={styles.loginButton}
-            contentStyle={styles.loginButtonContent}
-          >
-            Entrar
-          </Button>
+            accessibilityLabel="Entrar na conta"
+            accessibilityHint="Toque para fazer login com as credenciais informadas"
+          />
 
+          {/* Links */}
           <View style={styles.linksContainer}>
-            <Button
-              mode="text"
+            <TouchableOpacity
+              style={styles.linkButton}
               onPress={() => navigation.navigate('ForgotPassword' as never)}
-              style={styles.linkButton}
-              labelStyle={styles.linkButtonText}
+              accessibilityRole="link"
+              accessibilityLabel="Esqueci minha senha"
             >
-              Esqueci minha senha
-            </Button>
-            <Button
-              mode="text"
-              onPress={() => navigation.navigate('FirstAccess' as never)}
-              style={styles.linkButton}
-              labelStyle={styles.linkButtonText}
-            >
-              Primeiro acesso?
-            </Button>
-          </View>
+              <MaterialCommunityIcons
+                name="help-circle-outline"
+                size={20}
+                color={Colors.primary.main}
+              />
+              <Text style={styles.linkText}>Esqueci minha senha</Text>
+            </TouchableOpacity>
 
-          <View style={styles.testInfoContainer}>
-            <Text variant="titleSmall" style={styles.testInfoTitle}>
-              👤 Credenciais de Demonstração
-            </Text>
-            <Text variant="bodySmall" style={styles.testInfo}>
-              CPF: 951.974.949-72
-            </Text>
-            <Text variant="bodySmall" style={styles.testInfo}>
-              Senha: Demo@123
-            </Text>
+            <TouchableOpacity
+              style={styles.linkButton}
+              onPress={() => navigation.navigate('FirstAccess' as never)}
+              accessibilityRole="link"
+              accessibilityLabel="Primeiro acesso"
+            >
+              <MaterialCommunityIcons
+                name="account-plus-outline"
+                size={20}
+                color={Colors.primary.main}
+              />
+              <Text style={styles.linkText}>Primeiro acesso</Text>
+            </TouchableOpacity>
           </View>
+        </View>
+
+        {/* Demo Credentials Card */}
+        <View style={styles.demoCard}>
+          <View style={styles.demoHeader}>
+            <MaterialCommunityIcons
+              name="information-outline"
+              size={24}
+              color={Colors.primary.main}
+            />
+            <Text style={styles.demoTitle}>Acesso Demonstração</Text>
+          </View>
+          <View style={styles.demoCredentials}>
+            <View style={styles.demoRow}>
+              <Text style={styles.demoLabel}>CPF:</Text>
+              <Text style={styles.demoValue}>951.974.949-72</Text>
+            </View>
+            <View style={styles.demoRow}>
+              <Text style={styles.demoLabel}>Senha:</Text>
+              <Text style={styles.demoValue}>Demo@123</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            Ao entrar, você concorda com nossos
+          </Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Terms' as never)}
+            accessibilityRole="link"
+          >
+            <Text style={styles.footerLink}>Termos de Uso</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
+// =============================================================================
+// STYLES
+// =============================================================================
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.surface.background,
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
+    paddingHorizontal: Spacing.screenPadding,
+    paddingBottom: Spacing.xxl,
+  },
+
+  // Header
+  headerSection: {
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
   },
   logoContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  logoImage: {
-    width: 200,
+    width: 120,
     height: 120,
-    marginBottom: 16,
+    borderRadius: 60,
+    backgroundColor: Colors.surface.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+    ...Shadows.md,
   },
-  subtitle: {
-    color: '#FFFFFF',
-    marginTop: 8,
+  logo: {
+    width: 80,
+    height: 80,
   },
+  welcomeTitle: {
+    fontSize: Typography.sizes.h2,
+    fontWeight: Typography.weights.bold,
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginBottom: Spacing.xs,
+  },
+  welcomeSubtitle: {
+    fontSize: Typography.sizes.body,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    lineHeight: Typography.sizes.body * Typography.lineHeight.normal,
+    maxWidth: 280,
+  },
+
+  // Form
   formContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  input: {
-    marginBottom: 8,
+    backgroundColor: Colors.surface.card,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.cardPadding,
+    ...Shadows.md,
   },
   loginButton: {
-    marginTop: 16,
-    backgroundColor: Colors.primary,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
   },
-  loginButtonContent: {
-    paddingVertical: 8,
-  },
+
+  // Links
   linksContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
-    marginHorizontal: -8,
+    marginTop: Spacing.md,
+    gap: Spacing.sm,
   },
   linkButton: {
-    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.sm,
+    gap: Spacing.xs,
   },
-  linkButtonText: {
-    color: Colors.primary,
-    fontSize: 12,
-    textTransform: 'none',
+  linkText: {
+    fontSize: Typography.sizes.body,
+    color: Colors.primary.main,
+    fontWeight: Typography.weights.medium,
   },
-  testInfoContainer: {
-    marginTop: 24,
-    padding: 16,
-    backgroundColor: '#E3F2FD',
-    borderRadius: 8,
+
+  // Demo Card
+  demoCard: {
+    marginTop: Spacing.xl,
+    backgroundColor: Colors.primary.lighter,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.primary.light,
+  },
+  demoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  demoTitle: {
+    fontSize: Typography.sizes.body,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.primary.dark,
+  },
+  demoCredentials: {
+    gap: Spacing.xs,
+  },
+  demoRow: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  testInfoTitle: {
-    color: '#1565C0',
-    fontWeight: 'bold',
-    marginBottom: 8,
+  demoLabel: {
+    fontSize: Typography.sizes.body,
+    color: Colors.text.secondary,
+    width: 60,
+  },
+  demoValue: {
+    fontSize: Typography.sizes.body,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.primary.main,
+  },
+
+  // Footer
+  footer: {
+    marginTop: Spacing.xl,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: Typography.sizes.bodySmall,
+    color: Colors.text.tertiary,
     textAlign: 'center',
   },
-  testInfo: {
-    color: '#1976D2',
-    textAlign: 'center',
-    marginTop: 4,
+  footerLink: {
+    fontSize: Typography.sizes.bodySmall,
+    color: Colors.primary.main,
+    fontWeight: Typography.weights.medium,
+    marginTop: Spacing.xxs,
   },
 });

@@ -6,7 +6,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Colors } from '../../config/theme';
-import { maskCPF } from '../../utils/formatters';
+import { formatCPF as maskCPF } from '../../utils/formatters';
 import { API_URL } from '../../config/api';
 
 const schema = yup.object().shape({
@@ -86,7 +86,7 @@ export default function ForgotPasswordScreen({ navigation }: any) {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Icon name="lock-reset" size={64} color={Colors.primary} />
+          <Icon name="lock-reset" size={64} color={Colors.primary.main} />
           <Text variant="headlineMedium" style={styles.title}>
             Esqueci minha senha
           </Text>
@@ -152,13 +152,13 @@ export default function ForgotPasswordScreen({ navigation }: any) {
         <Card style={styles.infoCard}>
           <Card.Content>
             <View style={styles.infoRow}>
-              <Icon name="information-outline" size={20} color={Colors.info} />
+              <Icon name="information-outline" size={20} color={Colors.feedback.info} />
               <Text variant="bodySmall" style={styles.infoText}>
                 O código de recuperação será enviado para o e-mail cadastrado
               </Text>
             </View>
             <View style={styles.infoRow}>
-              <Icon name="clock-outline" size={20} color={Colors.info} />
+              <Icon name="clock-outline" size={20} color={Colors.feedback.info} />
               <Text variant="bodySmall" style={styles.infoText}>
                 O código expira em 1 hora
               </Text>
@@ -173,7 +173,7 @@ export default function ForgotPasswordScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -188,11 +188,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 8,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   subtitle: {
     textAlign: 'center',
-    color: Colors.textSecondary,
+    color: Colors.text.secondary,
     paddingHorizontal: 20,
   },
   card: {
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   infoCard: {
-    backgroundColor: Colors.info + '10',
+    backgroundColor: Colors.feedback.info + '10',
   },
   infoRow: {
     flexDirection: 'row',
@@ -220,6 +220,6 @@ const styles = StyleSheet.create({
   },
   infoText: {
     flex: 1,
-    color: Colors.info,
+    color: Colors.feedback.info,
   },
 });

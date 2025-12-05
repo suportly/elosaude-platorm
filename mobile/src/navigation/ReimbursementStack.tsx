@@ -24,7 +24,7 @@ export default function ReimbursementStack() {
           headerStyle: {
             backgroundColor: '#FFFFFF',
           },
-          headerTintColor: Colors.primary,
+          headerTintColor: Colors.primary.main,
         }}
       />
       <Stack.Screen
@@ -36,7 +36,7 @@ export default function ReimbursementStack() {
           headerStyle: {
             backgroundColor: '#FFFFFF',
           },
-          headerTintColor: Colors.primary,
+          headerTintColor: Colors.primary.main,
         }}
       />
     </Stack.Navigator>

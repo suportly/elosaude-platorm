@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    color: Colors.primary,
+    color: Colors.primary.main,
     fontWeight: 'bold',
     marginBottom: 8,
   },
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepDotActive: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.primary.main,
   },
   stepText: {
     color: '#FFFFFF',
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E0E0E0',
   },
   stepLineActive: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.primary.main,
   },
   input: {
     marginBottom: 8,
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 16,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.primary.main,
   },
   buttonContent: {
     paddingVertical: 8,

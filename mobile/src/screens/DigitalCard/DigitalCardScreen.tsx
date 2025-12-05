@@ -1,16 +1,424 @@
-import React, { useRef, useState } from 'react';
-import { Dimensions, FlatList, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Button, Card, Divider, Paragraph, Title } from 'react-native-paper';
+/**
+ * DigitalCardScreen - Carteirinhas Digitais
+ *
+ * Redesign UX/UI otimizado para usuários 35-65 anos:
+ * - Carrossel de carteirinhas com navegação clara
+ * - QR Code grande e acessível
+ * - Informações legíveis com fontes grandes
+ * - Feedback visual para navegação
+ */
+
+import React, { useRef, useState, useCallback } from 'react';
+import {
+  Dimensions,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Animated,
+} from 'react-native';
+import { Text } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
-import { Colors } from '../../config/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  Colors,
+  Typography,
+  Spacing,
+  BorderRadius,
+  Shadows,
+  ComponentSizes,
+} from '../../config/theme';
+import { Button, ErrorState, LoadingSpinner } from '../../components/ui';
 import { useGetOracleCardsQuery } from '../../store/services/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_PADDING = 8;
-const CARD_WIDTH = SCREEN_WIDTH - 32;
-const CARD_ITEM_WIDTH = CARD_WIDTH + (CARD_PADDING * 2);
+const CARD_MARGIN = Spacing.md;
+const CARD_WIDTH = SCREEN_WIDTH - (Spacing.screenPadding * 2);
+const CARD_ITEM_WIDTH = CARD_WIDTH + CARD_MARGIN;
+
+// =============================================================================
+// CARD TYPE CONFIG
+// =============================================================================
+
+const CARD_TYPE_CONFIG = {
+  CARTEIRINHA: {
+    title: 'Elosaúde',
+    icon: 'shield-check',
+    primaryColor: Colors.cards.elosaude.primary,
+    secondaryColor: Colors.cards.elosaude.secondary,
+    accentColor: Colors.cards.elosaude.accent,
+  },
+  UNIMED: {
+    title: 'Unimed',
+    icon: 'hospital-box',
+    primaryColor: Colors.cards.unimed.primary,
+    secondaryColor: Colors.cards.unimed.secondary,
+    accentColor: Colors.cards.unimed.accent,
+  },
+  RECIPROCIDADE: {
+    title: 'Reciprocidade',
+    icon: 'handshake',
+    primaryColor: Colors.cards.reciprocidade.primary,
+    secondaryColor: Colors.cards.reciprocidade.secondary,
+    accentColor: Colors.cards.reciprocidade.accent,
+  },
+};
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+const formatCPF = (cpf: string | number | null | undefined): string => {
+  if (!cpf) return 'N/A';
+  const numbers = String(cpf).padStart(11, '0');
+  return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+};
+
+const extractCardInfo = (item: any, cardType: string) => {
+  if (cardType === 'CARTEIRINHA') {
+    return {
+      name: item.NOME_DO_BENEFICIARIO || item.NM_SOCIAL || 'N/A',
+      registration: item.MATRICULA,
+      plan: item.PRIMARIO || item.SEGMENTACAO,
+      cpf: formatCPF(item.NR_CPF),
+      cns: item.NR_CNS,
+      birthDate: item.NASCTO,
+      company: item.EMPRESA,
+      validity: item.VALIDADE,
+      segmentation: item.SEGMENTACAO,
+    };
+  } else if (cardType === 'UNIMED') {
+    return {
+      name: item.NOME_DO_BENEFICIARIO || item.nm_social || 'N/A',
+      registration: item.MATRICULA_UNIMED,
+      plan: item.PLANO || item.SEGMENTACAO,
+      cpf: formatCPF(item.CPF),
+      cns: item.NR_CNS,
+      birthDate: item.nascto,
+      coverage: item.ABRANGENCIA,
+      accommodation: item.ACOMODACAO,
+      network: item.Rede_Atendimento,
+      validity: item.Validade,
+      segmentation: item.SEGMENTACAO,
+    };
+  } else {
+    return {
+      name: item.NOME_BENEFICIARIO || item.NM_SOCIAL || 'N/A',
+      registration: item.CD_MATRICULA_RECIPROCIDADE,
+      plan: item.PLANO_ELOSAUDE,
+      cpf: formatCPF(item.NR_CPF),
+      cns: item.NR_CNS,
+      birthDate: item.NASCTO,
+      provider: item.PRESTADOR_RECIPROCIDADE,
+      adhesionDate: item.DT_ADESAO,
+      validity: item.DT_VALIDADE_CARTEIRA,
+    };
+  }
+};
+
+// =============================================================================
+// INFO ROW COMPONENT
+// =============================================================================
+
+interface InfoRowProps {
+  label: string;
+  value: string | null | undefined;
+  icon?: string;
+  color?: string;
+}
+
+const InfoRow: React.FC<InfoRowProps> = ({ label, value, icon, color = Colors.text.primary }) => {
+  if (!value || value === 'N/A') return null;
+
+  return (
+    <View style={infoRowStyles.container}>
+      {icon && (
+        <MaterialCommunityIcons
+          name={icon as any}
+          size={20}
+          color={Colors.text.tertiary}
+          style={infoRowStyles.icon}
+        />
+      )}
+      <View style={infoRowStyles.content}>
+        <Text style={infoRowStyles.label}>{label}</Text>
+        <Text style={[infoRowStyles.value, { color }]}>{value}</Text>
+      </View>
+    </View>
+  );
+};
+
+const infoRowStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: Spacing.md,
+  },
+  icon: {
+    marginRight: Spacing.sm,
+    marginTop: 2,
+  },
+  content: {
+    flex: 1,
+  },
+  label: {
+    fontSize: Typography.sizes.caption,
+    color: Colors.text.tertiary,
+    marginBottom: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  value: {
+    fontSize: Typography.sizes.body,
+    fontWeight: Typography.weights.medium,
+  },
+});
+
+// =============================================================================
+// DIGITAL CARD COMPONENT
+// =============================================================================
+
+interface DigitalCardProps {
+  item: any;
+  showQR: boolean;
+  width: number;
+}
+
+const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width }) => {
+  const cardType = item._type as keyof typeof CARD_TYPE_CONFIG;
+  const config = CARD_TYPE_CONFIG[cardType] || CARD_TYPE_CONFIG.CARTEIRINHA;
+  const cardInfo = extractCardInfo(item, cardType);
+
+  const qrData = JSON.stringify({
+    type: cardType,
+    name: cardInfo.name,
+    registration: cardInfo.registration,
+    cpf: cardInfo.cpf,
+    cns: cardInfo.cns,
+  });
+
+  return (
+    <View style={[cardStyles.container, { width }]}>
+      {/* Card Header */}
+      <View style={[cardStyles.header, { backgroundColor: config.primaryColor }]}>
+        <View style={cardStyles.headerContent}>
+          <MaterialCommunityIcons
+            name={config.icon as any}
+            size={32}
+            color={Colors.text.inverse}
+          />
+          <View style={cardStyles.headerText}>
+            <Text style={cardStyles.headerTitle}>{config.title}</Text>
+            <Text style={cardStyles.headerSubtitle}>Carteirinha Digital</Text>
+          </View>
+        </View>
+        {cardInfo.validity && (
+          <View style={cardStyles.validityBadge}>
+            <Text style={cardStyles.validityText}>
+              Válido até {cardInfo.validity}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* Card Body */}
+      <View style={cardStyles.body}>
+        {/* Beneficiary Name */}
+        <View style={cardStyles.nameSection}>
+          <Text style={cardStyles.nameLabel}>BENEFICIÁRIO</Text>
+          <Text style={cardStyles.nameValue} numberOfLines={2}>
+            {cardInfo.name}
+          </Text>
+        </View>
+
+        {/* Info Grid */}
+        <View style={cardStyles.infoGrid}>
+          <View style={cardStyles.infoColumn}>
+            <InfoRow
+              label="Matrícula"
+              value={cardInfo.registration}
+              icon="card-account-details"
+              color={config.primaryColor}
+            />
+            <InfoRow
+              label="CPF"
+              value={cardInfo.cpf}
+              icon="account"
+            />
+            {cardInfo.cns && (
+              <InfoRow
+                label="CNS"
+                value={cardInfo.cns}
+                icon="numeric"
+              />
+            )}
+          </View>
+          <View style={cardStyles.infoColumn}>
+            <InfoRow
+              label="Plano"
+              value={cardInfo.plan}
+              icon="shield"
+            />
+            <InfoRow
+              label="Nascimento"
+              value={cardInfo.birthDate}
+              icon="calendar"
+            />
+            {cardInfo.segmentation && (
+              <InfoRow
+                label="Segmentação"
+                value={cardInfo.segmentation}
+                icon="tag"
+              />
+            )}
+          </View>
+        </View>
+
+        {/* Type-specific info */}
+        {cardType === 'UNIMED' && cardInfo.coverage && (
+          <View style={cardStyles.extraInfo}>
+            <InfoRow label="Abrangência" value={cardInfo.coverage} icon="earth" />
+            {cardInfo.accommodation && (
+              <InfoRow label="Acomodação" value={cardInfo.accommodation} icon="bed" />
+            )}
+          </View>
+        )}
+
+        {cardType === 'RECIPROCIDADE' && cardInfo.provider && (
+          <View style={cardStyles.extraInfo}>
+            <InfoRow label="Prestador" value={cardInfo.provider} icon="domain" />
+          </View>
+        )}
+
+        {/* QR Code */}
+        {showQR && (
+          <View style={cardStyles.qrSection}>
+            <View style={cardStyles.qrDivider} />
+            <View style={cardStyles.qrContainer}>
+              <QRCode
+                value={qrData}
+                size={160}
+                color={Colors.text.primary}
+                backgroundColor={Colors.surface.card}
+              />
+            </View>
+            <Text style={cardStyles.qrHint}>
+              Apresente este QR Code nos prestadores credenciados
+            </Text>
+          </View>
+        )}
+      </View>
+    </View>
+  );
+};
+
+const cardStyles = StyleSheet.create({
+  container: {
+    marginHorizontal: CARD_MARGIN / 2,
+    borderRadius: BorderRadius.xl,
+    backgroundColor: Colors.surface.card,
+    overflow: 'hidden',
+    ...Shadows.lg,
+  },
+  header: {
+    padding: Spacing.cardPadding,
+    paddingBottom: Spacing.lg,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerText: {
+    marginLeft: Spacing.md,
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: Typography.sizes.h3,
+    fontWeight: Typography.weights.bold,
+    color: Colors.text.inverse,
+  },
+  headerSubtitle: {
+    fontSize: Typography.sizes.bodySmall,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 2,
+  },
+  validityBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+    marginTop: Spacing.sm,
+    alignSelf: 'flex-start',
+  },
+  validityText: {
+    fontSize: Typography.sizes.caption,
+    color: Colors.text.inverse,
+    fontWeight: Typography.weights.medium,
+  },
+  body: {
+    padding: Spacing.cardPadding,
+  },
+  nameSection: {
+    marginBottom: Spacing.lg,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+  },
+  nameLabel: {
+    fontSize: Typography.sizes.caption,
+    color: Colors.text.tertiary,
+    letterSpacing: 1,
+    marginBottom: Spacing.xs,
+  },
+  nameValue: {
+    fontSize: Typography.sizes.h4,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.text.primary,
+  },
+  infoGrid: {
+    flexDirection: 'row',
+  },
+  infoColumn: {
+    flex: 1,
+  },
+  extraInfo: {
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
+  },
+  qrSection: {
+    marginTop: Spacing.md,
+  },
+  qrDivider: {
+    height: 1,
+    backgroundColor: Colors.border.light,
+    marginBottom: Spacing.lg,
+  },
+  qrContainer: {
+    alignItems: 'center',
+    padding: Spacing.md,
+    backgroundColor: Colors.surface.muted,
+    borderRadius: BorderRadius.md,
+  },
+  qrHint: {
+    fontSize: Typography.sizes.caption,
+    color: Colors.text.tertiary,
+    textAlign: 'center',
+    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.md,
+  },
+});
+
+// =============================================================================
+// MAIN SCREEN COMPONENT
+// =============================================================================
 
 const DigitalCardScreen = () => {
+  const insets = useSafeAreaInsets();
   const { data: oracleCards, isLoading, error, refetch } = useGetOracleCardsQuery();
 
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -18,16 +426,16 @@ const DigitalCardScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
-  const onRefresh = async () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       await refetch();
     } finally {
       setRefreshing(false);
     }
-  };
+  }, [refetch]);
 
-  // Combine all Oracle cards into a single array for the main carousel
+  // Combine all Oracle cards
   const allCards = oracleCards
     ? [
         ...oracleCards.carteirinha.map((card: any) => ({ ...card, _type: 'CARTEIRINHA' })),
@@ -36,491 +444,259 @@ const DigitalCardScreen = () => {
       ]
     : [];
 
-  const currentCard = allCards[currentCardIndex];
-
-  if (isLoading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-        <Paragraph style={styles.loadingText}>Carregando carteirinhas...</Paragraph>
-      </View>
-    );
-  }
-
-  if (error || !oracleCards || allCards.length === 0) {
-    return (
-      <View style={styles.centerContainer}>
-        <Paragraph style={styles.errorText}>
-          {allCards.length === 0
-            ? 'Nenhuma carteirinha encontrada'
-            : 'Não foi possível carregar as carteirinhas'}
-        </Paragraph>
-        <Button mode="contained" onPress={refetch}>
-          Tentar Novamente
-        </Button>
-      </View>
-    );
-  }
-
-  const handleScroll = (event: any) => {
+  const handleScroll = useCallback((event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;
     const index = Math.round(offsetX / CARD_ITEM_WIDTH);
     if (index !== currentCardIndex && index >= 0 && index < allCards.length) {
       setCurrentCardIndex(index);
     }
-  };
+  }, [currentCardIndex, allCards.length]);
 
-  const renderCard = ({ item }: { item: any }) => {
-    const cardType = item._type;
-    let cardInfo: any = {};
-
-    // Extract card information based on type
-    if (cardType === 'CARTEIRINHA') {
-      cardInfo = {
-        title: 'Elosaúde',
-        name: item.NOME_DO_BENEFICIARIO || item.NM_SOCIAL,
-        registration: item.MATRICULA,
-        plan: item.PRIMARIO || item.SEGMENTACAO,
-        cpf: item.NR_CPF ? String(item.NR_CPF).padStart(11, '0').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '',
-        cns: item.NR_CNS,
-        birthDate: item.NASCTO,
-        cardNumber: item.MATRICULA,
-        company: item.EMPRESA,
-        contractType: item.CONTRATACAO,
-        validity: item.VALIDADE,
-        layout: item.LAYOUT,
-        segmentation: item.SEGMENTACAO,
-      };
-    } else if (cardType === 'UNIMED') {
-      cardInfo = {
-        title: 'Unimed',
-        name: item.NOME_DO_BENEFICIARIO || item.nm_social,
-        registration: item.MATRICULA_UNIMED,
-        plan: item.PLANO || item.SEGMENTACAO,
-        cpf: item.CPF ? String(item.CPF).padStart(11, '0').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '',
-        cns: item.NR_CNS,
-        birthDate: item.nascto,
-        cardNumber: item.MATRICULA_UNIMED,
-        coverage: item.ABRANGENCIA,
-        accommodation: item.ACOMODACAO,
-        network: item.Rede_Atendimento,
-        validity: item.Validade,
-        segmentation: item.SEGMENTACAO,
-      };
-    } else { // RECIPROCIDADE
-      cardInfo = {
-        title: item.PRESTADOR_RECIPROCIDADE || 'Reciprocidade',
-        name: item.NOME_BENEFICIARIO || item.NM_SOCIAL,
-        registration: item.CD_MATRICULA_RECIPROCIDADE,
-        plan: item.PLANO_ELOSAUDE,
-        cpf: item.NR_CPF ? String(item.NR_CPF).padStart(11, '0').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '',
-        cns: item.NR_CNS,
-        birthDate: item.NASCTO,
-        cardNumber: item.CD_MATRICULA_RECIPROCIDADE,
-        provider: item.PRESTADOR_RECIPROCIDADE,
-        adhesionDate: item.DT_ADESAO,
-        validity: item.DT_VALIDADE_CARTEIRA,
-      };
-    }
-
-    // Generate QR code data with card information
-    const qrData = JSON.stringify({
-      type: cardType,
-      name: cardInfo.name,
-      registration: cardInfo.registration,
-      cpf: cardInfo.cpf,
-      cns: cardInfo.cns,
-      cardNumber: cardInfo.cardNumber,
+  const scrollToCard = useCallback((index: number) => {
+    flatListRef.current?.scrollToOffset({
+      offset: index * CARD_ITEM_WIDTH,
+      animated: true,
     });
+  }, []);
 
+  // Loading state
+  if (isLoading) {
     return (
-      <View style={[styles.cardContainer, { width: CARD_ITEM_WIDTH }]}>
-        <Card style={styles.card} elevation={4}>
-          <Card.Content>
-            {/* Card Type Badge */}
-            {/* Header */}
-            <View style={styles.cardHeader}>
-              <Title style={styles.planName}>{cardInfo.title}</Title>
-            </View>
-
-            <Divider style={styles.divider} />
-
-            {/* Beneficiary Info */}
-            <View style={styles.infoSection}>
-              <Paragraph style={styles.label}>Nome</Paragraph>
-              <Title style={styles.value}>{cardInfo.name}</Title>
-            </View>
-
-            <View style={styles.infoRow}>
-              <View style={styles.infoItem}>
-                <Paragraph style={styles.label}>Matrícula</Paragraph>
-                <Paragraph style={styles.value}>{cardInfo.registration || 'N/A'}</Paragraph>
-              </View>
-              <View style={styles.infoItem}>
-                <Paragraph style={styles.label}>Plano</Paragraph>
-                <Paragraph style={styles.value}>{cardInfo.plan || 'N/A'}</Paragraph>
-              </View>
-            </View>
-
-            {cardInfo.cpf && (
-              <View style={styles.infoRow}>
-                <View style={styles.infoItem}>
-                  <Paragraph style={styles.label}>CPF</Paragraph>
-                  <Paragraph style={styles.value}>{cardInfo.cpf}</Paragraph>
-                </View>
-                <View style={styles.infoItem}>
-                  <Paragraph style={styles.label}>Data de Nascimento</Paragraph>
-                  <Paragraph style={styles.value}>{cardInfo.birthDate || 'N/A'}</Paragraph>
-                </View>
-              </View>
-            )}
-
-            {cardInfo.cns && (
-              <View style={styles.infoRow}>
-                <View style={styles.infoItem}>
-                  <Paragraph style={styles.label}>CNS</Paragraph>
-                  <Paragraph style={styles.value}>{cardInfo.cns}</Paragraph>
-                </View>
-              </View>
-            )}
-
-            {/* Type-specific information */}
-            {cardType === 'UNIMED' && (
-              <>
-                {cardInfo.coverage && (
-                  <View style={styles.infoRow}>
-                    <View style={styles.infoItem}>
-                      <Paragraph style={styles.label}>Abrangência</Paragraph>
-                      <Paragraph style={styles.value}>{cardInfo.coverage}</Paragraph>
-                    </View>
-                    {cardInfo.accommodation && (
-                      <View style={styles.infoItem}>
-                        <Paragraph style={styles.label}>Acomodação</Paragraph>
-                        <Paragraph style={styles.value}>{cardInfo.accommodation}</Paragraph>
-                      </View>
-                    )}
-                  </View>
-                )}
-              </>
-            )}
-
-            {cardType === 'RECIPROCIDADE' && cardInfo.provider && (
-              <View style={styles.infoRow}>
-                <View style={styles.infoItem}>
-                  <Paragraph style={styles.label}>Prestador</Paragraph>
-                  <Paragraph style={styles.value}>{cardInfo.provider}</Paragraph>
-                </View>
-              </View>
-            )}
-
-            {cardInfo.segmentation && (
-              <View style={styles.infoRow}>
-                <View style={styles.infoItem}>
-                  <Paragraph style={styles.label}>Segmentação</Paragraph>
-                  <Paragraph style={styles.value}>{cardInfo.segmentation}</Paragraph>
-                </View>
-              </View>
-            )}
-
-            <Divider style={styles.divider} />
-
-            {/* QR Code */}
-            {showQR && (
-              <View style={styles.qrContainer}>
-                <QRCode value={qrData} size={200} />
-                <Paragraph style={styles.qrLabel}>
-                  Apresente este QR code nos prestadores credenciados
-                </Paragraph>
-              </View>
-            )}
-          </Card.Content>
-        </Card>
+      <View style={styles.centerContainer}>
+        <LoadingSpinner message="Carregando suas carteirinhas..." />
       </View>
     );
-  };
+  }
+
+  // Error state
+  if (error || !oracleCards || allCards.length === 0) {
+    return (
+      <View style={styles.centerContainer}>
+        <ErrorState
+          message={
+            allCards.length === 0
+              ? 'Nenhuma carteirinha encontrada para seu cadastro'
+              : 'Não foi possível carregar suas carteirinhas'
+          }
+          onRetry={refetch}
+        />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
       style={styles.container}
+      contentContainerStyle={[
+        styles.contentContainer,
+        { paddingBottom: insets.bottom + Spacing.xl },
+      ]}
+      showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          colors={[Colors.primary]}
-          tintColor={Colors.primary}
+          tintColor={Colors.primary.main}
+          colors={[Colors.primary.main]}
         />
       }
     >
-      <View style={styles.content}>
-        {/* Card Counter */}
-        <View style={styles.counterContainer}>
-          <Paragraph style={styles.counterText}>
-            Carteirinha {currentCardIndex + 1} de {allCards.length}
-          </Paragraph>
-          <Paragraph style={styles.summaryText}>
-            Total: {oracleCards.total_cards} carteirinha{oracleCards.total_cards !== 1 ? 's' : ''}
-          </Paragraph>
-        </View>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Suas Carteirinhas</Text>
+        <Text style={styles.subtitle}>
+          {currentCardIndex + 1} de {allCards.length} • Deslize para ver mais
+        </Text>
+      </View>
 
-        {/* Digital Card Carousel */}
-        <FlatList
-          ref={flatListRef}
-          data={allCards}
-          renderItem={renderCard}
-          keyExtractor={(item, index) => `${item._type}-${index}`}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-          snapToInterval={CARD_ITEM_WIDTH}
-          decelerationRate="fast"
-          contentContainerStyle={styles.carouselContent}
-        />
+      {/* Cards Carousel */}
+      <FlatList
+        ref={flatListRef}
+        data={allCards}
+        renderItem={({ item }) => (
+          <DigitalCard item={item} showQR={showQR} width={CARD_WIDTH} />
+        )}
+        keyExtractor={(item, index) => `${item._type}-${index}`}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        snapToInterval={CARD_ITEM_WIDTH}
+        decelerationRate="fast"
+        contentContainerStyle={styles.carouselContent}
+      />
 
-        {/* Page Indicators */}
-        {allCards.length > 1 && (
-          <View style={styles.indicatorContainer}>
-            {allCards.map((_, index) => (
-              <View
+      {/* Page Indicators */}
+      {allCards.length > 1 && (
+        <View style={styles.indicatorContainer}>
+          {allCards.map((card, index) => {
+            const config = CARD_TYPE_CONFIG[card._type as keyof typeof CARD_TYPE_CONFIG];
+            const isActive = index === currentCardIndex;
+            return (
+              <TouchableOpacity
                 key={index}
+                onPress={() => scrollToCard(index)}
                 style={[
                   styles.indicator,
-                  index === currentCardIndex && styles.activeIndicator,
+                  isActive && [
+                    styles.activeIndicator,
+                    { backgroundColor: config?.primaryColor || Colors.primary.main },
+                  ],
                 ]}
+                accessibilityLabel={`Carteirinha ${index + 1} de ${allCards.length}`}
+                accessibilityRole="button"
               />
-            ))}
-          </View>
-        )}
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <Button
-            mode="outlined"
-            icon="qrcode"
-            onPress={() => setShowQR(!showQR)}
-            style={styles.button}
-          >
-            {showQR ? 'Ocultar QR Code' : 'Mostrar QR Code'}
-          </Button>
+            );
+          })}
         </View>
+      )}
 
-        {/* Additional Info */}
-        <Card style={styles.infoCard}>
-          <Card.Content>
-            <Title style={styles.infoTitle}>Informações Importantes</Title>
-            <Paragraph style={styles.infoParagraph}>
-              • Sempre apresente a carteirinha adequada nos prestadores
-            </Paragraph>
-            <Paragraph style={styles.infoParagraph}>
-              • Mantenha seus dados cadastrais atualizados
-            </Paragraph>
-            <Paragraph style={styles.infoParagraph}>
-              • Em caso de perda ou roubo, entre em contato imediatamente
-            </Paragraph>
-            <Paragraph style={styles.infoParagraph}>
-              • Estas carteirinhas são pessoais e intransferíveis
-            </Paragraph>
-          </Card.Content>
-        </Card>
+      {/* Actions */}
+      <View style={styles.actionsContainer}>
+        <Button
+          title={showQR ? 'Ocultar QR Code' : 'Mostrar QR Code'}
+          onPress={() => setShowQR(!showQR)}
+          variant="outline"
+          icon={showQR ? 'qrcode-remove' : 'qrcode'}
+          size="medium"
+        />
+      </View>
+
+      {/* Info Card */}
+      <View style={styles.infoCard}>
+        <View style={styles.infoHeader}>
+          <MaterialCommunityIcons
+            name="information"
+            size={24}
+            color={Colors.primary.main}
+          />
+          <Text style={styles.infoTitle}>Informações Importantes</Text>
+        </View>
+        <View style={styles.infoList}>
+          <InfoItem text="Sempre apresente a carteirinha adequada nos prestadores" />
+          <InfoItem text="Mantenha seus dados cadastrais atualizados" />
+          <InfoItem text="Em caso de perda ou roubo, entre em contato imediatamente" />
+          <InfoItem text="Estas carteirinhas são pessoais e intransferíveis" />
+        </View>
       </View>
     </ScrollView>
   );
 };
 
+// Info Item component
+const InfoItem: React.FC<{ text: string }> = ({ text }) => (
+  <View style={styles.infoItem}>
+    <MaterialCommunityIcons
+      name="check-circle"
+      size={20}
+      color={Colors.secondary.main}
+    />
+    <Text style={styles.infoItemText}>{text}</Text>
+  </View>
+);
+
+// =============================================================================
+// STYLES
+// =============================================================================
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.surface.background,
   },
-  content: {
-    paddingVertical: 16,
+  contentContainer: {
+    flexGrow: 1,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: Spacing.xl,
+    backgroundColor: Colors.surface.background,
   },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
+
+  // Header
+  header: {
+    paddingHorizontal: Spacing.screenPadding,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
   },
-  errorText: {
-    fontSize: 16,
-    color: '#d32f2f',
-    marginBottom: 16,
-    textAlign: 'center',
+  title: {
+    fontSize: Typography.sizes.h2,
+    fontWeight: Typography.weights.bold,
+    color: Colors.text.primary,
+    marginBottom: Spacing.xs,
   },
-  counterContainer: {
-    alignItems: 'center',
-    marginBottom: 12,
+  subtitle: {
+    fontSize: Typography.sizes.body,
+    color: Colors.text.secondary,
   },
-  counterText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.primary,
-  },
-  summaryText: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
+
+  // Carousel
   carouselContent: {
-    paddingHorizontal: 8,
-    paddingBottom: 8,
+    paddingHorizontal: Spacing.screenPadding - (CARD_MARGIN / 2),
   },
-  cardContainer: {
-    paddingHorizontal: 8,
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-  },
-  badgeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  typeBadge: {
-    flex: 1,
-    marginRight: 8,
-  },
-  badgeElosaude: {
-    backgroundColor: Colors.primary,
-  },
-  badgeUnimed: {
-    backgroundColor: '#00A859',
-  },
-  badgeReciprocidade: {
-    backgroundColor: '#FF6B35',
-  },
-  activeBadge: {
-    backgroundColor: '#4CAF50',
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  cardHeader: {
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  planName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.primary,
-  },
-  divider: {
-    marginVertical: 12,
-  },
-  infoSection: {
-    marginBottom: 16,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  infoItem: {
-    flex: 1,
-  },
-  label: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
-  },
-  value: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  qrContainer: {
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  qrLabel: {
-    marginTop: 12,
-    fontSize: 12,
-    color: '#666',
-    textAlign: 'center',
-  },
+
+  // Indicators
   indicatorContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 16,
+    marginTop: Spacing.lg,
+    gap: Spacing.sm,
   },
   indicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#BDBDBD',
-    marginHorizontal: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Colors.border.medium,
   },
   activeIndicator: {
-    backgroundColor: Colors.primary,
-    width: 24,
+    width: 28,
   },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 16,
-    marginBottom: 16,
-    paddingHorizontal: 16,
-  },
-  button: {
-    flex: 1,
-    maxWidth: 200,
-  },
-  summaryCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    marginHorizontal: 16,
-    marginBottom: 16,
-  },
-  summaryTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: Colors.primary,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  summaryItem: {
+
+  // Actions
+  actionsContainer: {
+    paddingHorizontal: Spacing.screenPadding,
+    marginTop: Spacing.lg,
     alignItems: 'center',
-    minWidth: 100,
-    flex: 1,
   },
-  summaryCount: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 8,
-    color: '#333',
-  },
+
+  // Info Card
   infoCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    marginHorizontal: 16,
+    margin: Spacing.screenPadding,
+    marginTop: Spacing.xl,
+    backgroundColor: Colors.primary.lighter,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.cardPadding,
+    borderWidth: 1,
+    borderColor: Colors.primary.light,
+  },
+  infoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
   },
   infoTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: Colors.primary,
+    fontSize: Typography.sizes.body,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.primary.dark,
+    marginLeft: Spacing.sm,
   },
-  infoParagraph: {
-    fontSize: 14,
-    lineHeight: 22,
-    marginBottom: 8,
-    color: '#555',
+  infoList: {
+    gap: Spacing.sm,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  infoItemText: {
+    flex: 1,
+    fontSize: Typography.sizes.bodySmall,
+    color: Colors.text.secondary,
+    marginLeft: Spacing.sm,
+    lineHeight: Typography.sizes.bodySmall * Typography.lineHeight.normal,
   },
 });
 

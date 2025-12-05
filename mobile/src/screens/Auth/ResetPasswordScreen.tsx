@@ -103,7 +103,7 @@ export default function ResetPasswordScreen({ route, navigation }: any) {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Icon name="shield-lock" size={64} color={Colors.primary} />
+          <Icon name="shield-lock" size={64} color={Colors.primary.main} />
           <Text variant="headlineMedium" style={styles.title}>
             Nova Senha
           </Text>
@@ -239,25 +239,25 @@ export default function ResetPasswordScreen({ route, navigation }: any) {
               Requisitos da senha:
             </Text>
             <View style={styles.requirementRow}>
-              <Icon name="check-circle" size={16} color={Colors.success} />
+              <Icon name="check-circle" size={16} color={Colors.feedback.success} />
               <Text variant="bodySmall" style={styles.requirementText}>
                 Mínimo de 8 caracteres
               </Text>
             </View>
             <View style={styles.requirementRow}>
-              <Icon name="check-circle" size={16} color={Colors.success} />
+              <Icon name="check-circle" size={16} color={Colors.feedback.success} />
               <Text variant="bodySmall" style={styles.requirementText}>
                 Pelo menos uma letra maiúscula
               </Text>
             </View>
             <View style={styles.requirementRow}>
-              <Icon name="check-circle" size={16} color={Colors.success} />
+              <Icon name="check-circle" size={16} color={Colors.feedback.success} />
               <Text variant="bodySmall" style={styles.requirementText}>
                 Pelo menos uma letra minúscula
               </Text>
             </View>
             <View style={styles.requirementRow}>
-              <Icon name="check-circle" size={16} color={Colors.success} />
+              <Icon name="check-circle" size={16} color={Colors.feedback.success} />
               <Text variant="bodySmall" style={styles.requirementText}>
                 Pelo menos um número
               </Text>
@@ -272,7 +272,7 @@ export default function ResetPasswordScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -287,11 +287,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 8,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   subtitle: {
     textAlign: 'center',
-    color: Colors.textSecondary,
+    color: Colors.text.secondary,
     paddingHorizontal: 20,
   },
   card: {
@@ -309,12 +309,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   requirementsCard: {
-    backgroundColor: Colors.success + '10',
+    backgroundColor: Colors.feedback.success + '10',
   },
   requirementsTitle: {
     fontWeight: 'bold',
     marginBottom: 8,
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   requirementRow: {
     flexDirection: 'row',
@@ -323,6 +323,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   requirementText: {
-    color: Colors.text,
+    color: Colors.text.primary,
   },
 });
