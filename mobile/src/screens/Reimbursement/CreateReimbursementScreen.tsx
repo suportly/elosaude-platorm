@@ -70,7 +70,7 @@ const CreateReimbursementScreen = ({ navigation }: any) => {
     setValue,
     watch,
   } = useForm<FormData>({
-    resolver: yupResolver(reimbursementSchema),
+    resolver: yupResolver(reimbursementSchema) as any,
     defaultValues: {
       service_date: new Date(),
       bank_details: {

@@ -167,7 +167,8 @@ export default function NotificationsScreen({ navigation }: any) {
     );
   };
 
-  const unreadCount = notifications?.filter(n => !n.is_read).length || 0;
+  const notificationsList = notifications?.results || [];
+  const unreadCount = notificationsList.filter(n => !n.is_read).length || 0;
 
   if (isLoading) {
     return (
@@ -208,7 +209,7 @@ export default function NotificationsScreen({ navigation }: any) {
               filter === 'all' && { color: '#FFFFFF' },
             ]}
           >
-            Todas ({notifications?.length || 0})
+            Todas ({notificationsList.length})
           </Chip>
           <Chip
             selected={filter === 'unread'}
@@ -246,8 +247,8 @@ export default function NotificationsScreen({ navigation }: any) {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {notifications && notifications.length > 0 ? (
-          notifications.map((notification) => renderNotification(notification))
+        {notificationsList.length > 0 ? (
+          notificationsList.map((notification) => renderNotification(notification))
         ) : (
           <View style={styles.emptyContainer}>
             <Icon name="bell-off-outline" size={64} color={Colors.textLight} />

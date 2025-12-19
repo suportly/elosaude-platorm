@@ -1,0 +1,61 @@
+# =============================================================================
+# Elosaude Backend - Production Environment Configuration
+# =============================================================================
+# Copy this file to prod.tfvars and fill in your values.
+# NEVER commit prod.tfvars to version control!
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Project Configuration
+# -----------------------------------------------------------------------------
+
+project_id  = "your-gcp-project-id"
+region      = "us-central1"
+zone        = "us-central1-a"
+environment = "prod"
+
+# -----------------------------------------------------------------------------
+# Compute Instance - Production Sizing
+# -----------------------------------------------------------------------------
+
+# Production: e2-small for adequate performance
+machine_type = "e2-small"
+
+# Production Docker image
+container_image = "us-central1-docker.pkg.dev/your-project/elosaude-backend-prod/backend:latest"
+
+# -----------------------------------------------------------------------------
+# Database Configuration (REQUIRED - SENSITIVE)
+# -----------------------------------------------------------------------------
+
+# Production PostgreSQL connection string
+database_url = "postgresql://user:password@your-prod-db-host:5432/elosaude_prod"
+
+# -----------------------------------------------------------------------------
+# Django Configuration (REQUIRED - SENSITIVE)
+# -----------------------------------------------------------------------------
+
+# Production secret key (generate unique value!)
+django_secret_key = "your-production-secret-key-here"
+
+# Production: Restrict to actual domain or IP
+django_allowed_hosts = "*"
+
+# -----------------------------------------------------------------------------
+# Network Configuration
+# -----------------------------------------------------------------------------
+
+# Production: Restrict SSH to specific admin IPs
+# Leave empty to only allow SSH via IAP
+allowed_ssh_ranges = []
+
+# -----------------------------------------------------------------------------
+# Labels
+# -----------------------------------------------------------------------------
+
+labels = {
+  project     = "elosaude"
+  environment = "prod"
+  managed_by  = "terraform"
+  cost_center = "production"
+}

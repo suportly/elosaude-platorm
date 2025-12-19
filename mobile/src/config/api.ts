@@ -13,11 +13,11 @@ const MACHINE_IP = '192.168.0.116';
 const getDevAPIUrl = () => {
   if (Platform.OS === 'android') {
     // Android Emulator uses special IP to access host machine
-    return 'http://10.0.2.2:8000/api';
+    return 'http://10.0.2.2:8005/api';
   }
   // iOS Simulator can use localhost
   // If localhost doesn't work, try using your machine's IP
-  return `http://${MACHINE_IP}:8000/api`;
+  return `http://${MACHINE_IP}:8005/api`;
 };
 
 export const API_URL = __DEV__
@@ -28,7 +28,7 @@ export const API_URL = __DEV__
 if (__DEV__) {
   console.log('📱 Platform:', Platform.OS);
   console.log('🌐 API URL:', API_URL);
-  console.log('💻 Backend should be running at: http://0.0.0.0:8000');
+  console.log('💻 Backend should be running at: http://0.0.0.0:8005');
   console.log('🔗 Full test endpoint:', `${API_URL}/accounts/test-login/`);
 }
 

@@ -5,7 +5,8 @@ import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Colors } from '../../config/theme';
+import { useColors } from '../../config/ThemeContext';
+import { Typography, Spacing, ComponentSizes } from '../../config/theme';
 import { API_URL } from '../../config/api';
 
 const schema = yup.object().shape({
@@ -31,6 +32,7 @@ interface FormData {
 
 export default function ResetPasswordScreen({ route, navigation }: any) {
   const { cpf } = route.params;
+  const colors = useColors();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -97,17 +99,17 @@ export default function ResetPasswordScreen({ route, navigation }: any) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.surface.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Icon name="shield-lock" size={64} color={Colors.primary} />
-          <Text variant="headlineMedium" style={styles.title}>
+          <Icon name="shield-lock" size={ComponentSizes.icon.xl} color={colors.primary.main} />
+          <Text variant="headlineMedium" style={[styles.title, { color: colors.text.primary }]}>
             Nova Senha
           </Text>
-          <Text variant="bodyMedium" style={styles.subtitle}>
+          <Text variant="bodyMedium" style={[styles.subtitle, { color: colors.text.secondary }]}>
             Digite o código recebido por e-mail e sua nova senha
           </Text>
         </View>
@@ -134,6 +136,9 @@ export default function ResetPasswordScreen({ route, navigation }: any) {
                     placeholder="000000"
                     disabled={isLoading}
                     style={styles.input}
+                    accessibilityLabel="Código de Verificação"
+                    accessibilityHint="Digite o código de 6 dígitos recebido por e-mail"
+                    accessibilityRole="none"
                   />
                   {errors.code && (
                     <HelperText type="error" visible={!!errors.code}>
@@ -163,10 +168,16 @@ export default function ResetPasswordScreen({ route, navigation }: any) {
                       <TextInput.Icon
                         icon={showPassword ? 'eye-off' : 'eye'}
                         onPress={() => setShowPassword(!showPassword)}
+                        accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                        accessibilityHint="Toque para alternar a visibilidade da senha"
+                        accessibilityRole="button"
                       />
                     }
                     disabled={isLoading}
                     style={styles.input}
+                    accessibilityLabel="Nova Senha"
+                    accessibilityHint="Digite sua nova senha com pelo menos 8 caracteres, incluindo maiúsculas, minúsculas e números"
+                    accessibilityRole="none"
                   />
                   {errors.new_password && (
                     <HelperText type="error" visible={!!errors.new_password}>
@@ -196,10 +207,16 @@ export default function ResetPasswordScreen({ route, navigation }: any) {
                       <TextInput.Icon
                         icon={showConfirmPassword ? 'eye-off' : 'eye'}
                         onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                        accessibilityLabel={showConfirmPassword ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}
+                        accessibilityHint="Toque para alternar a visibilidade da confirmação de senha"
+                        accessibilityRole="button"
                       />
                     }
                     disabled={isLoading}
                     style={styles.input}
+                    accessibilityLabel="Confirmar Nova Senha"
+                    accessibilityHint="Digite a mesma senha novamente para confirmar"
+                    accessibilityRole="none"
                   />
                   {errors.confirm_password && (
                     <HelperText type="error" visible={!!errors.confirm_password}>
@@ -217,6 +234,9 @@ export default function ResetPasswordScreen({ route, navigation }: any) {
               disabled={isLoading}
               style={styles.button}
               icon="check"
+              accessibilityLabel="Redefinir Senha"
+              accessibilityHint="Submete o formulário para redefinir sua senha"
+              accessibilityRole="button"
             >
               Redefinir Senha
             </Button>
@@ -226,6 +246,9 @@ export default function ResetPasswordScreen({ route, navigation }: any) {
               onPress={() => navigation.goBack()}
               disabled={isLoading}
               style={styles.backButton}
+              accessibilityLabel="Voltar"
+              accessibilityHint="Retorna à tela anterior"
+              accessibilityRole="button"
             >
               Voltar
             </Button>
@@ -233,32 +256,32 @@ export default function ResetPasswordScreen({ route, navigation }: any) {
         </Card>
 
         {/* Requirements Card */}
-        <Card style={styles.requirementsCard}>
+        <Card style={[styles.requirementsCard, { backgroundColor: colors.feedback.successLight }]}>
           <Card.Content>
-            <Text variant="titleSmall" style={styles.requirementsTitle}>
+            <Text variant="titleSmall" style={[styles.requirementsTitle, { color: colors.text.primary }]}>
               Requisitos da senha:
             </Text>
             <View style={styles.requirementRow}>
-              <Icon name="check-circle" size={16} color={Colors.success} />
-              <Text variant="bodySmall" style={styles.requirementText}>
+              <Icon name="check-circle" size={ComponentSizes.icon.xs} color={colors.feedback.success} />
+              <Text variant="bodySmall" style={[styles.requirementText, { color: colors.text.primary }]}>
                 Mínimo de 8 caracteres
               </Text>
             </View>
             <View style={styles.requirementRow}>
-              <Icon name="check-circle" size={16} color={Colors.success} />
-              <Text variant="bodySmall" style={styles.requirementText}>
+              <Icon name="check-circle" size={ComponentSizes.icon.xs} color={colors.feedback.success} />
+              <Text variant="bodySmall" style={[styles.requirementText, { color: colors.text.primary }]}>
                 Pelo menos uma letra maiúscula
               </Text>
             </View>
             <View style={styles.requirementRow}>
-              <Icon name="check-circle" size={16} color={Colors.success} />
-              <Text variant="bodySmall" style={styles.requirementText}>
+              <Icon name="check-circle" size={ComponentSizes.icon.xs} color={colors.feedback.success} />
+              <Text variant="bodySmall" style={[styles.requirementText, { color: colors.text.primary }]}>
                 Pelo menos uma letra minúscula
               </Text>
             </View>
             <View style={styles.requirementRow}>
-              <Icon name="check-circle" size={16} color={Colors.success} />
-              <Text variant="bodySmall" style={styles.requirementText}>
+              <Icon name="check-circle" size={ComponentSizes.icon.xs} color={colors.feedback.success} />
+              <Text variant="bodySmall" style={[styles.requirementText, { color: colors.text.primary }]}>
                 Pelo menos um número
               </Text>
             </View>
@@ -272,57 +295,59 @@ export default function ResetPasswordScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    // backgroundColor is applied dynamically via colors hook
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: Spacing.screenPadding,
     justifyContent: 'center',
   },
   header: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: Spacing.xl,
   },
   title: {
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
     fontWeight: 'bold',
-    color: Colors.text,
+    // color is applied dynamically via colors hook
   },
   subtitle: {
     textAlign: 'center',
-    color: Colors.textSecondary,
-    paddingHorizontal: 20,
+    paddingHorizontal: Spacing.screenPadding,
+    // color is applied dynamically via colors hook
   },
   card: {
-    marginBottom: 20,
+    marginBottom: Spacing.screenPadding,
     elevation: 2,
   },
   input: {
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   button: {
-    marginTop: 16,
-    paddingVertical: 6,
+    marginTop: Spacing.md,
+    paddingVertical: Spacing.xs,
+    minHeight: ComponentSizes.touchTarget,
   },
   backButton: {
-    marginTop: 8,
+    marginTop: Spacing.sm,
+    minHeight: ComponentSizes.touchTarget,
   },
   requirementsCard: {
-    backgroundColor: Colors.success + '10',
+    // backgroundColor is applied dynamically via colors hook
   },
   requirementsTitle: {
     fontWeight: 'bold',
-    marginBottom: 8,
-    color: Colors.text,
+    marginBottom: Spacing.sm,
+    // color is applied dynamically via colors hook
   },
   requirementRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 4,
-    gap: 8,
+    marginVertical: Spacing.xs,
+    gap: Spacing.sm,
   },
   requirementText: {
-    color: Colors.text,
+    // color is applied dynamically via colors hook
   },
 });

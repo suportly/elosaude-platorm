@@ -1,0 +1,41 @@
+# Terraform State Files
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Terraform Lock File (can be committed, but often gitignored)
+.terraform.lock.hcl
+
+# Terraform Directory
+.terraform/
+
+# Sensitive Variable Files (NEVER commit these)
+*.tfvars
+!*.tfvars.example
+terraform.tfvars
+*.auto.tfvars
+
+# Environment-specific tfvars (keep examples only)
+environments/*.tfvars
+!environments/*.tfvars.example
+
+# Crash Logs
+crash.log
+crash.*.log
+
+# Override Files (for local testing)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI Configuration
+.terraformrc
+terraform.rc
+
+# Credentials and Keys
+*.pem
+*.key
+*.json
+!*example*.json
+credentials/

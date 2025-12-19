@@ -1,0 +1,132 @@
+openapi: 3.0.3
+info:
+  title: Elosaude Backend API - Health Endpoint
+  description: |
+    Health check endpoint for deployment verification.
+    This endpoint is used by:
+    - GCP health checkers for instance monitoring
+    - Deployment scripts for verification
+    - Mobile app for connectivity testing
+  version: 1.0.0
+  contact:
+    name: Elosaude Development Team
+
+servers:
+  - url: http://{host}:8005
+    description: Production server (HTTP, direct IP)
+    variables:
+      host:
+        default: localhost
+        description: Server hostname or IP address
+
+paths:
+  /api/health/:
+    get:
+      summary: Health Check
+      description: |
+        Returns the health status of the backend service.
+        This endpoint should be fast (<100ms) and not require authentication.
+      operationId: getHealth
+      tags:
+        - Health
+      security: []  # No authentication required
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+                timestamp: '2025-12-17T10:30:00Z'
+                version: '1.0.0'
+        '500':
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: error
+                timestamp: '2025-12-17T10:30:00Z'
+                error: Database connection failed
+
+  /api/health/ready/:
+    get:
+      summary: Readiness Check
+      description: |
+        Returns whether the service is ready to accept traffic.
+        Checks database connectivity and other dependencies.
+      operationId: getReadiness
+      tags:
+        - Health
+      security: []
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+              example:
+                ready: true
+                checks:
+                  database: ok
+                  cache: ok
+        '503':
+          description: Service is not ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+              example:
+                ready: false
+                checks:
+                  database: error
+                  cache: ok
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+          description: Overall health status
+        timestamp:
+          type: string
+          format: date-time
+          description: Current server time
+        version:
+          type: string
+          description: Application version
+        error:
+          type: string
+          description: Error message if status is error
+
+    ReadinessResponse:
+      type: object
+      required:
+        - ready
+        - checks
+      properties:
+        ready:
+          type: boolean
+          description: Whether service is ready to accept traffic
+        checks:
+          type: object
+          additionalProperties:
+            type: string
+            enum: [ok, error]
+          description: Individual dependency check results
+          example:
+            database: ok
+            cache: ok
+
+tags:
+  - name: Health
+    description: Health and readiness endpoints for deployment verification

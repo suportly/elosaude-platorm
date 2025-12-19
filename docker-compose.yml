@@ -34,11 +34,11 @@ services:
     command: >
       sh -c "python manage.py migrate &&
              python manage.py loaddata fixtures/*.json 2>/dev/null || true &&
-             python manage.py runserver 0.0.0.0:8000"
+             python manage.py runserver 0.0.0.0:8005"
     volumes:
       - ./backend:/app
     ports:
-      - "8000:8000"
+      - "8005:8005"
     env_file:
       - ./backend/.env
     environment:

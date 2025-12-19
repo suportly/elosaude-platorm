@@ -10,14 +10,18 @@ import {
   ActivityIndicator,
   Text,
   Divider,
+  Provider as PaperProvider,
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useGetReimbursementsQuery, useGetReimbursementSummaryQuery } from '../../store/services/api';
 import { Colors } from '../../config/theme';
+import AddDocumentsModal from './AddDocumentsModal';
 
 const ReimbursementScreen = ({ navigation }: any) => {
   const [selectedStatus, setSelectedStatus] = useState('Todos');
   const [refreshing, setRefreshing] = useState(false);
+  const [addDocsModalVisible, setAddDocsModalVisible] = useState(false);
+  const [selectedReimbursement, setSelectedReimbursement] = useState<{ id: number; protocol: string } | null>(null);
 
   const { data, isLoading, error, refetch } = useGetReimbursementsQuery({
     status: selectedStatus,
@@ -159,7 +163,13 @@ const ReimbursementScreen = ({ navigation }: any) => {
           Detalhes
         </Button>
         {item.status === 'IN_ANALYSIS' && (
-          <Button icon="file-upload" onPress={() => console.log('Enviar docs', item.id)}>
+          <Button
+            icon="file-upload"
+            onPress={() => {
+              setSelectedReimbursement({ id: item.id, protocol: item.protocol_number });
+              setAddDocsModalVisible(true);
+            }}
+          >
             Enviar docs
           </Button>
         )}
@@ -193,8 +203,8 @@ const ReimbursementScreen = ({ navigation }: any) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[Colors.primary]}
-            tintColor={Colors.primary}
+            colors={[Colors.primary.main]}
+            tintColor={Colors.primary.main}
           />
         }
       >
@@ -244,6 +254,18 @@ const ReimbursementScreen = ({ navigation }: any) => {
         label="Nova Solicitação"
         onPress={() => navigation.navigate("CreateReimbursement")}
       />
+
+      {selectedReimbursement && (
+        <AddDocumentsModal
+          visible={addDocsModalVisible}
+          onDismiss={() => {
+            setAddDocsModalVisible(false);
+            setSelectedReimbursement(null);
+          }}
+          reimbursementId={selectedReimbursement.id}
+          protocolNumber={selectedReimbursement.protocol}
+        />
+      )}
     </View>
   );
 };

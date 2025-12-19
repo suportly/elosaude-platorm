@@ -1,0 +1,69 @@
+# =============================================================================
+# Elosaude Backend - Terraform Variables Example
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in your values.
+# NEVER commit terraform.tfvars to version control!
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Project Configuration (REQUIRED)
+# -----------------------------------------------------------------------------
+
+# Your Google Cloud Project ID
+project_id = "your-gcp-project-id"
+
+# GCP Region and Zone
+region = "us-central1"
+zone   = "us-central1-a"
+
+# Environment name (dev, staging, prod)
+environment = "prod"
+
+# -----------------------------------------------------------------------------
+# Compute Instance Configuration
+# -----------------------------------------------------------------------------
+
+# Machine type for the VM (e2-micro, e2-small, e2-medium)
+machine_type = "e2-small"
+
+# Docker image to deploy (will be set after first build)
+# Format: REGION-docker.pkg.dev/PROJECT_ID/REPO_NAME/IMAGE:TAG
+container_image = "us-central1-docker.pkg.dev/your-project/elosaude-backend-prod/backend:latest"
+
+# -----------------------------------------------------------------------------
+# Database Configuration (REQUIRED - SENSITIVE)
+# -----------------------------------------------------------------------------
+
+# PostgreSQL connection string for the external database
+# Format: postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+database_url = "postgresql://user:password@your-db-host:5432/elosaude"
+
+# -----------------------------------------------------------------------------
+# Django Configuration (REQUIRED - SENSITIVE)
+# -----------------------------------------------------------------------------
+
+# Django secret key (generate a new one for production)
+# Generate with: python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+django_secret_key = "your-secret-key-here"
+
+# Django allowed hosts (comma-separated, or * for all)
+django_allowed_hosts = "*"
+
+# -----------------------------------------------------------------------------
+# Network Configuration
+# -----------------------------------------------------------------------------
+
+# IP ranges allowed to SSH into the VM (for security, restrict to your IP)
+# Leave empty to disable SSH access, or use ["0.0.0.0/0"] to allow all (not recommended)
+allowed_ssh_ranges = []
+
+# -----------------------------------------------------------------------------
+# Labels (Optional)
+# -----------------------------------------------------------------------------
+
+# Resource labels for organization and billing
+labels = {
+  project     = "elosaude"
+  environment = "prod"
+  managed_by  = "terraform"
+}

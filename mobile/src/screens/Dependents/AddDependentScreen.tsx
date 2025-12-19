@@ -123,12 +123,12 @@ export default function AddDependentScreen({ route, navigation }: any) {
       {/* Info Card */}
       <Card style={styles.infoCard}>
         <Card.Content style={styles.infoCardContent}>
-          <Icon name="information-outline" size={24} color={Colors.info} />
+          <Icon name="information-outline" size={24} color={Colors.feedback.info} />
           <View style={styles.infoTextContainer}>
-            <Text variant="titleSmall" style={[styles.infoTitle, { color: Colors.info }]}>
+            <Text variant="titleSmall" style={[styles.infoTitle, { color: Colors.feedback.info }]}>
               {isEditing ? 'Editar Dependente' : 'Adicionar Dependente'}
             </Text>
-            <Text variant="bodySmall" style={[styles.infoText, { color: Colors.info }]}>
+            <Text variant="bodySmall" style={[styles.infoText, { color: Colors.feedback.info }]}>
               {isEditing
                 ? 'Atualize as informações do dependente.'
                 : 'Preencha os dados do dependente para incluí-lo no plano de saúde. O valor adicional será de 50% da mensalidade.'}
@@ -415,12 +415,12 @@ export default function AddDependentScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface.background,
   },
   infoCard: {
     margin: 16,
     marginBottom: 8,
-    backgroundColor: Colors.info + '10',
+    backgroundColor: Colors.feedback.info + '10',
   },
   infoCardContent: {
     flexDirection: 'row',
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     marginBottom: 8,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   genderContainer: {
     flexDirection: 'row',
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.divider,
+    backgroundColor: Colors.border.light,
     marginVertical: 16,
   },
   actionsContainer: {

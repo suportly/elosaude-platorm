@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   typeBadge: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.primary.main,
   },
   activeBadge: {
     backgroundColor: '#4CAF50',

@@ -4,7 +4,7 @@ import { RootState } from '../index';
 import { API_URL } from '../../config/api';
 import { updateTokens, logout } from '../slices/authSlice';
 import { Mutex } from 'async-mutex';
-import type { OracleCardsResponse, OracleTestConnectionResponse } from '../../types/oracle';
+import type { OracleCardsResponse } from '../../types/oracle';
 
 // Define types for API responses
 export interface PaginatedResponse<T> {
@@ -96,6 +96,20 @@ export interface ReimbursementSummary {
   total_approved: number;
   pending_count: number;
   approved_count: number;
+}
+
+export interface ReimbursementDocument {
+  id: number;
+  document_type: string;
+  document_type_display: string;
+  description: string;
+  file_url: string;
+  uploaded_at: string;
+}
+
+export interface AddDocumentsResponse {
+  message: string;
+  documents: ReimbursementDocument[];
 }
 
 export interface Beneficiary {
@@ -427,6 +441,15 @@ export const api = createApi({
       invalidatesTags: ['Reimbursements'],
     }),
 
+    addReimbursementDocuments: builder.mutation<AddDocumentsResponse, { reimbursementId: number; documents: number[] }>({
+      query: ({ reimbursementId, documents }) => ({
+        url: `/reimbursements/requests/${reimbursementId}/add-documents/`,
+        method: 'POST',
+        body: { documents },
+      }),
+      invalidatesTags: ['Reimbursements'],
+    }),
+
     // Invoices
     getInvoices: builder.query<PaginatedResponse<Invoice>, { status?: string; page?: number }>({
       query: (params) => {
@@ -616,14 +639,10 @@ export const api = createApi({
       providesTags: ['Vaccinations'],
     }),
 
-    // Oracle Cards Integration
+    // Cards (from PostgreSQL view v_app_carteiras_unificadas)
     getOracleCards: builder.query<OracleCardsResponse, void>({
-      query: () => '/oracle-cards/my_oracle_cards/',
+      query: () => '/beneficiaries/beneficiaries/my_cards/',
       providesTags: ['OracleCards'],
-    }),
-
-    testOracleConnection: builder.query<OracleTestConnectionResponse, void>({
-      query: () => '/oracle-cards/test_connection/',
     }),
   }),
 });
@@ -643,6 +662,7 @@ export const {
   useGetReimbursementQuery,
   useGetReimbursementSummaryQuery,
   useCreateReimbursementMutation,
+  useAddReimbursementDocumentsMutation,
   useGetInvoicesQuery,
   useGetInvoiceQuery,
   useGetTaxStatementsQuery,
@@ -662,5 +682,4 @@ export const {
   useGetUpcomingVaccinationsQuery,
   useGetOverdueVaccinationsQuery,
   useGetOracleCardsQuery,
-  useTestOracleConnectionQuery,
 } = api;

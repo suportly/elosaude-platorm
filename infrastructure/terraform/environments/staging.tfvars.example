@@ -1,0 +1,63 @@
+# =============================================================================
+# Elosaude Backend - Staging Environment Configuration
+# =============================================================================
+# Copy this file to staging.tfvars and fill in your values.
+# NEVER commit staging.tfvars to version control!
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Project Configuration
+# -----------------------------------------------------------------------------
+
+project_id  = "your-gcp-project-id"
+region      = "us-central1"
+zone        = "us-central1-a"
+environment = "staging"
+
+# -----------------------------------------------------------------------------
+# Compute Instance - Staging Sizing
+# -----------------------------------------------------------------------------
+
+# Staging: e2-micro for cost savings
+machine_type = "e2-micro"
+
+# Staging Docker image
+container_image = "us-central1-docker.pkg.dev/your-project/elosaude-backend-staging/backend:latest"
+
+# -----------------------------------------------------------------------------
+# Database Configuration (REQUIRED - SENSITIVE)
+# -----------------------------------------------------------------------------
+
+# Staging PostgreSQL connection string
+database_url = "postgresql://user:password@your-staging-db-host:5432/elosaude_staging"
+
+# -----------------------------------------------------------------------------
+# Django Configuration (REQUIRED - SENSITIVE)
+# -----------------------------------------------------------------------------
+
+# Staging secret key (can be simpler than production)
+django_secret_key = "your-staging-secret-key-here"
+
+# Staging: Allow all hosts for testing
+django_allowed_hosts = "*"
+
+# -----------------------------------------------------------------------------
+# Network Configuration
+# -----------------------------------------------------------------------------
+
+# Staging: Allow SSH from office/VPN IPs for debugging
+allowed_ssh_ranges = [
+  # "YOUR_OFFICE_IP/32",
+  # "YOUR_VPN_RANGE/24",
+]
+
+# -----------------------------------------------------------------------------
+# Labels
+# -----------------------------------------------------------------------------
+
+labels = {
+  project     = "elosaude"
+  environment = "staging"
+  managed_by  = "terraform"
+  cost_center = "development"
+}

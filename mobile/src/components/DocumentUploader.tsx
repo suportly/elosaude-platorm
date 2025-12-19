@@ -207,7 +207,7 @@ export default function DocumentUploader({
           {documents.map((doc, index) => (
             <Card key={index} style={styles.documentCard}>
               <Card.Content style={styles.documentContent}>
-                <Icon name={getFileIcon(doc.type)} size={32} color={Colors.primary} />
+                <Icon name={getFileIcon(doc.type)} size={32} color={Colors.primary.main} />
                 <View style={styles.documentInfo}>
                   <Text variant="bodyMedium" numberOfLines={1} style={styles.documentName}>
                     {doc.name}
@@ -222,7 +222,7 @@ export default function DocumentUploader({
                   icon="close"
                   size={20}
                   onPress={() => removeDocument(index)}
-                  iconColor={Colors.error}
+                  iconColor={Colors.feedback.error}
                 />
               </Card.Content>
             </Card>
@@ -244,7 +244,7 @@ export default function DocumentUploader({
       )}
 
       <View style={styles.infoContainer}>
-        <Icon name="information-outline" size={16} color={Colors.textSecondary} />
+        <Icon name="information-outline" size={16} color={Colors.text.secondary} />
         <Text variant="bodySmall" style={styles.infoText}>
           Formatos aceitos: Imagens (JPG, PNG) e PDF. Máximo {maxFiles} arquivos.
         </Text>
@@ -281,13 +281,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   documentSize: {
-    color: Colors.textSecondary,
+    color: Colors.text.secondary,
     marginTop: 2,
   },
   addButton: {
     borderStyle: 'dashed',
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: Colors.primary.main,
   },
   infoContainer: {
     flexDirection: 'row',
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   infoText: {
-    color: Colors.textSecondary,
+    color: Colors.text.secondary,
     flex: 1,
   },
 });

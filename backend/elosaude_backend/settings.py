@@ -48,11 +48,11 @@ INSTALLED_APPS = [
     'apps.notifications',
     'apps.uploads',
     'apps.health_records',
-    'apps.oracle_integration',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -97,10 +97,6 @@ DATABASES = {
     },
 }
 
-# NOTE: Oracle 11g (11.2.0.4.0) is not supported by Django (requires Oracle 19+)
-# Oracle integration uses direct connection via oracledb library
-# See: apps.oracle_integration.connection.OracleConnection
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -132,6 +128,7 @@ USE_TZ = True
 # Static files
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 

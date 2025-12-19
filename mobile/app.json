@@ -5,9 +5,9 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "icon": "./assets/adaptive-icon.png",
+    "icon": "./assets/images/elosaude_logo.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/images/elosaude_logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#1976D2"
     },

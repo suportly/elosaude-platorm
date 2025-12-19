@@ -58,7 +58,7 @@ class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <View style={styles.container}>
-          <Icon name="alert-circle-outline" size={80} color={Colors.error} />
+          <Icon name="alert-circle-outline" size={80} color={Colors.feedback.error} />
           <Text variant="headlineSmall" style={styles.title}>
             Ops! Algo deu errado
           </Text>
@@ -77,7 +77,7 @@ class ErrorBoundary extends Component<Props, State> {
             mode="contained"
             onPress={this.handleReset}
             style={styles.button}
-            buttonColor={Colors.primary}
+            buttonColor={Colors.primary.main}
           >
             Tentar Novamente
           </Button>
@@ -95,18 +95,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface.background,
   },
   title: {
     marginTop: 20,
     marginBottom: 10,
-    color: Colors.text,
+    color: Colors.text.primary,
     fontWeight: 'bold',
     textAlign: 'center',
   },
   message: {
     marginBottom: 20,
-    color: Colors.textSecondary,
+    color: Colors.text.secondary,
     textAlign: 'center',
     paddingHorizontal: 20,
   },
