@@ -24,13 +24,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Colors,
+  Colors as StaticColors,
   Typography,
   Spacing,
   BorderRadius,
   Shadows,
   ComponentSizes,
 } from '../../config/theme';
+import { useColors } from '../../config';
 import { Button, ErrorState, LoadingSpinner } from '../../components/ui';
 import { useGetOracleCardsQuery } from '../../store/services/api';
 
@@ -43,29 +44,29 @@ const CARD_ITEM_WIDTH = CARD_WIDTH + CARD_MARGIN;
 // CARD TYPE CONFIG
 // =============================================================================
 
-const CARD_TYPE_CONFIG = {
+const getCardTypeConfig = (colors: typeof StaticColors) => ({
   CARTEIRINHA: {
     title: 'Elosaúde',
     icon: 'shield-check',
-    primaryColor: Colors.cards.elosaude.primary,
-    secondaryColor: Colors.cards.elosaude.secondary,
-    accentColor: Colors.cards.elosaude.accent,
+    primaryColor: colors.cards.elosaude.primary,
+    secondaryColor: colors.cards.elosaude.secondary,
+    accentColor: colors.cards.elosaude.accent,
   },
   UNIMED: {
     title: 'Unimed',
     icon: 'hospital-box',
-    primaryColor: Colors.cards.unimed.primary,
-    secondaryColor: Colors.cards.unimed.secondary,
-    accentColor: Colors.cards.unimed.accent,
+    primaryColor: colors.cards.unimed.primary,
+    secondaryColor: colors.cards.unimed.secondary,
+    accentColor: colors.cards.unimed.accent,
   },
   RECIPROCIDADE: {
     title: 'Reciprocidade',
     icon: 'handshake',
-    primaryColor: Colors.cards.reciprocidade.primary,
-    secondaryColor: Colors.cards.reciprocidade.secondary,
-    accentColor: Colors.cards.reciprocidade.accent,
+    primaryColor: colors.cards.reciprocidade.primary,
+    secondaryColor: colors.cards.reciprocidade.secondary,
+    accentColor: colors.cards.reciprocidade.accent,
   },
-};
+});
 
 // =============================================================================
 // HELPER FUNCTIONS
@@ -128,24 +129,44 @@ interface InfoRowProps {
   value: string | null | undefined;
   icon?: string;
   color?: string;
+  colors: typeof StaticColors;
 }
 
-const InfoRow: React.FC<InfoRowProps> = ({ label, value, icon, color = Colors.text.primary }) => {
+const InfoRow: React.FC<InfoRowProps> = ({ label, value, icon, color, colors }) => {
   if (!value || value === 'N/A') return null;
 
+  const iconAccessibilityLabels: Record<string, string> = {
+    'card-account-details': 'Ícone de matrícula',
+    'account': 'Ícone de CPF',
+    'numeric': 'Ícone de CNS',
+    'shield': 'Ícone de plano',
+    'calendar': 'Ícone de data',
+    'tag': 'Ícone de segmentação',
+    'earth': 'Ícone de abrangência',
+    'bed': 'Ícone de acomodação',
+    'domain': 'Ícone de prestador',
+  };
+
   return (
-    <View style={infoRowStyles.container}>
+    <View
+      style={infoRowStyles.container}
+      accessible
+      accessibilityLabel={`${label}: ${value}`}
+      accessibilityRole="text"
+    >
       {icon && (
         <MaterialCommunityIcons
           name={icon as any}
           size={20}
-          color={Colors.text.tertiary}
+          color={colors.text.tertiary}
           style={infoRowStyles.icon}
+          accessible
+          accessibilityLabel={iconAccessibilityLabels[icon] || `Ícone de ${label}`}
         />
       )}
       <View style={infoRowStyles.content}>
-        <Text style={infoRowStyles.label}>{label}</Text>
-        <Text style={[infoRowStyles.value, { color }]}>{value}</Text>
+        <Text style={[infoRowStyles.label, { color: colors.text.tertiary }]}>{label}</Text>
+        <Text style={[infoRowStyles.value, { color: color || colors.text.primary }]}>{value}</Text>
       </View>
     </View>
   );
@@ -166,7 +187,6 @@ const infoRowStyles = StyleSheet.create({
   },
   label: {
     fontSize: Typography.sizes.caption,
-    color: Colors.text.tertiary,
     marginBottom: 2,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -185,9 +205,11 @@ interface DigitalCardProps {
   item: any;
   showQR: boolean;
   width: number;
+  colors: typeof StaticColors;
 }
 
-const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width }) => {
+const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width, colors }) => {
+  const CARD_TYPE_CONFIG = getCardTypeConfig(colors);
   const cardType = item._type as keyof typeof CARD_TYPE_CONFIG;
   const config = CARD_TYPE_CONFIG[cardType] || CARD_TYPE_CONFIG.CARTEIRINHA;
   const cardInfo = extractCardInfo(item, cardType);
@@ -201,23 +223,35 @@ const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width }) => {
   });
 
   return (
-    <View style={[cardStyles.container, { width }]}>
+    <View style={[cardStyles.container, { width, backgroundColor: colors.surface.card }]}>
       {/* Card Header */}
-      <View style={[cardStyles.header, { backgroundColor: config.primaryColor }]}>
+      <View
+        style={[cardStyles.header, { backgroundColor: config.primaryColor }]}
+        accessible
+        accessibilityLabel={`Carteirinha ${config.title} de ${cardInfo.name}`}
+        accessibilityRole="header"
+      >
         <View style={cardStyles.headerContent}>
           <MaterialCommunityIcons
             name={config.icon as any}
             size={32}
-            color={Colors.text.inverse}
+            color={colors.text.inverse}
+            accessible
+            accessibilityLabel={`Logotipo ${config.title}`}
           />
           <View style={cardStyles.headerText}>
-            <Text style={cardStyles.headerTitle}>{config.title}</Text>
+            <Text style={[cardStyles.headerTitle, { color: colors.text.inverse }]}>{config.title}</Text>
             <Text style={cardStyles.headerSubtitle}>Carteirinha Digital</Text>
           </View>
         </View>
         {cardInfo.validity && (
-          <View style={cardStyles.validityBadge}>
-            <Text style={cardStyles.validityText}>
+          <View
+            style={cardStyles.validityBadge}
+            accessible
+            accessibilityLabel={`Validade até ${cardInfo.validity}`}
+            accessibilityRole="text"
+          >
+            <Text style={[cardStyles.validityText, { color: colors.text.inverse }]}>
               Válido até {cardInfo.validity}
             </Text>
           </View>
@@ -227,9 +261,9 @@ const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width }) => {
       {/* Card Body */}
       <View style={cardStyles.body}>
         {/* Beneficiary Name */}
-        <View style={cardStyles.nameSection}>
-          <Text style={cardStyles.nameLabel}>BENEFICIÁRIO</Text>
-          <Text style={cardStyles.nameValue} numberOfLines={2}>
+        <View style={[cardStyles.nameSection, { borderBottomColor: colors.border.light }]}>
+          <Text style={[cardStyles.nameLabel, { color: colors.text.tertiary }]}>BENEFICIÁRIO</Text>
+          <Text style={[cardStyles.nameValue, { color: colors.text.primary }]} numberOfLines={2}>
             {cardInfo.name}
           </Text>
         </View>
@@ -242,17 +276,20 @@ const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width }) => {
               value={cardInfo.registration}
               icon="card-account-details"
               color={config.primaryColor}
+              colors={colors}
             />
             <InfoRow
               label="CPF"
               value={cardInfo.cpf}
               icon="account"
+              colors={colors}
             />
             {cardInfo.cns && (
               <InfoRow
                 label="CNS"
                 value={cardInfo.cns}
                 icon="numeric"
+                colors={colors}
               />
             )}
           </View>
@@ -261,17 +298,20 @@ const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width }) => {
               label="Plano"
               value={cardInfo.plan}
               icon="shield"
+              colors={colors}
             />
             <InfoRow
               label="Nascimento"
               value={cardInfo.birthDate}
               icon="calendar"
+              colors={colors}
             />
             {cardInfo.segmentation && (
               <InfoRow
                 label="Segmentação"
                 value={cardInfo.segmentation}
                 icon="tag"
+                colors={colors}
               />
             )}
           </View>
@@ -279,33 +319,39 @@ const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width }) => {
 
         {/* Type-specific info */}
         {cardType === 'UNIMED' && cardInfo.coverage && (
-          <View style={cardStyles.extraInfo}>
-            <InfoRow label="Abrangência" value={cardInfo.coverage} icon="earth" />
+          <View style={[cardStyles.extraInfo, { borderTopColor: colors.border.light }]}>
+            <InfoRow label="Abrangência" value={cardInfo.coverage} icon="earth" colors={colors} />
             {cardInfo.accommodation && (
-              <InfoRow label="Acomodação" value={cardInfo.accommodation} icon="bed" />
+              <InfoRow label="Acomodação" value={cardInfo.accommodation} icon="bed" colors={colors} />
             )}
           </View>
         )}
 
         {cardType === 'RECIPROCIDADE' && cardInfo.provider && (
-          <View style={cardStyles.extraInfo}>
-            <InfoRow label="Prestador" value={cardInfo.provider} icon="domain" />
+          <View style={[cardStyles.extraInfo, { borderTopColor: colors.border.light }]}>
+            <InfoRow label="Prestador" value={cardInfo.provider} icon="domain" colors={colors} />
           </View>
         )}
 
         {/* QR Code */}
         {showQR && (
-          <View style={cardStyles.qrSection}>
-            <View style={cardStyles.qrDivider} />
-            <View style={cardStyles.qrContainer}>
+          <View
+            style={cardStyles.qrSection}
+            accessible
+            accessibilityLabel="Código QR da carteirinha"
+            accessibilityRole="image"
+            accessibilityHint="Use este código para apresentar sua carteirinha digital nos prestadores credenciados"
+          >
+            <View style={[cardStyles.qrDivider, { backgroundColor: colors.border.light }]} />
+            <View style={[cardStyles.qrContainer, { backgroundColor: colors.surface.muted }]}>
               <QRCode
                 value={qrData}
                 size={160}
-                color={Colors.text.primary}
-                backgroundColor={Colors.surface.card}
+                color={colors.text.primary}
+                backgroundColor={colors.surface.card}
               />
             </View>
-            <Text style={cardStyles.qrHint}>
+            <Text style={[cardStyles.qrHint, { color: colors.text.tertiary }]}>
               Apresente este QR Code nos prestadores credenciados
             </Text>
           </View>
@@ -319,7 +365,6 @@ const cardStyles = StyleSheet.create({
   container: {
     marginHorizontal: CARD_MARGIN / 2,
     borderRadius: BorderRadius.xl,
-    backgroundColor: Colors.surface.card,
     overflow: 'hidden',
     ...Shadows.lg,
   },
@@ -338,7 +383,6 @@ const cardStyles = StyleSheet.create({
   headerTitle: {
     fontSize: Typography.sizes.h3,
     fontWeight: Typography.weights.bold,
-    color: Colors.text.inverse,
   },
   headerSubtitle: {
     fontSize: Typography.sizes.bodySmall,
@@ -355,7 +399,6 @@ const cardStyles = StyleSheet.create({
   },
   validityText: {
     fontSize: Typography.sizes.caption,
-    color: Colors.text.inverse,
     fontWeight: Typography.weights.medium,
   },
   body: {
@@ -365,18 +408,15 @@ const cardStyles = StyleSheet.create({
     marginBottom: Spacing.lg,
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border.light,
   },
   nameLabel: {
     fontSize: Typography.sizes.caption,
-    color: Colors.text.tertiary,
     letterSpacing: 1,
     marginBottom: Spacing.xs,
   },
   nameValue: {
     fontSize: Typography.sizes.h4,
     fontWeight: Typography.weights.semibold,
-    color: Colors.text.primary,
   },
   infoGrid: {
     flexDirection: 'row',
@@ -388,25 +428,21 @@ const cardStyles = StyleSheet.create({
     marginTop: Spacing.sm,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border.light,
   },
   qrSection: {
     marginTop: Spacing.md,
   },
   qrDivider: {
     height: 1,
-    backgroundColor: Colors.border.light,
     marginBottom: Spacing.lg,
   },
   qrContainer: {
     alignItems: 'center',
     padding: Spacing.md,
-    backgroundColor: Colors.surface.muted,
     borderRadius: BorderRadius.md,
   },
   qrHint: {
     fontSize: Typography.sizes.caption,
-    color: Colors.text.tertiary,
     textAlign: 'center',
     marginTop: Spacing.md,
     paddingHorizontal: Spacing.md,
@@ -418,6 +454,7 @@ const cardStyles = StyleSheet.create({
 // =============================================================================
 
 const DigitalCardScreen = () => {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const { data: oracleCards, isLoading, error, refetch } = useGetOracleCardsQuery();
 
@@ -462,7 +499,7 @@ const DigitalCardScreen = () => {
   // Loading state
   if (isLoading) {
     return (
-      <View style={styles.centerContainer}>
+      <View style={[styles.centerContainer, { backgroundColor: colors.surface.background }]}>
         <LoadingSpinner message="Carregando suas carteirinhas..." />
       </View>
     );
@@ -471,7 +508,7 @@ const DigitalCardScreen = () => {
   // Error state
   if (error || !oracleCards || allCards.length === 0) {
     return (
-      <View style={styles.centerContainer}>
+      <View style={[styles.centerContainer, { backgroundColor: colors.surface.background }]}>
         <ErrorState
           message={
             allCards.length === 0
@@ -486,7 +523,7 @@ const DigitalCardScreen = () => {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.surface.background }]}
       contentContainerStyle={[
         styles.contentContainer,
         { paddingBottom: insets.bottom + Spacing.xl },
@@ -496,15 +533,25 @@ const DigitalCardScreen = () => {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={Colors.primary.main}
-          colors={[Colors.primary.main]}
+          tintColor={colors.primary.main}
+          colors={[colors.primary.main]}
         />
       }
     >
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Suas Carteirinhas</Text>
-        <Text style={styles.subtitle}>
+      <View
+        style={styles.header}
+        accessible
+        accessibilityLabel="Seção de carteirinhas digitais"
+        accessibilityRole="header"
+      >
+        <Text style={[styles.title, { color: colors.text.primary }]}>Suas Carteirinhas</Text>
+        <Text
+          style={[styles.subtitle, { color: colors.text.secondary }]}
+          accessible
+          accessibilityLabel={`Exibindo carteirinha ${currentCardIndex + 1} de ${allCards.length}. Deslize para ver mais carteirinhas`}
+          accessibilityRole="text"
+        >
           {currentCardIndex + 1} de {allCards.length} • Deslize para ver mais
         </Text>
       </View>
@@ -514,7 +561,7 @@ const DigitalCardScreen = () => {
         ref={flatListRef}
         data={allCards}
         renderItem={({ item }) => (
-          <DigitalCard item={item} showQR={showQR} width={CARD_WIDTH} />
+          <DigitalCard item={item} showQR={showQR} width={CARD_WIDTH} colors={colors} />
         )}
         keyExtractor={(item, index) => `${item._type}-${index}`}
         horizontal
@@ -531,6 +578,7 @@ const DigitalCardScreen = () => {
       {allCards.length > 1 && (
         <View style={styles.indicatorContainer}>
           {allCards.map((card, index) => {
+            const CARD_TYPE_CONFIG = getCardTypeConfig(colors);
             const config = CARD_TYPE_CONFIG[card._type as keyof typeof CARD_TYPE_CONFIG];
             const isActive = index === currentCardIndex;
             return (
@@ -539,12 +587,15 @@ const DigitalCardScreen = () => {
                 onPress={() => scrollToCard(index)}
                 style={[
                   styles.indicator,
+                  { backgroundColor: colors.border.medium },
                   isActive && [
                     styles.activeIndicator,
-                    { backgroundColor: config?.primaryColor || Colors.primary.main },
+                    { backgroundColor: config?.primaryColor || colors.primary.main },
                   ],
                 ]}
+                accessible
                 accessibilityLabel={`Carteirinha ${index + 1} de ${allCards.length}`}
+                accessibilityHint={isActive ? 'Carteirinha selecionada' : 'Toque para ver esta carteirinha'}
                 accessibilityRole="button"
               />
             );
@@ -560,24 +611,39 @@ const DigitalCardScreen = () => {
           variant="outline"
           icon={showQR ? 'qrcode-remove' : 'qrcode'}
           size="medium"
+          accessibilityLabel={showQR ? 'Botão ocultar código QR' : 'Botão mostrar código QR'}
+          accessibilityHint={showQR ? 'Toque para ocultar o código QR da carteirinha' : 'Toque para exibir o código QR da carteirinha'}
+          accessibilityRole="button"
         />
       </View>
 
       {/* Info Card */}
-      <View style={styles.infoCard}>
-        <View style={styles.infoHeader}>
+      <View
+        style={[styles.infoCard, { backgroundColor: colors.primary.lighter, borderColor: colors.primary.light }]}
+        accessible
+        accessibilityLabel="Informações importantes sobre suas carteirinhas"
+        accessibilityRole="list"
+      >
+        <View
+          style={styles.infoHeader}
+          accessible
+          accessibilityLabel="Título: Informações Importantes"
+          accessibilityRole="header"
+        >
           <MaterialCommunityIcons
             name="information"
             size={24}
-            color={Colors.primary.main}
+            color={colors.primary.main}
+            accessible
+            accessibilityLabel="Ícone de informações"
           />
-          <Text style={styles.infoTitle}>Informações Importantes</Text>
+          <Text style={[styles.infoTitle, { color: colors.primary.dark }]}>Informações Importantes</Text>
         </View>
         <View style={styles.infoList}>
-          <InfoItem text="Sempre apresente a carteirinha adequada nos prestadores" />
-          <InfoItem text="Mantenha seus dados cadastrais atualizados" />
-          <InfoItem text="Em caso de perda ou roubo, entre em contato imediatamente" />
-          <InfoItem text="Estas carteirinhas são pessoais e intransferíveis" />
+          <InfoItem text="Sempre apresente a carteirinha adequada nos prestadores" colors={colors} />
+          <InfoItem text="Mantenha seus dados cadastrais atualizados" colors={colors} />
+          <InfoItem text="Em caso de perda ou roubo, entre em contato imediatamente" colors={colors} />
+          <InfoItem text="Estas carteirinhas são pessoais e intransferíveis" colors={colors} />
         </View>
       </View>
     </ScrollView>
@@ -585,14 +651,21 @@ const DigitalCardScreen = () => {
 };
 
 // Info Item component
-const InfoItem: React.FC<{ text: string }> = ({ text }) => (
-  <View style={styles.infoItem}>
+const InfoItem: React.FC<{ text: string; colors: typeof StaticColors }> = ({ text, colors }) => (
+  <View
+    style={styles.infoItem}
+    accessible
+    accessibilityLabel={text}
+    accessibilityRole="text"
+  >
     <MaterialCommunityIcons
       name="check-circle"
       size={20}
-      color={Colors.secondary.main}
+      color={colors.secondary.main}
+      accessible
+      accessibilityLabel="Ícone de informação confirmada"
     />
-    <Text style={styles.infoItemText}>{text}</Text>
+    <Text style={[styles.infoItemText, { color: colors.text.secondary }]}>{text}</Text>
   </View>
 );
 
@@ -603,7 +676,6 @@ const InfoItem: React.FC<{ text: string }> = ({ text }) => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.surface.background,
   },
   contentContainer: {
     flexGrow: 1,
@@ -613,7 +685,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.xl,
-    backgroundColor: Colors.surface.background,
   },
 
   // Header
@@ -625,12 +696,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Typography.sizes.h2,
     fontWeight: Typography.weights.bold,
-    color: Colors.text.primary,
     marginBottom: Spacing.xs,
   },
   subtitle: {
     fontSize: Typography.sizes.body,
-    color: Colors.text.secondary,
   },
 
   // Carousel
@@ -650,7 +719,6 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: Colors.border.medium,
   },
   activeIndicator: {
     width: 28,
@@ -667,11 +735,9 @@ const styles = StyleSheet.create({
   infoCard: {
     margin: Spacing.screenPadding,
     marginTop: Spacing.xl,
-    backgroundColor: Colors.primary.lighter,
     borderRadius: BorderRadius.lg,
     padding: Spacing.cardPadding,
     borderWidth: 1,
-    borderColor: Colors.primary.light,
   },
   infoHeader: {
     flexDirection: 'row',
@@ -681,7 +747,6 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: Typography.sizes.body,
     fontWeight: Typography.weights.semibold,
-    color: Colors.primary.dark,
     marginLeft: Spacing.sm,
   },
   infoList: {
@@ -694,7 +759,6 @@ const styles = StyleSheet.create({
   infoItemText: {
     flex: 1,
     fontSize: Typography.sizes.bodySmall,
-    color: Colors.text.secondary,
     marginLeft: Spacing.sm,
     lineHeight: Typography.sizes.bodySmall * Typography.lineHeight.normal,
   },

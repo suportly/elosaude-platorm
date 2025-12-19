@@ -1,0 +1,62 @@
+# =============================================================================
+# Elosaude Backend - Development Environment Configuration
+# =============================================================================
+# Copy this file to dev.tfvars and fill in your values.
+# NEVER commit dev.tfvars to version control!
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Project Configuration
+# -----------------------------------------------------------------------------
+
+project_id  = "your-gcp-project-id"
+region      = "us-central1"
+zone        = "us-central1-a"
+environment = "dev"
+
+# -----------------------------------------------------------------------------
+# Compute Instance - Development Sizing
+# -----------------------------------------------------------------------------
+
+# Development: e2-micro for minimal cost
+machine_type = "e2-micro"
+
+# Development Docker image
+container_image = "us-central1-docker.pkg.dev/your-project/elosaude-backend-dev/backend:latest"
+
+# -----------------------------------------------------------------------------
+# Database Configuration (REQUIRED - SENSITIVE)
+# -----------------------------------------------------------------------------
+
+# Development PostgreSQL connection string
+# Can use same DB as local development or a shared dev instance
+database_url = "postgresql://user:password@your-dev-db-host:5432/elosaude_dev"
+
+# -----------------------------------------------------------------------------
+# Django Configuration (REQUIRED - SENSITIVE)
+# -----------------------------------------------------------------------------
+
+# Development secret key (simpler for dev)
+django_secret_key = "dev-secret-key-not-for-production"
+
+# Development: Allow all hosts
+django_allowed_hosts = "*"
+
+# -----------------------------------------------------------------------------
+# Network Configuration
+# -----------------------------------------------------------------------------
+
+# Development: Allow SSH from anywhere for easy debugging
+# WARNING: Only use in isolated dev environment!
+allowed_ssh_ranges = ["0.0.0.0/0"]
+
+# -----------------------------------------------------------------------------
+# Labels
+# -----------------------------------------------------------------------------
+
+labels = {
+  project     = "elosaude"
+  environment = "dev"
+  managed_by  = "terraform"
+  cost_center = "development"
+}

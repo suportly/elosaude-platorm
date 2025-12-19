@@ -7,6 +7,7 @@ import pt from 'react-native-paper-dates/src/translations/pt';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
 import ErrorBoundary from './src/components/ErrorBoundary';
+import { ThemeProvider, useTheme } from './src/config/ThemeContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { store } from './src/store';
 
@@ -30,16 +31,28 @@ Sentry.init({
 // Register Portuguese locale for date picker
 registerTranslation('pt', pt);
 
+// Componente interno que usa o tema para StatusBar
+function AppContent() {
+  const { isDark } = useTheme();
+  return (
+    <>
+      <AppNavigator />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+    </>
+  );
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
       <Provider store={store}>
-        <PaperProvider>
-          <SafeAreaProvider>
-            <AppNavigator />
-            <StatusBar style="light" />
-          </SafeAreaProvider>
-        </PaperProvider>
+        <ThemeProvider>
+          <PaperProvider>
+            <SafeAreaProvider>
+              <AppContent />
+            </SafeAreaProvider>
+          </PaperProvider>
+        </ThemeProvider>
       </Provider>
     </ErrorBoundary>
   );

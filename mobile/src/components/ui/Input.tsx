@@ -9,7 +9,7 @@
  * - Suporte a ícones e máscaras
  */
 
-import React, { useState, useRef, useCallback, forwardRef } from 'react';
+import React, { useState, useRef, useCallback, forwardRef, useMemo } from 'react';
 import {
   View,
   TextInput,
@@ -24,13 +24,13 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {
-  Colors,
   Typography,
   Spacing,
   BorderRadius,
   ComponentSizes,
   Animations,
 } from '../../config/theme';
+import { useColors } from '../../config/ThemeContext';
 
 // =============================================================================
 // TYPES
@@ -79,6 +79,9 @@ export const Input = forwardRef<TextInput, InputProps>(
     },
     ref
   ) => {
+    // Get theme colors
+    const colors = useColors();
+
     const [isFocused, setIsFocused] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const borderColorAnim = useRef(new Animated.Value(0)).current;
@@ -128,8 +131,8 @@ export const Input = forwardRef<TextInput, InputProps>(
     const borderColor = borderColorAnim.interpolate({
       inputRange: [0, 1],
       outputRange: [
-        error ? Colors.feedback.error : Colors.border.medium,
-        error ? Colors.feedback.error : Colors.border.focus,
+        error ? colors.feedback.error : colors.border.medium,
+        error ? colors.feedback.error : colors.border.focus,
       ],
     });
 
@@ -146,30 +149,87 @@ export const Input = forwardRef<TextInput, InputProps>(
       ? togglePasswordVisibility
       : onRightIconPress;
 
+    // Dynamic styles based on theme
+    const themedStyles = useMemo(
+      () => ({
+        label: {
+          fontSize: Typography.sizes.label,
+          fontWeight: Typography.weights.medium as any,
+          color: colors.text.secondary,
+          letterSpacing: Typography.letterSpacing.wide,
+        },
+        labelFocused: {
+          color: colors.primary.main,
+        },
+        labelError: {
+          color: colors.feedback.error,
+        },
+        labelDisabled: {
+          color: colors.text.disabled,
+        },
+        required: {
+          color: colors.feedback.error,
+        },
+        inputContainer: {
+          flexDirection: 'row' as const,
+          alignItems: 'center' as const,
+          height: ComponentSizes.input.height,
+          borderWidth: 1.5,
+          borderRadius: BorderRadius.input,
+          backgroundColor: colors.surface.card,
+          paddingHorizontal: Spacing.inputPadding,
+        },
+        inputContainerDisabled: {
+          backgroundColor: colors.surface.muted,
+          borderColor: colors.border.light,
+        },
+        inputContainerError: {
+          borderColor: colors.feedback.error,
+          backgroundColor: colors.feedback.errorLight,
+        },
+        input: {
+          flex: 1,
+          fontSize: Typography.sizes.input,
+          color: colors.text.primary,
+          paddingVertical: 0,
+        },
+        inputDisabled: {
+          color: colors.text.disabled,
+        },
+        errorMessage: {
+          color: colors.feedback.error,
+        },
+        hintMessage: {
+          color: colors.text.tertiary,
+        },
+      }),
+      [colors]
+    );
+
     return (
       <View style={[styles.container, containerStyle]}>
         {/* Label */}
         <View style={styles.labelContainer}>
           <Text
             style={[
-              styles.label,
-              isFocused && styles.labelFocused,
-              error && styles.labelError,
-              disabled && styles.labelDisabled,
+              themedStyles.label,
+              isFocused && themedStyles.labelFocused,
+              error && themedStyles.labelError,
+              disabled && themedStyles.labelDisabled,
             ]}
           >
             {label}
-            {required && <Text style={styles.required}> *</Text>}
+            {required && <Text style={themedStyles.required}> *</Text>}
           </Text>
         </View>
 
         {/* Input Container */}
         <Animated.View
           style={[
-            styles.inputContainer,
+            themedStyles.inputContainer,
             { borderColor },
-            disabled && styles.inputContainerDisabled,
-            error && styles.inputContainerError,
+            disabled && themedStyles.inputContainerDisabled,
+            error && themedStyles.inputContainerError,
           ]}
         >
           {/* Left Icon */}
@@ -179,10 +239,10 @@ export const Input = forwardRef<TextInput, InputProps>(
               size={ComponentSizes.input.iconSize}
               color={
                 disabled
-                  ? Colors.text.disabled
+                  ? colors.text.disabled
                   : isFocused
-                  ? Colors.primary.main
-                  : Colors.text.tertiary
+                  ? colors.primary.main
+                  : colors.text.tertiary
               }
               style={styles.leftIcon}
             />
@@ -192,10 +252,10 @@ export const Input = forwardRef<TextInput, InputProps>(
           <TextInput
             ref={ref}
             style={[
-              styles.input,
+              themedStyles.input,
               leftIcon && styles.inputWithLeftIcon,
               effectiveRightIcon && styles.inputWithRightIcon,
-              disabled && styles.inputDisabled,
+              disabled && themedStyles.inputDisabled,
               inputStyle,
             ]}
             value={value}
@@ -204,8 +264,8 @@ export const Input = forwardRef<TextInput, InputProps>(
             onBlur={handleBlur as any}
             editable={!disabled}
             secureTextEntry={isSecure}
-            placeholderTextColor={Colors.text.tertiary}
-            selectionColor={Colors.primary.main}
+            placeholderTextColor={colors.text.tertiary}
+            selectionColor={colors.primary.main}
             accessibilityLabel={label}
             accessibilityState={{ disabled }}
             {...textInputProps}
@@ -230,10 +290,10 @@ export const Input = forwardRef<TextInput, InputProps>(
                 size={ComponentSizes.input.iconSize}
                 color={
                   disabled
-                    ? Colors.text.disabled
+                    ? colors.text.disabled
                     : isFocused
-                    ? Colors.primary.main
-                    : Colors.text.tertiary
+                    ? colors.primary.main
+                    : colors.text.tertiary
                 }
               />
             </TouchableOpacity>
@@ -247,11 +307,11 @@ export const Input = forwardRef<TextInput, InputProps>(
               <MaterialCommunityIcons
                 name="alert-circle"
                 size={16}
-                color={Colors.feedback.error}
+                color={colors.feedback.error}
                 style={styles.messageIcon}
               />
             )}
-            <Text style={[styles.message, error ? styles.errorMessage : styles.hintMessage]}>
+            <Text style={[styles.message, error ? themedStyles.errorMessage : themedStyles.hintMessage]}>
               {error || hint}
             </Text>
           </View>
@@ -274,58 +334,14 @@ const styles = StyleSheet.create({
   labelContainer: {
     marginBottom: Spacing.xs,
   },
-  label: {
-    fontSize: Typography.sizes.label,
-    fontWeight: Typography.weights.medium,
-    color: Colors.text.secondary,
-    letterSpacing: Typography.letterSpacing.wide,
-  },
-  labelFocused: {
-    color: Colors.primary.main,
-  },
-  labelError: {
-    color: Colors.feedback.error,
-  },
-  labelDisabled: {
-    color: Colors.text.disabled,
-  },
-  required: {
-    color: Colors.feedback.error,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: ComponentSizes.input.height,
-    borderWidth: 1.5,
-    borderRadius: BorderRadius.input,
-    backgroundColor: Colors.surface.card,
-    paddingHorizontal: Spacing.inputPadding,
-  },
-  inputContainerDisabled: {
-    backgroundColor: Colors.surface.muted,
-    borderColor: Colors.border.light,
-  },
-  inputContainerError: {
-    borderColor: Colors.feedback.error,
-    backgroundColor: Colors.feedback.errorLight,
-  },
   leftIcon: {
     marginRight: Spacing.sm,
-  },
-  input: {
-    flex: 1,
-    fontSize: Typography.sizes.input,
-    color: Colors.text.primary,
-    paddingVertical: 0,
   },
   inputWithLeftIcon: {
     paddingLeft: 0,
   },
   inputWithRightIcon: {
     paddingRight: Spacing.sm,
-  },
-  inputDisabled: {
-    color: Colors.text.disabled,
   },
   rightIconButton: {
     padding: Spacing.xs,
@@ -343,12 +359,6 @@ const styles = StyleSheet.create({
   message: {
     flex: 1,
     fontSize: Typography.sizes.caption,
-  },
-  errorMessage: {
-    color: Colors.feedback.error,
-  },
-  hintMessage: {
-    color: Colors.text.tertiary,
   },
 });
 

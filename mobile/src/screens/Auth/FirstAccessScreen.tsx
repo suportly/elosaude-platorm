@@ -10,11 +10,13 @@ import {
 } from 'react-native';
 import { Button, HelperText, Text, TextInput, Card } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import { Colors } from '../../config/theme';
+import { useColors } from '../../config/ThemeContext';
+import { Typography, Spacing, BorderRadius, Shadows, ComponentSizes } from '../../config/theme';
 import { API_URL } from '../../config/api';
 
 export default function FirstAccessScreen() {
   const navigation = useNavigation();
+  const colors = useColors();
   const [step, setStep] = useState(1); // 1: CPF, 2: Token, 3: Senha
   const [cpf, setCpf] = useState('');
   const [registrationNumber, setRegistrationNumber] = useState('');
@@ -240,6 +242,105 @@ export default function FirstAccessScreen() {
     }
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface.background,
+    },
+    scrollContainer: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      padding: Spacing.screenPadding,
+    },
+    logoContainer: {
+      alignItems: 'center',
+      marginBottom: Spacing.xl,
+    },
+    logoImage: {
+      width: 160,
+      height: 80,
+      marginBottom: Spacing.md,
+    },
+    title: {
+      color: colors.primary.main,
+      fontWeight: Typography.weights.bold,
+      fontSize: Typography.sizes.h2,
+      marginBottom: Spacing.sm,
+    },
+    subtitle: {
+      color: colors.text.secondary,
+      fontSize: Typography.sizes.body,
+      textAlign: 'center',
+      paddingHorizontal: Spacing.screenPadding,
+    },
+    formContainer: {
+      backgroundColor: colors.surface.card,
+      borderRadius: BorderRadius.card,
+      padding: Spacing.lg,
+      ...Shadows.card,
+    },
+    stepIndicator: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: Spacing.lg,
+    },
+    stepDot: {
+      width: 32,
+      height: 32,
+      borderRadius: BorderRadius.xl,
+      backgroundColor: colors.border.medium,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    stepDotActive: {
+      backgroundColor: colors.primary.main,
+    },
+    stepText: {
+      color: colors.text.inverse,
+      fontWeight: Typography.weights.bold,
+      fontSize: Typography.sizes.label,
+    },
+    stepLine: {
+      width: 40,
+      height: 2,
+      backgroundColor: colors.border.medium,
+    },
+    stepLineActive: {
+      backgroundColor: colors.primary.main,
+    },
+    input: {
+      marginBottom: Spacing.sm,
+      backgroundColor: colors.surface.card,
+    },
+    infoCard: {
+      marginBottom: Spacing.md,
+      backgroundColor: colors.feedback.infoLight,
+    },
+    infoText: {
+      color: colors.feedback.info,
+      fontSize: Typography.sizes.body,
+      textAlign: 'center',
+    },
+    button: {
+      marginTop: Spacing.md,
+      backgroundColor: colors.primary.main,
+      minHeight: ComponentSizes.touchTarget,
+    },
+    buttonContent: {
+      paddingVertical: Spacing.sm,
+      minHeight: ComponentSizes.touchTarget,
+    },
+    backButton: {
+      marginTop: Spacing.sm,
+      minHeight: ComponentSizes.touchTarget,
+    },
+    cancelButton: {
+      marginTop: Spacing.md,
+      minHeight: ComponentSizes.touchTarget,
+    },
+  });
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -292,6 +393,8 @@ export default function FirstAccessScreen() {
                 left={<TextInput.Icon icon="account" />}
                 error={!!cpfError}
                 disabled={isLoading}
+                accessibilityLabel="Campo de CPF"
+                accessibilityHint="Insira seu CPF com 11 dígitos para solicitar a ativação da conta"
               />
               <HelperText type="error" visible={!!cpfError}>
                 {cpfError}
@@ -309,6 +412,8 @@ export default function FirstAccessScreen() {
                 left={<TextInput.Icon icon="card-account-details" />}
                 error={!!registrationError}
                 disabled={isLoading}
+                accessibilityLabel="Campo de Número de Matrícula"
+                accessibilityHint="Insira seu número de matrícula para solicitar a ativação da conta"
               />
               <HelperText type="error" visible={!!registrationError}>
                 {registrationError}
@@ -321,6 +426,8 @@ export default function FirstAccessScreen() {
                 disabled={isLoading}
                 style={styles.button}
                 contentStyle={styles.buttonContent}
+                accessibilityLabel="Solicitar Token de Ativação"
+                accessibilityHint="Envia um token de ativação para seu email cadastrado"
               >
                 Solicitar Token
               </Button>
@@ -351,6 +458,8 @@ export default function FirstAccessScreen() {
                 left={<TextInput.Icon icon="key" />}
                 error={!!tokenError}
                 disabled={isLoading}
+                accessibilityLabel="Campo de Token de Ativação"
+                accessibilityHint="Insira o token recebido em seu email para verificar sua identidade"
               />
               <HelperText type="error" visible={!!tokenError}>
                 {tokenError}
@@ -363,6 +472,8 @@ export default function FirstAccessScreen() {
                 disabled={isLoading}
                 style={styles.button}
                 contentStyle={styles.buttonContent}
+                accessibilityLabel="Verificar Token"
+                accessibilityHint="Valida o token de ativação e avança para a criação de senha"
               >
                 Verificar Token
               </Button>
@@ -372,6 +483,8 @@ export default function FirstAccessScreen() {
                 onPress={() => setStep(1)}
                 disabled={isLoading}
                 style={styles.backButton}
+                accessibilityLabel="Voltar"
+                accessibilityHint="Retorna à etapa anterior para inserir novamente seus dados"
               >
                 Voltar
               </Button>
@@ -405,10 +518,14 @@ export default function FirstAccessScreen() {
                   <TextInput.Icon
                     icon={showPassword ? 'eye-off' : 'eye'}
                     onPress={() => setShowPassword(!showPassword)}
+                    accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                    accessibilityHint={showPassword ? 'Oculta a senha digitada' : 'Exibe a senha digitada'}
                   />
                 }
                 error={!!passwordError}
                 disabled={isLoading}
+                accessibilityLabel="Campo de Nova Senha"
+                accessibilityHint="Insira uma senha com no mínimo 8 caracteres, incluindo maiúsculas, minúsculas e números"
               />
               <HelperText type="error" visible={!!passwordError}>
                 {passwordError}
@@ -429,10 +546,14 @@ export default function FirstAccessScreen() {
                   <TextInput.Icon
                     icon={showConfirmPassword ? 'eye-off' : 'eye'}
                     onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    accessibilityLabel={showConfirmPassword ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}
+                    accessibilityHint={showConfirmPassword ? 'Oculta a confirmação de senha digitada' : 'Exibe a confirmação de senha digitada'}
                   />
                 }
                 error={!!confirmPasswordError}
                 disabled={isLoading}
+                accessibilityLabel="Campo de Confirmação de Senha"
+                accessibilityHint="Digite novamente sua senha para confirmar que digitou corretamente"
               />
               <HelperText type="error" visible={!!confirmPasswordError}>
                 {confirmPasswordError}
@@ -445,6 +566,8 @@ export default function FirstAccessScreen() {
                 disabled={isLoading}
                 style={styles.button}
                 contentStyle={styles.buttonContent}
+                accessibilityLabel="Ativar Conta"
+                accessibilityHint="Ativa sua conta com a senha criada e leva você para o login"
               >
                 Ativar Conta
               </Button>
@@ -456,6 +579,8 @@ export default function FirstAccessScreen() {
             onPress={() => navigation.goBack()}
             disabled={isLoading}
             style={styles.cancelButton}
+            accessibilityLabel="Cancelar"
+            accessibilityHint="Cancela o processo de primeiro acesso e volta à tela anterior"
           >
             Cancelar
           </Button>
@@ -464,98 +589,3 @@ export default function FirstAccessScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  logoImage: {
-    width: 160,
-    height: 80,
-    marginBottom: 16,
-  },
-  title: {
-    color: Colors.primary.main,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: '#666',
-    textAlign: 'center',
-    paddingHorizontal: 20,
-  },
-  formContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  stepIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  stepDot: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#E0E0E0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepDotActive: {
-    backgroundColor: Colors.primary.main,
-  },
-  stepText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  stepLine: {
-    width: 40,
-    height: 2,
-    backgroundColor: '#E0E0E0',
-  },
-  stepLineActive: {
-    backgroundColor: Colors.primary.main,
-  },
-  input: {
-    marginBottom: 8,
-  },
-  infoCard: {
-    marginBottom: 16,
-    backgroundColor: '#E3F2FD',
-  },
-  infoText: {
-    color: '#1565C0',
-    textAlign: 'center',
-  },
-  button: {
-    marginTop: 16,
-    backgroundColor: Colors.primary.main,
-  },
-  buttonContent: {
-    paddingVertical: 8,
-  },
-  backButton: {
-    marginTop: 8,
-  },
-  cancelButton: {
-    marginTop: 16,
-  },
-});

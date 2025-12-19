@@ -8,7 +8,7 @@
  * - Estados: default, loading, disabled
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -29,6 +29,7 @@ import {
   ComponentSizes,
   Animations,
 } from '../../config/theme';
+import { useColors } from '../../config/ThemeContext';
 
 // =============================================================================
 // TYPES
@@ -74,6 +75,9 @@ export const Button: React.FC<ButtonProps> = ({
   accessibilityHint,
   testID,
 }) => {
+  // Get theme colors
+  const colors = useColors();
+
   // Animated value for press feedback
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
 
@@ -95,10 +99,19 @@ export const Button: React.FC<ButtonProps> = ({
     }).start();
   }, [scaleAnim]);
 
-  // Get styles based on variant and size
-  const buttonStyles = getButtonStyles(variant, size, disabled, fullWidth);
-  const textStyles = getTextStyles(variant, size, disabled);
-  const iconColor = getIconColor(variant, disabled);
+  // Get styles based on variant, size and theme colors
+  const buttonStyles = useMemo(
+    () => getButtonStyles(variant, size, disabled, fullWidth, colors),
+    [variant, size, disabled, fullWidth, colors]
+  );
+  const textStyles = useMemo(
+    () => getTextStyles(variant, size, disabled, colors),
+    [variant, size, disabled, colors]
+  );
+  const iconColor = useMemo(
+    () => getIconColor(variant, disabled, colors),
+    [variant, disabled, colors]
+  );
   const iconSize = getIconSize(size);
 
   const isDisabled = disabled || loading;
@@ -126,7 +139,7 @@ export const Button: React.FC<ButtonProps> = ({
       >
         {loading ? (
           <ActivityIndicator
-            color={variant === 'primary' || variant === 'danger' ? Colors.primary.contrast : Colors.primary.main}
+            color={variant === 'primary' || variant === 'danger' ? colors.primary.contrast : colors.primary.main}
             size="small"
           />
         ) : (
@@ -163,7 +176,8 @@ const getButtonStyles = (
   variant: ButtonVariant,
   size: ButtonSize,
   disabled: boolean,
-  fullWidth: boolean
+  fullWidth: boolean,
+  colors: ReturnType<typeof useColors>
 ): ViewStyle => {
   const baseStyles: ViewStyle = {
     height: getSizeHeight(size),
@@ -174,8 +188,8 @@ const getButtonStyles = (
   if (disabled) {
     return {
       ...baseStyles,
-      backgroundColor: Colors.surface.muted,
-      borderColor: Colors.border.light,
+      backgroundColor: colors.surface.muted,
+      borderColor: colors.border.light,
     };
   }
 
@@ -183,13 +197,13 @@ const getButtonStyles = (
     case 'primary':
       return {
         ...baseStyles,
-        backgroundColor: Colors.primary.main,
+        backgroundColor: colors.primary.main,
         ...Shadows.button,
       };
     case 'secondary':
       return {
         ...baseStyles,
-        backgroundColor: Colors.secondary.main,
+        backgroundColor: colors.secondary.main,
         ...Shadows.sm,
       };
     case 'outline':
@@ -197,7 +211,7 @@ const getButtonStyles = (
         ...baseStyles,
         backgroundColor: 'transparent',
         borderWidth: 2,
-        borderColor: Colors.primary.main,
+        borderColor: colors.primary.main,
       };
     case 'text':
       return {
@@ -209,7 +223,7 @@ const getButtonStyles = (
     case 'danger':
       return {
         ...baseStyles,
-        backgroundColor: Colors.feedback.error,
+        backgroundColor: colors.feedback.error,
         ...Shadows.sm,
       };
     default:
@@ -220,7 +234,8 @@ const getButtonStyles = (
 const getTextStyles = (
   variant: ButtonVariant,
   size: ButtonSize,
-  disabled: boolean
+  disabled: boolean,
+  colors: ReturnType<typeof useColors>
 ): TextStyle => {
   const baseStyles: TextStyle = {
     fontSize: size === 'small' ? Typography.sizes.buttonSmall : Typography.sizes.button,
@@ -231,7 +246,7 @@ const getTextStyles = (
   if (disabled) {
     return {
       ...baseStyles,
-      color: Colors.text.disabled,
+      color: colors.text.disabled,
     };
   }
 
@@ -241,32 +256,36 @@ const getTextStyles = (
     case 'danger':
       return {
         ...baseStyles,
-        color: Colors.primary.contrast,
+        color: colors.primary.contrast,
       };
     case 'outline':
     case 'text':
       return {
         ...baseStyles,
-        color: Colors.primary.main,
+        color: colors.primary.main,
       };
     default:
       return baseStyles;
   }
 };
 
-const getIconColor = (variant: ButtonVariant, disabled: boolean): string => {
-  if (disabled) return Colors.text.disabled;
+const getIconColor = (
+  variant: ButtonVariant,
+  disabled: boolean,
+  colors: ReturnType<typeof useColors>
+): string => {
+  if (disabled) return colors.text.disabled;
 
   switch (variant) {
     case 'primary':
     case 'secondary':
     case 'danger':
-      return Colors.primary.contrast;
+      return colors.primary.contrast;
     case 'outline':
     case 'text':
-      return Colors.primary.main;
+      return colors.primary.main;
     default:
-      return Colors.primary.main;
+      return colors.primary.main;
   }
 };
 

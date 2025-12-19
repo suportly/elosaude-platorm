@@ -5,7 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Colors } from '../../config/theme';
+import { useColors, Typography, Spacing, ComponentSizes, Shadows } from '../../config';
 import { formatCPF as maskCPF } from '../../utils/formatters';
 import { API_URL } from '../../config/api';
 
@@ -18,6 +18,7 @@ interface FormData {
 }
 
 export default function ForgotPasswordScreen({ navigation }: any) {
+  const colors = useColors();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -80,17 +81,17 @@ export default function ForgotPasswordScreen({ navigation }: any) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.surface.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Icon name="lock-reset" size={64} color={Colors.primary.main} />
-          <Text variant="headlineMedium" style={styles.title}>
+          <Icon name="lock-reset" size={ComponentSizes.icon.xl} color={colors.primary.main} />
+          <Text variant="headlineMedium" style={[styles.title, { color: colors.text.primary }]}>
             Esqueci minha senha
           </Text>
-          <Text variant="bodyMedium" style={styles.subtitle}>
+          <Text variant="bodyMedium" style={[styles.subtitle, { color: colors.text.secondary }]}>
             Digite seu CPF para receber um código de recuperação por e-mail
           </Text>
         </View>
@@ -116,6 +117,9 @@ export default function ForgotPasswordScreen({ navigation }: any) {
                     placeholder="000.000.000-00"
                     disabled={isLoading}
                     style={styles.input}
+                    accessibilityLabel="Campo de CPF"
+                    accessibilityHint="Digite seu número de CPF no formato 000.000.000-00 para receber um código de recuperação de senha"
+                    accessibilityRole="text"
                   />
                   {errors.cpf && (
                     <HelperText type="error" visible={!!errors.cpf}>
@@ -133,6 +137,9 @@ export default function ForgotPasswordScreen({ navigation }: any) {
               disabled={isLoading}
               style={styles.button}
               icon="send"
+              accessibilityLabel="Enviar Código de Recuperação"
+              accessibilityHint="Envia um código de recuperação de senha para o seu e-mail cadastrado"
+              accessibilityRole="button"
             >
               Enviar Código
             </Button>
@@ -142,6 +149,9 @@ export default function ForgotPasswordScreen({ navigation }: any) {
               onPress={() => navigation.goBack()}
               disabled={isLoading}
               style={styles.backButton}
+              accessibilityLabel="Voltar para Login"
+              accessibilityHint="Retorna para a tela de login"
+              accessibilityRole="button"
             >
               Voltar para Login
             </Button>
@@ -149,17 +159,17 @@ export default function ForgotPasswordScreen({ navigation }: any) {
         </Card>
 
         {/* Info Card */}
-        <Card style={styles.infoCard}>
+        <Card style={[styles.infoCard, { backgroundColor: colors.feedback.info + '10' }]}>
           <Card.Content>
             <View style={styles.infoRow}>
-              <Icon name="information-outline" size={20} color={Colors.feedback.info} />
-              <Text variant="bodySmall" style={styles.infoText}>
+              <Icon name="information-outline" size={ComponentSizes.icon.sm} color={colors.feedback.info} />
+              <Text variant="bodySmall" style={[styles.infoText, { color: colors.feedback.info }]}>
                 O código de recuperação será enviado para o e-mail cadastrado
               </Text>
             </View>
             <View style={styles.infoRow}>
-              <Icon name="clock-outline" size={20} color={Colors.feedback.info} />
-              <Text variant="bodySmall" style={styles.infoText}>
+              <Icon name="clock-outline" size={ComponentSizes.icon.sm} color={colors.feedback.info} />
+              <Text variant="bodySmall" style={[styles.infoText, { color: colors.feedback.info }]}>
                 O código expira em 1 hora
               </Text>
             </View>
@@ -173,53 +183,51 @@ export default function ForgotPasswordScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.surface.background,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: Spacing.screenPadding,
     justifyContent: 'center',
   },
   header: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: Spacing.xl,
   },
   title: {
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
     fontWeight: 'bold',
-    color: Colors.text.primary,
   },
   subtitle: {
     textAlign: 'center',
-    color: Colors.text.secondary,
-    paddingHorizontal: 20,
+    paddingHorizontal: Spacing.screenPadding,
   },
   card: {
-    marginBottom: 20,
-    elevation: 2,
+    marginBottom: Spacing.screenPadding,
+    ...Shadows.card,
   },
   input: {
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   button: {
-    marginTop: 16,
-    paddingVertical: 6,
+    marginTop: Spacing.md,
+    paddingVertical: Spacing.xs,
+    minHeight: ComponentSizes.touchTarget,
   },
   backButton: {
-    marginTop: 8,
+    marginTop: Spacing.sm,
+    minHeight: ComponentSizes.touchTarget,
   },
   infoCard: {
-    backgroundColor: Colors.feedback.info + '10',
+    ...Shadows.card,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 4,
-    gap: 8,
+    marginVertical: Spacing.xs,
+    gap: Spacing.sm,
   },
   infoText: {
     flex: 1,
-    color: Colors.feedback.info,
   },
 });

@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "expo start --port 8082",
-    "android": "expo start --android --port 8082",
-    "ios": "expo start --ios --port 8082",
-    "web": "expo start --web --port 8082"
+    "start": "expo start --port 3005",
+    "android": "expo start --android --port 3005",
+    "ios": "expo start --ios --port 3005",
+    "web": "expo start --web --port 3005"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

@@ -24,13 +24,13 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppSelector } from '../../store/hooks';
 import {
-  Colors,
+  useColors,
   Typography,
   Spacing,
   BorderRadius,
   Shadows,
   ComponentSizes,
-} from '../../config/theme';
+} from '../../config';
 import { SectionHeader } from '../../components/ui';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 
@@ -45,6 +45,9 @@ interface ModuleCardProps {
   color: string;
   backgroundColor: string;
   onPress: () => void;
+  cardBackgroundColor?: string;
+  textPrimaryColor?: string;
+  textSecondaryColor?: string;
 }
 
 const ModuleCard: React.FC<ModuleCardProps> = ({
@@ -54,6 +57,9 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
   color,
   backgroundColor,
   onPress,
+  cardBackgroundColor,
+  textPrimaryColor,
+  textSecondaryColor,
 }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -80,7 +86,10 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
       style={[styles.moduleCardContainer, { transform: [{ scale: scaleAnim }] }]}
     >
       <TouchableOpacity
-        style={styles.moduleCard}
+        style={[
+          styles.moduleCard,
+          cardBackgroundColor && { backgroundColor: cardBackgroundColor },
+        ]}
         onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
@@ -92,11 +101,23 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
         <View style={[styles.moduleIconContainer, { backgroundColor }]}>
           <MaterialCommunityIcons name={icon as any} size={32} color={color} />
         </View>
-        <Text style={styles.moduleTitle} numberOfLines={2}>
+        <Text
+          style={[
+            styles.moduleTitle,
+            textPrimaryColor && { color: textPrimaryColor },
+          ]}
+          numberOfLines={2}
+        >
           {title}
         </Text>
         {description && (
-          <Text style={styles.moduleDescription} numberOfLines={1}>
+          <Text
+            style={[
+              styles.moduleDescription,
+              textSecondaryColor && { color: textSecondaryColor },
+            ]}
+            numberOfLines={1}
+          >
             {description}
           </Text>
         )}
@@ -115,7 +136,24 @@ interface QuickActionProps {
   onPress: () => void;
 }
 
-const QuickAction: React.FC<QuickActionProps> = ({ title, icon, onPress }) => {
+interface QuickActionInternalProps extends QuickActionProps {
+  primaryColor: string;
+  primaryLighter: string;
+  textPrimary: string;
+  textTertiary: string;
+  surfaceCard: string;
+}
+
+const QuickActionInternal: React.FC<QuickActionInternalProps> = ({
+  title,
+  icon,
+  onPress,
+  primaryColor,
+  primaryLighter,
+  textPrimary,
+  textTertiary,
+  surfaceCard,
+}) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = useCallback(() => {
@@ -141,28 +179,29 @@ const QuickAction: React.FC<QuickActionProps> = ({ title, icon, onPress }) => {
       style={[styles.quickActionContainer, { transform: [{ scale: scaleAnim }] }]}
     >
       <TouchableOpacity
-        style={styles.quickAction}
+        style={[styles.quickAction, { backgroundColor: surfaceCard }]}
         onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         activeOpacity={0.9}
         accessibilityLabel={title}
+        accessibilityHint={`Toque para acessar ${title}`}
         accessibilityRole="button"
       >
-        <View style={styles.quickActionIcon}>
+        <View style={[styles.quickActionIcon, { backgroundColor: primaryLighter }]}>
           <MaterialCommunityIcons
             name={icon as any}
             size={24}
-            color={Colors.primary.main}
+            color={primaryColor}
           />
         </View>
-        <Text style={styles.quickActionText} numberOfLines={2}>
+        <Text style={[styles.quickActionText, { color: textPrimary }]} numberOfLines={2}>
           {title}
         </Text>
         <MaterialCommunityIcons
           name="chevron-right"
           size={20}
-          color={Colors.text.tertiary}
+          color={textTertiary}
         />
       </TouchableOpacity>
     </Animated.View>
@@ -175,6 +214,7 @@ const QuickAction: React.FC<QuickActionProps> = ({ title, icon, onPress }) => {
 
 export default function HomeScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
   const { beneficiary } = useAppSelector((state) => state.auth);
   const [refreshing, setRefreshing] = React.useState(false);
 
@@ -197,7 +237,7 @@ export default function HomeScreen({ navigation }: any) {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.surface.background }]}
       contentContainerStyle={[
         styles.contentContainer,
         { paddingBottom: insets.bottom + Spacing.xl },
@@ -207,17 +247,17 @@ export default function HomeScreen({ navigation }: any) {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={Colors.primary.main}
-          colors={[Colors.primary.main]}
+          tintColor={colors.primary.main}
+          colors={[colors.primary.main]}
         />
       }
     >
       {/* Welcome Header */}
-      <View style={styles.welcomeSection}>
+      <View style={[styles.welcomeSection, { backgroundColor: colors.primary.main }]}>
         <View style={styles.welcomeContent}>
           <View style={styles.welcomeTextContainer}>
             <Text style={styles.greeting}>{getGreeting()},</Text>
-            <Text style={styles.userName} numberOfLines={1}>
+            <Text style={[styles.userName, { color: colors.primary.contrast }]} numberOfLines={1}>
               {firstName}
             </Text>
           </View>
@@ -225,10 +265,11 @@ export default function HomeScreen({ navigation }: any) {
             style={styles.profileButton}
             onPress={() => navigation.navigate('Profile')}
             accessibilityLabel="Ver perfil"
+            accessibilityHint="Toque para acessar seu perfil pessoal"
             accessibilityRole="button"
           >
             <View style={styles.avatarContainer}>
-              <Text style={styles.avatarText}>
+              <Text style={[styles.avatarText, { color: colors.primary.contrast }]}>
                 {firstName.charAt(0).toUpperCase()}
               </Text>
             </View>
@@ -242,7 +283,7 @@ export default function HomeScreen({ navigation }: any) {
       {/* Plan Status Card */}
       <View style={styles.section}>
         <TouchableOpacity
-          style={styles.planCard}
+          style={[styles.planCard, { backgroundColor: colors.surface.card }]}
           onPress={() => navigation.navigate('PlanDetails')}
           activeOpacity={0.9}
           accessibilityLabel={`Plano ${beneficiary?.health_plan || 'Básico'}, Status ${beneficiary?.status === 'ACTIVE' ? 'Ativo' : beneficiary?.status}`}
@@ -250,18 +291,18 @@ export default function HomeScreen({ navigation }: any) {
           accessibilityHint="Toque para ver detalhes do plano"
         >
           <View style={styles.planCardHeader}>
-            <View style={styles.planIconContainer}>
+            <View style={[styles.planIconContainer, { backgroundColor: colors.secondary.lighter }]}>
               <MaterialCommunityIcons
                 name="shield-check"
                 size={28}
-                color={Colors.secondary.main}
+                color={colors.secondary.main}
               />
             </View>
             <View style={styles.planInfo}>
-              <Text style={styles.planName} numberOfLines={1}>
+              <Text style={[styles.planName, { color: colors.text.primary }]} numberOfLines={1}>
                 {beneficiary?.health_plan || 'Plano Elosaúde'}
               </Text>
-              <Text style={styles.planRegistration}>
+              <Text style={[styles.planRegistration, { color: colors.text.secondary }]}>
                 Matrícula: {beneficiary?.registration_number || '---'}
               </Text>
             </View>
@@ -272,12 +313,12 @@ export default function HomeScreen({ navigation }: any) {
               showIcon={false}
             />
           </View>
-          <View style={styles.planCardFooter}>
-            <Text style={styles.planDetailsText}>Ver detalhes do plano</Text>
+          <View style={[styles.planCardFooter, { borderTopColor: colors.border.light }]}>
+            <Text style={[styles.planDetailsText, { color: colors.primary.main }]}>Ver detalhes do plano</Text>
             <MaterialCommunityIcons
               name="chevron-right"
               size={20}
-              color={Colors.primary.main}
+              color={colors.primary.main}
             />
           </View>
         </TouchableOpacity>
@@ -295,25 +336,34 @@ export default function HomeScreen({ navigation }: any) {
             title="Carteirinha Digital"
             description="Sua carteirinha virtual"
             icon="card-account-details"
-            color={Colors.primary.main}
-            backgroundColor={Colors.primary.lighter}
+            color={colors.primary.main}
+            backgroundColor={colors.primary.lighter}
             onPress={() => navigation.navigate('DigitalCard')}
+            cardBackgroundColor={colors.surface.card}
+            textPrimaryColor={colors.text.primary}
+            textSecondaryColor={colors.text.secondary}
           />
           <ModuleCard
             title="Rede Credenciada"
             description="Médicos e hospitais"
             icon="hospital-building"
-            color={Colors.secondary.main}
-            backgroundColor={Colors.secondary.lighter}
+            color={colors.secondary.main}
+            backgroundColor={colors.secondary.lighter}
             onPress={() => navigation.navigate('Network')}
+            cardBackgroundColor={colors.surface.card}
+            textPrimaryColor={colors.text.primary}
+            textSecondaryColor={colors.text.secondary}
           />
           <ModuleCard
             title="Guias Médicas"
             description="Solicitar autorizações"
             icon="file-document-multiple"
-            color={Colors.feedback.warning}
-            backgroundColor={Colors.feedback.warningLight}
+            color={colors.feedback.warning}
+            backgroundColor={colors.feedback.warningLight}
             onPress={() => navigation.navigate('Guides')}
+            cardBackgroundColor={colors.surface.card}
+            textPrimaryColor={colors.text.primary}
+            textSecondaryColor={colors.text.secondary}
           />
           <ModuleCard
             title="Minha Saúde"
@@ -322,6 +372,9 @@ export default function HomeScreen({ navigation }: any) {
             color="#E91E63"
             backgroundColor="#FCE4EC"
             onPress={() => navigation.navigate('HealthRecords')}
+            cardBackgroundColor={colors.surface.card}
+            textPrimaryColor={colors.text.primary}
+            textSecondaryColor={colors.text.secondary}
           />
         </View>
       </View>
@@ -334,25 +387,45 @@ export default function HomeScreen({ navigation }: any) {
           icon="cog"
         />
         <View style={styles.quickActionsGrid}>
-          <QuickAction
+          <QuickActionInternal
             title="2ª Via de Boleto"
             icon="file-download-outline"
             onPress={() => navigation.navigate('Invoices')}
+            primaryColor={colors.primary.main}
+            primaryLighter={colors.primary.lighter}
+            textPrimary={colors.text.primary}
+            textTertiary={colors.text.tertiary}
+            surfaceCard={colors.surface.card}
           />
-          <QuickAction
+          <QuickActionInternal
             title="Informe de IR"
             icon="file-chart-outline"
             onPress={() => navigation.navigate('TaxStatements')}
+            primaryColor={colors.primary.main}
+            primaryLighter={colors.primary.lighter}
+            textPrimary={colors.text.primary}
+            textTertiary={colors.text.tertiary}
+            surfaceCard={colors.surface.card}
           />
-          <QuickAction
+          <QuickActionInternal
             title="Dependentes"
             icon="account-group"
             onPress={() => navigation.navigate('Dependents')}
+            primaryColor={colors.primary.main}
+            primaryLighter={colors.primary.lighter}
+            textPrimary={colors.text.primary}
+            textTertiary={colors.text.tertiary}
+            surfaceCard={colors.surface.card}
           />
-          <QuickAction
+          <QuickActionInternal
             title="Alterar Senha"
             icon="lock-reset"
             onPress={() => navigation.navigate('ChangePassword')}
+            primaryColor={colors.primary.main}
+            primaryLighter={colors.primary.lighter}
+            textPrimary={colors.text.primary}
+            textTertiary={colors.text.tertiary}
+            surfaceCard={colors.surface.card}
           />
         </View>
       </View>
@@ -360,29 +433,35 @@ export default function HomeScreen({ navigation }: any) {
       {/* Help Card */}
       <View style={styles.section}>
         <TouchableOpacity
-          style={styles.helpCard}
+          style={[
+            styles.helpCard,
+            {
+              backgroundColor: colors.primary.lighter,
+              borderColor: colors.primary.light,
+            },
+          ]}
           onPress={() => navigation.navigate('Contact')}
           activeOpacity={0.9}
           accessibilityLabel="Central de Ajuda"
           accessibilityHint="Toque para entrar em contato com nossa equipe"
           accessibilityRole="button"
         >
-          <View style={styles.helpIconContainer}>
+          <View style={[styles.helpIconContainer, { backgroundColor: colors.surface.card }]}>
             <MaterialCommunityIcons
               name="headset"
               size={32}
-              color={Colors.primary.main}
+              color={colors.primary.main}
             />
           </View>
           <View style={styles.helpContent}>
-            <Text style={styles.helpTitle}>Precisa de Ajuda?</Text>
-            <Text style={styles.helpSubtitle}>
+            <Text style={[styles.helpTitle, { color: colors.text.primary }]}>Precisa de Ajuda?</Text>
+            <Text style={[styles.helpSubtitle, { color: colors.text.secondary }]}>
               Nossa equipe está pronta para atendê-lo
             </Text>
           </View>
           <View style={styles.helpButtonContainer}>
-            <View style={styles.helpButton}>
-              <Text style={styles.helpButtonText}>Falar com Atendimento</Text>
+            <View style={[styles.helpButton, { backgroundColor: colors.primary.main }]}>
+              <Text style={[styles.helpButtonText, { color: colors.primary.contrast }]}>Falar com Atendimento</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -398,7 +477,6 @@ export default function HomeScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.surface.background,
   },
   contentContainer: {
     flexGrow: 1,
@@ -406,7 +484,6 @@ const styles = StyleSheet.create({
 
   // Welcome Section
   welcomeSection: {
-    backgroundColor: Colors.primary.main,
     paddingHorizontal: Spacing.screenPadding,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.xl,
@@ -430,7 +507,6 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: Typography.sizes.h2,
     fontWeight: Typography.weights.bold,
-    color: Colors.primary.contrast,
     marginTop: 2,
   },
   welcomeSubtext: {
@@ -454,7 +530,6 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: Typography.sizes.h3,
     fontWeight: Typography.weights.bold,
-    color: Colors.primary.contrast,
   },
 
   // Section
@@ -465,7 +540,6 @@ const styles = StyleSheet.create({
 
   // Plan Card
   planCard: {
-    backgroundColor: Colors.surface.card,
     borderRadius: BorderRadius.lg,
     padding: Spacing.cardPadding,
     ...Shadows.md,
@@ -478,7 +552,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: BorderRadius.md,
-    backgroundColor: Colors.secondary.lighter,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
@@ -489,11 +562,9 @@ const styles = StyleSheet.create({
   planName: {
     fontSize: Typography.sizes.body,
     fontWeight: Typography.weights.semibold,
-    color: Colors.text.primary,
   },
   planRegistration: {
     fontSize: Typography.sizes.bodySmall,
-    color: Colors.text.secondary,
     marginTop: 2,
   },
   planCardFooter: {
@@ -503,12 +574,10 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border.light,
   },
   planDetailsText: {
     fontSize: Typography.sizes.bodySmall,
     fontWeight: Typography.weights.medium,
-    color: Colors.primary.main,
   },
 
   // Modules Grid
@@ -523,7 +592,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   moduleCard: {
-    backgroundColor: Colors.surface.card,
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
     alignItems: 'center',
@@ -541,13 +609,11 @@ const styles = StyleSheet.create({
   moduleTitle: {
     fontSize: Typography.sizes.body,
     fontWeight: Typography.weights.semibold,
-    color: Colors.text.primary,
     textAlign: 'center',
     marginBottom: Spacing.xxs,
   },
   moduleDescription: {
     fontSize: Typography.sizes.caption,
-    color: Colors.text.secondary,
     textAlign: 'center',
   },
 
@@ -561,7 +627,6 @@ const styles = StyleSheet.create({
   quickAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface.card,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
     minHeight: ComponentSizes.touchTarget,
@@ -571,7 +636,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: BorderRadius.sm,
-    backgroundColor: Colors.primary.lighter,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
@@ -580,22 +644,18 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: Typography.sizes.body,
     fontWeight: Typography.weights.medium,
-    color: Colors.text.primary,
   },
 
   // Help Card
   helpCard: {
-    backgroundColor: Colors.primary.lighter,
     borderRadius: BorderRadius.lg,
     padding: Spacing.cardPadding,
     borderWidth: 1,
-    borderColor: Colors.primary.light,
   },
   helpIconContainer: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.surface.card,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
@@ -609,19 +669,16 @@ const styles = StyleSheet.create({
   helpTitle: {
     fontSize: Typography.sizes.h4,
     fontWeight: Typography.weights.semibold,
-    color: Colors.text.primary,
     marginBottom: Spacing.xxs,
   },
   helpSubtitle: {
     fontSize: Typography.sizes.bodySmall,
-    color: Colors.text.secondary,
     textAlign: 'center',
   },
   helpButtonContainer: {
     alignItems: 'center',
   },
   helpButton: {
-    backgroundColor: Colors.primary.main,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.xl,
     borderRadius: BorderRadius.button,
@@ -630,6 +687,5 @@ const styles = StyleSheet.create({
   helpButtonText: {
     fontSize: Typography.sizes.button,
     fontWeight: Typography.weights.semibold,
-    color: Colors.primary.contrast,
   },
 });

@@ -106,7 +106,7 @@ export default function ReimbursementDetailScreen({ route, navigation }: any) {
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+        <ActivityIndicator size="large" color={Colors.primary.main} />
       </View>
     );
   }
@@ -137,8 +137,8 @@ export default function ReimbursementDetailScreen({ route, navigation }: any) {
         <RefreshControl
           refreshing={isLoading}
           onRefresh={refetch}
-          colors={[Colors.primary]}
-          tintColor={Colors.primary}
+          colors={[Colors.primary.main]}
+          tintColor={Colors.primary.main}
         />
       }
     >
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: Colors.primary,
+    color: Colors.primary.main,
   },
   amountRow: {
     flexDirection: 'row',
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   },
   requestedAmount: {
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   approvedAmount: {
     fontWeight: 'bold',

@@ -1,0 +1,519 @@
+openapi: 3.0.3
+info:
+  title: Elosaúde Reimbursement API
+  description: API endpoints for reimbursement management in the Elosaúde platform
+  version: 1.0.0
+  contact:
+    name: Elosaúde Development Team
+
+servers:
+  - url: http://localhost:8000/api
+    description: Development server
+  - url: https://api.elosaude.com.br/api
+    description: Production server
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Reimbursements
+    description: Reimbursement request operations
+  - name: Documents
+    description: Reimbursement document operations
+
+paths:
+  /reimbursements/requests/:
+    get:
+      tags: [Reimbursements]
+      summary: List all reimbursement requests
+      description: Returns paginated list of all reimbursements (admin only)
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/StatusFilter'
+        - $ref: '#/components/parameters/ExpenseTypeFilter'
+      responses:
+        '200':
+          description: Paginated list of reimbursements
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReimbursementList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Reimbursements]
+      summary: Create a new reimbursement request
+      description: Creates a new reimbursement request for the authenticated beneficiary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReimbursementRequestCreate'
+      responses:
+        '201':
+          description: Reimbursement created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReimbursementRequest'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /reimbursements/requests/{id}/:
+    get:
+      tags: [Reimbursements]
+      summary: Get reimbursement details
+      parameters:
+        - $ref: '#/components/parameters/ReimbursementId'
+      responses:
+        '200':
+          description: Reimbursement details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReimbursementRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /reimbursements/requests/my_reimbursements/:
+    get:
+      tags: [Reimbursements]
+      summary: List current user's reimbursements
+      description: Returns paginated list of reimbursements for the authenticated beneficiary
+      operationId: getMyReimbursements
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/StatusFilter'
+      responses:
+        '200':
+          description: Paginated list of user's reimbursements
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReimbursementList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Beneficiary not found for user
+
+  /reimbursements/requests/summary/:
+    get:
+      tags: [Reimbursements]
+      summary: Get reimbursement summary
+      description: Returns summary statistics for the authenticated beneficiary's reimbursements
+      operationId: getReimbursementSummary
+      responses:
+        '200':
+          description: Reimbursement summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReimbursementSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /reimbursements/requests/{id}/receipt-pdf/:
+    get:
+      tags: [Reimbursements]
+      summary: Download reimbursement receipt PDF
+      description: Generates and returns a PDF receipt for paid reimbursements
+      operationId: downloadReceiptPdf
+      parameters:
+        - $ref: '#/components/parameters/ReimbursementId'
+      responses:
+        '200':
+          description: PDF file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Reimbursement not yet paid
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /reimbursements/requests/{id}/add-documents/:
+    post:
+      tags: [Reimbursements]
+      summary: Add documents to existing reimbursement
+      description: |
+        Adds additional documents to a reimbursement request.
+        Only available for reimbursements with status IN_ANALYSIS.
+
+        **NEW ENDPOINT - To be implemented**
+      operationId: addDocuments
+      parameters:
+        - $ref: '#/components/parameters/ReimbursementId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - documents
+              properties:
+                documents:
+                  type: array
+                  description: Array of document IDs to associate
+                  items:
+                    type: integer
+                  minItems: 1
+                  maxItems: 5
+                  example: [1, 2, 3]
+      responses:
+        '200':
+          description: Documents added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "3 documentos adicionados com sucesso"
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReimbursementDocument'
+        '400':
+          description: Invalid request or reimbursement not in analysis
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Documentos só podem ser adicionados a reembolsos em análise"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /reimbursements/documents/:
+    get:
+      tags: [Documents]
+      summary: List reimbursement documents
+      parameters:
+        - name: reimbursement
+          in: query
+          schema:
+            type: integer
+          description: Filter by reimbursement ID
+      responses:
+        '200':
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReimbursementDocument'
+
+    post:
+      tags: [Documents]
+      summary: Upload a document
+      description: Uploads a document file. Returns document ID for association with reimbursement.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - document_type
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Document file (PDF, JPG, PNG, max 10MB)
+                document_type:
+                  type: string
+                  enum: [INVOICE, PRESCRIPTION, REPORT, RECEIPT, OTHER]
+                description:
+                  type: string
+                  maxLength: 200
+                reimbursement:
+                  type: integer
+                  description: Optional reimbursement ID to associate immediately
+      responses:
+        '201':
+          description: Document uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReimbursementDocument'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: Page number for pagination
+
+    StatusFilter:
+      name: status
+      in: query
+      schema:
+        type: string
+        enum: [IN_ANALYSIS, APPROVED, PARTIALLY_APPROVED, DENIED, PAID, CANCELLED]
+      description: Filter by status
+
+    ExpenseTypeFilter:
+      name: expense_type
+      in: query
+      schema:
+        type: string
+        enum: [CONSULTATION, EXAM, MEDICATION, HOSPITALIZATION, SURGERY, THERAPY, OTHER]
+      description: Filter by expense type
+
+    ReimbursementId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Reimbursement ID
+
+  schemas:
+    ReimbursementRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        protocol_number:
+          type: string
+          readOnly: true
+          example: "REIMB1234567890"
+        beneficiary:
+          type: integer
+        beneficiary_name:
+          type: string
+          readOnly: true
+        expense_type:
+          type: string
+          enum: [CONSULTATION, EXAM, MEDICATION, HOSPITALIZATION, SURGERY, THERAPY, OTHER]
+        expense_type_display:
+          type: string
+          readOnly: true
+        service_date:
+          type: string
+          format: date
+        provider_name:
+          type: string
+          maxLength: 200
+        provider_cnpj_cpf:
+          type: string
+          maxLength: 14
+        requested_amount:
+          type: string
+          format: decimal
+        approved_amount:
+          type: string
+          format: decimal
+          nullable: true
+          readOnly: true
+        bank_details:
+          $ref: '#/components/schemas/BankDetails'
+        status:
+          type: string
+          enum: [IN_ANALYSIS, APPROVED, PARTIALLY_APPROVED, DENIED, PAID, CANCELLED]
+          readOnly: true
+        status_display:
+          type: string
+          readOnly: true
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReimbursementDocument'
+          readOnly: true
+        denial_reason:
+          type: string
+          readOnly: true
+        request_date:
+          type: string
+          format: date-time
+          readOnly: true
+        analysis_date:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+
+    ReimbursementRequestCreate:
+      type: object
+      required:
+        - beneficiary
+        - expense_type
+        - service_date
+        - provider_name
+        - provider_cnpj_cpf
+        - requested_amount
+        - bank_details
+      properties:
+        beneficiary:
+          type: integer
+        expense_type:
+          type: string
+          enum: [CONSULTATION, EXAM, MEDICATION, HOSPITALIZATION, SURGERY, THERAPY, OTHER]
+        service_date:
+          type: string
+          format: date
+        provider_name:
+          type: string
+          maxLength: 200
+        provider_cnpj_cpf:
+          type: string
+          maxLength: 14
+        requested_amount:
+          type: string
+          format: decimal
+        bank_details:
+          $ref: '#/components/schemas/BankDetails'
+        documents:
+          type: array
+          items:
+            type: integer
+          description: Array of document IDs to associate
+
+    BankDetails:
+      type: object
+      required:
+        - bank_name
+        - agency
+        - account
+        - account_type
+      properties:
+        bank_name:
+          type: string
+          example: "Banco do Brasil"
+        agency:
+          type: string
+          example: "1234"
+        account:
+          type: string
+          example: "56789-0"
+        account_type:
+          type: string
+          enum: [CORRENTE, POUPANCA]
+
+    ReimbursementSummary:
+      type: object
+      properties:
+        total_requested:
+          type: number
+          format: float
+        total_approved:
+          type: number
+          format: float
+        pending_count:
+          type: integer
+        approved_count:
+          type: integer
+
+    ReimbursementDocument:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        reimbursement:
+          type: integer
+        document_type:
+          type: string
+          enum: [INVOICE, PRESCRIPTION, REPORT, RECEIPT, OTHER]
+        document_type_display:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          maxLength: 200
+        file:
+          type: string
+          format: uri
+          writeOnly: true
+        file_url:
+          type: string
+          format: uri
+          readOnly: true
+        uploaded_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    PaginatedReimbursementList:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReimbursementRequest'
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        detail:
+          type: string
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            detail: "Authentication credentials were not provided."
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            detail: "Not found."
+
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties:
+              type: array
+              items:
+                type: string
+          example:
+            requested_amount: ["Este campo é obrigatório."]
+            service_date: ["A data do serviço não pode ser futura."]

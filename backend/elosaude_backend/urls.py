@@ -5,11 +5,41 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse
+from django.db import connection
 from rest_framework_simplejwt.views import TokenRefreshView
 from apps.accounts.views import CPFTokenObtainPairView
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
+from datetime import datetime
+
+
+def health_status(request):
+    """
+    Health check endpoint for infrastructure monitoring.
+    Returns 200 if the service is healthy, 503 if unhealthy.
+    """
+    status = {
+        'status': 'ok',
+        'timestamp': datetime.utcnow().isoformat() + 'Z',
+        'service': 'elosaude-backend',
+        'version': '1.0.0',
+    }
+
+    # Check database connectivity
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT 1')
+        status['database'] = 'ok'
+    except Exception as e:
+        status['status'] = 'degraded'
+        status['database'] = 'error'
+        status['database_error'] = str(e)
+
+    http_status = 200 if status['status'] == 'ok' else 503
+    return JsonResponse(status, status=http_status)
+
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -23,6 +53,9 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    # Health check endpoint (no auth required) - for infrastructure monitoring
+    path('api/status/', health_status, name='health_status'),
+
     path('admin/', admin.site.urls),
 
     # API Documentation
@@ -43,7 +76,6 @@ urlpatterns = [
     path('api/notifications/', include('apps.notifications.urls')),
     path('api/uploads/', include('apps.uploads.urls')),
     path('api/health/', include('apps.health_records.urls')),
-    path('api/', include('apps.oracle_integration.urls')),
 ]
 
 if settings.DEBUG:

@@ -27,13 +27,13 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Colors,
   Typography,
   Spacing,
   BorderRadius,
   Shadows,
   ComponentSizes,
 } from '../../config/theme';
+import { useColors } from '../../config/ThemeContext';
 import { Input, Button } from '../../components/ui';
 import { useLoginMutation } from '../../store/services/api';
 import { setCredentials } from '../../store/slices/authSlice';
@@ -123,6 +123,7 @@ export default function LoginScreen() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
+  const colors = useColors();
 
   const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
@@ -132,6 +133,9 @@ export default function LoginScreen() {
   const [login, { isLoading }] = useLoginMutation();
 
   const passwordInputRef = useRef<any>(null);
+
+  // Create styles with dynamic colors
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const handleCPFChange = useCallback((text: string) => {
     const formatted = formatCPF(text);
@@ -279,7 +283,7 @@ export default function LoginScreen() {
               <MaterialCommunityIcons
                 name="help-circle-outline"
                 size={20}
-                color={Colors.primary.main}
+                color={colors.primary.main}
               />
               <Text style={styles.linkText}>Esqueci minha senha</Text>
             </TouchableOpacity>
@@ -293,7 +297,7 @@ export default function LoginScreen() {
               <MaterialCommunityIcons
                 name="account-plus-outline"
                 size={20}
-                color={Colors.primary.main}
+                color={colors.primary.main}
               />
               <Text style={styles.linkText}>Primeiro acesso</Text>
             </TouchableOpacity>
@@ -306,7 +310,7 @@ export default function LoginScreen() {
             <MaterialCommunityIcons
               name="information-outline"
               size={24}
-              color={Colors.primary.main}
+              color={colors.primary.main}
             />
             <Text style={styles.demoTitle}>Acesso Demonstração</Text>
           </View>
@@ -343,10 +347,10 @@ export default function LoginScreen() {
 // STYLES
 // =============================================================================
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ReturnType<typeof useColors>) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.surface.background,
+    backgroundColor: colors.surface.background,
   },
   scrollContainer: {
     flexGrow: 1,
@@ -363,7 +367,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: Colors.surface.card,
+    backgroundColor: colors.surface.card,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.lg,
@@ -376,13 +380,13 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: Typography.sizes.h2,
     fontWeight: Typography.weights.bold,
-    color: Colors.text.primary,
+    color: colors.text.primary,
     textAlign: 'center',
     marginBottom: Spacing.xs,
   },
   welcomeSubtitle: {
     fontSize: Typography.sizes.body,
-    color: Colors.text.secondary,
+    color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: Typography.sizes.body * Typography.lineHeight.normal,
     maxWidth: 280,
@@ -390,7 +394,7 @@ const styles = StyleSheet.create({
 
   // Form
   formContainer: {
-    backgroundColor: Colors.surface.card,
+    backgroundColor: colors.surface.card,
     borderRadius: BorderRadius.xl,
     padding: Spacing.cardPadding,
     ...Shadows.md,
@@ -410,22 +414,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: Spacing.sm,
+    minHeight: ComponentSizes.touchTarget,
     gap: Spacing.xs,
   },
   linkText: {
     fontSize: Typography.sizes.body,
-    color: Colors.primary.main,
+    color: colors.primary.main,
     fontWeight: Typography.weights.medium,
   },
 
   // Demo Card
   demoCard: {
     marginTop: Spacing.xl,
-    backgroundColor: Colors.primary.lighter,
+    backgroundColor: colors.primary.lighter,
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.primary.light,
+    borderColor: colors.primary.light,
   },
   demoHeader: {
     flexDirection: 'row',
@@ -436,7 +441,7 @@ const styles = StyleSheet.create({
   demoTitle: {
     fontSize: Typography.sizes.body,
     fontWeight: Typography.weights.semibold,
-    color: Colors.primary.dark,
+    color: colors.primary.dark,
   },
   demoCredentials: {
     gap: Spacing.xs,
@@ -447,13 +452,13 @@ const styles = StyleSheet.create({
   },
   demoLabel: {
     fontSize: Typography.sizes.body,
-    color: Colors.text.secondary,
+    color: colors.text.secondary,
     width: 60,
   },
   demoValue: {
     fontSize: Typography.sizes.body,
     fontWeight: Typography.weights.semibold,
-    color: Colors.primary.main,
+    color: colors.primary.main,
   },
 
   // Footer
@@ -463,12 +468,12 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: Typography.sizes.bodySmall,
-    color: Colors.text.tertiary,
+    color: colors.text.tertiary,
     textAlign: 'center',
   },
   footerLink: {
     fontSize: Typography.sizes.bodySmall,
-    color: Colors.primary.main,
+    color: colors.primary.main,
     fontWeight: Typography.weights.medium,
     marginTop: Spacing.xxs,
   },

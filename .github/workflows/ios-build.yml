@@ -1,0 +1,59 @@
+name: iOS Build & Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'Build profile'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - preview
+
+env:
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Display Version Info
+        working-directory: mobile
+        run: |
+          echo "Build Number: ${{ github.run_number }}"
+          cat app.json | grep -E '"version"|"buildNumber"' || echo "No buildNumber in app.json"
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build iOS
+        working-directory: mobile
+        run: |
+          eas build --platform ios --profile ${{ inputs.profile || 'production' }} --non-interactive
+
+      - name: Submit to App Store
+        if: github.ref == 'refs/heads/main'
+        working-directory: mobile
+        run: |
+          eas submit --platform ios --profile production --non-interactive

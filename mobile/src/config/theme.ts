@@ -674,11 +674,120 @@ export const getStatusBackgroundColor = (status: string): string => {
 };
 
 // =============================================================================
+// DARK MODE COLORS
+// =============================================================================
+
+export const DarkColors = {
+  // Primárias - Azul (ligeiramente mais claro para contraste)
+  primary: {
+    main: '#3B82F6',
+    light: '#60A5FA',
+    dark: '#2563EB',
+    lighter: '#1E3A5F',
+    contrast: '#FFFFFF',
+  },
+
+  // Secundárias - Verde (ligeiramente mais claro)
+  secondary: {
+    main: '#34D399',
+    light: '#6EE7B7',
+    dark: '#10B981',
+    lighter: '#064E3B',
+    contrast: '#FFFFFF',
+  },
+
+  // Superfícies (invertidas para dark mode)
+  surface: {
+    background: '#0F172A',   // Slate 900
+    card: '#1E293B',         // Slate 800
+    elevated: '#334155',     // Slate 700
+    muted: '#1E293B',        // Slate 800
+  },
+
+  // Texto (invertido para dark mode - alto contraste)
+  text: {
+    primary: '#F1F5F9',      // Slate 100
+    secondary: '#94A3B8',    // Slate 400
+    tertiary: '#64748B',     // Slate 500
+    disabled: '#475569',     // Slate 600
+    inverse: '#1E293B',      // Para texto em superfícies claras
+    link: '#60A5FA',         // Azul mais claro para links
+  },
+
+  // Feedback (mesmas cores, ajustadas para dark)
+  feedback: {
+    success: '#34D399',
+    successLight: '#064E3B',
+    warning: '#FBBF24',
+    warningLight: '#451A03',
+    error: '#F87171',
+    errorLight: '#450A0A',
+    info: '#60A5FA',
+    infoLight: '#1E3A5F',
+  },
+
+  // Bordas (mais claras para visibilidade)
+  border: {
+    light: '#334155',
+    medium: '#475569',
+    dark: '#64748B',
+    focus: '#3B82F6',
+  },
+
+  // Status
+  status: {
+    approved: '#34D399',
+    pending: '#FBBF24',
+    rejected: '#F87171',
+    underReview: '#60A5FA',
+    draft: '#64748B',
+    cancelled: '#475569',
+  },
+
+  // Gradientes
+  gradient: {
+    primary: ['#3B82F6', '#2563EB'],
+    secondary: ['#34D399', '#10B981'],
+    card: ['#1E293B', '#0F172A'],
+  },
+
+  // Cards específicos (ajustados para dark)
+  cards: {
+    elosaude: {
+      primary: '#3B82F6',
+      secondary: '#2563EB',
+      accent: '#93C5FD',
+    },
+    unimed: {
+      primary: '#10B981',
+      secondary: '#059669',
+      accent: '#6EE7B7',
+    },
+    reciprocidade: {
+      primary: '#8B5CF6',
+      secondary: '#7C3AED',
+      accent: '#C4B5FD',
+    },
+  },
+
+  // Aliases de compatibilidade
+  success: '#34D399',
+  warning: '#FBBF24',
+  error: '#F87171',
+  info: '#60A5FA',
+  textSecondary: '#94A3B8',
+  textLight: '#64748B',
+  background: '#0F172A',
+  divider: '#334155',
+};
+
+// =============================================================================
 // EXPORT DEFAULT
 // =============================================================================
 
 export default {
   Colors,
+  DarkColors,
   Typography,
   TextStyles,
   FontSizes,

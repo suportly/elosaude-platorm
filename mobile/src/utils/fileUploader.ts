@@ -3,7 +3,7 @@ import { Alert } from 'react-native';
 import { UploadedDocument } from '../components/DocumentUploader';
 
 // Base API URL - should match your API configuration
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'http://localhost:8003/api';
 
 export interface UploadOptions {
   documents: UploadedDocument[];
@@ -154,12 +154,13 @@ export const uploadFilesWithProgress = async (
     }
 
     // Use FileSystem.uploadAsync for progress tracking
+    // uploadType: 1 = MULTIPART mode for form-data uploads
     const uploadResult = await FileSystem.uploadAsync(
       `${API_BASE_URL}/uploads/bulk_upload/`,
       documents[0].uri, // Primary file
       {
         httpMethod: 'POST',
-        uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+        uploadType: 1, // MULTIPART
         fieldName: 'files',
         headers: {
           'Authorization': `Bearer ${accessToken}`,

@@ -285,6 +285,62 @@ class ReimbursementRequestViewSet(viewsets.ModelViewSet):
                           status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+    @action(detail=True, methods=['post'], url_path='add-documents')
+    def add_documents(self, request, pk=None):
+        """
+        Add additional documents to an existing reimbursement request.
+        Only available for reimbursements with status IN_ANALYSIS.
+
+        Request body:
+            documents: list of document IDs to associate with this reimbursement
+
+        Returns:
+            message: success message
+            documents: list of added documents
+        """
+        try:
+            reimbursement = self.get_object()
+
+            # Validate status - only IN_ANALYSIS can receive additional documents
+            if reimbursement.status != 'IN_ANALYSIS':
+                return Response(
+                    {'error': 'Documentos só podem ser adicionados a reembolsos em análise'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Get document IDs from request
+            document_ids = request.data.get('documents', [])
+            if not document_ids:
+                return Response(
+                    {'error': 'Nenhum documento informado'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Validate document IDs exist
+            documents = ReimbursementDocument.objects.filter(id__in=document_ids)
+            if documents.count() != len(document_ids):
+                return Response(
+                    {'error': 'Um ou mais documentos não foram encontrados'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Associate documents with this reimbursement
+            documents.update(reimbursement=reimbursement)
+
+            # Return success response
+            serializer = ReimbursementDocumentSerializer(documents, many=True, context={'request': request})
+            return Response({
+                'message': f'{documents.count()} documento(s) adicionado(s) com sucesso',
+                'documents': serializer.data
+            })
+
+        except Exception as e:
+            return Response(
+                {'error': f'Erro ao adicionar documentos: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
 class ReimbursementDocumentViewSet(viewsets.ModelViewSet):
     queryset = ReimbursementDocument.objects.all()
     serializer_class = ReimbursementDocumentSerializer

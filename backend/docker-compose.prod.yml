@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend:
+    image: elosaude-backend:latest
+    container_name: elosaude-backend
+    restart: unless-stopped
+    ports:
+      - "8005:8005"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_DEBUG=False
+      - DJANGO_ALLOWED_HOSTS=*
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - elosaude_media:/app/media
+      - elosaude_static:/app/staticfiles
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/api/status/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  elosaude_media:
+  elosaude_static:

@@ -18,3 +18,4 @@ django-storages==1.14.2
 boto3==1.34.51
 drf-yasg==1.21.7
 gunicorn==21.2.0
+whitenoise==6.6.0

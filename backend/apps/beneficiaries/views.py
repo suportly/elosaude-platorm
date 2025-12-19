@@ -2,6 +2,7 @@ from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db import connection
 from apps.common.pagination import StandardResultsSetPagination, SmallResultsSetPagination
 from .models import Company, HealthPlan, Beneficiary
 from .serializers import (
@@ -234,3 +235,154 @@ class BeneficiaryViewSet(viewsets.ModelViewSet):
         dependents = beneficiary.dependents.all()
         serializer = BeneficiarySerializer(dependents, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def my_cards(self, request):
+        """Get all cards for current user from PostgreSQL view"""
+        try:
+            beneficiary = request.user.beneficiary
+            cpf = beneficiary.cpf
+
+            # Remove any formatting from CPF
+            cpf_clean = ''.join(filter(str.isdigit, cpf))
+
+            carteirinha = []
+            unimed = []
+            reciprocidade = []
+
+            with connection.cursor() as cursor:
+                # Query the unified view by CPF
+                cursor.execute("""
+                    SELECT
+                        tipo_carteira,
+                        contrato,
+                        matricula_soul,
+                        nr_cpf,
+                        nome_beneficiario,
+                        matricula,
+                        nr_cns,
+                        nascto,
+                        nm_social,
+                        sn_ativo,
+                        segmentacao,
+                        empresa,
+                        cd_plano,
+                        plano_nome,
+                        plano_secundario,
+                        plano_terciario,
+                        tipo_contratacao,
+                        data_validade,
+                        cpt,
+                        layout,
+                        nome_titular,
+                        matricula_rede,
+                        prestador_rede,
+                        data_adesao,
+                        abrangencia,
+                        acomodacao,
+                        rede_atendimento
+                    FROM public.v_app_carteiras_unificadas
+                    WHERE LPAD(nr_cpf::TEXT, 11, '0') = %s
+                       OR nr_cpf::TEXT = %s
+                """, [cpf_clean.zfill(11), cpf_clean])
+
+                columns = [col[0] for col in cursor.description]
+                rows = cursor.fetchall()
+
+                for row in rows:
+                    record = dict(zip(columns, row))
+                    tipo = record.get('tipo_carteira', '').upper()
+
+                    # Helper to format date fields
+                    def format_date(val):
+                        if val is None:
+                            return None
+                        if hasattr(val, 'strftime'):
+                            return val.strftime('%d/%m/%Y')
+                        return str(val)
+
+                    def format_date_iso(val):
+                        if val is None:
+                            return None
+                        if hasattr(val, 'isoformat'):
+                            return val.isoformat()
+                        return str(val)
+
+                    if tipo == 'CARTEIRINHA':
+                        # Format for OracleCarteirinha interface
+                        carteirinha.append({
+                            'CONTRATO': record.get('contrato'),
+                            'MATRICULA_SOUL': record.get('matricula_soul'),
+                            'NR_CPF': record.get('nr_cpf'),
+                            'NOME_DO_BENEFICIARIO': record.get('nome_beneficiario'),
+                            'MATRICULA': record.get('matricula'),
+                            'CD_PLANO': record.get('cd_plano'),
+                            'PRIMARIO': record.get('plano_nome'),
+                            'SEGMENTACAO': record.get('segmentacao'),
+                            'NR_CNS': record.get('nr_cns'),
+                            'NASCTO': format_date(record.get('nascto')),
+                            'NM_SOCIAL': record.get('nm_social'),
+                            'SN_ATIVO': record.get('sn_ativo'),
+                            'SECUNDARIO': record.get('plano_secundario'),
+                            'TERCIARIO': record.get('plano_terciario'),
+                            'CONTRATACAO': record.get('tipo_contratacao'),
+                            'VALIDADE': record.get('data_validade'),
+                            'CPT': record.get('cpt'),
+                            'LAYOUT': record.get('layout'),
+                            'NOME_TITULAR': record.get('nome_titular'),
+                            'EMPRESA': record.get('empresa'),
+                        })
+                    elif tipo == 'UNIMED':
+                        # Format for OracleUnimed interface
+                        unimed.append({
+                            'MATRICULA_UNIMED': record.get('matricula_rede'),
+                            'PLANO': record.get('plano_nome'),
+                            'ABRANGENCIA': record.get('abrangencia'),
+                            'ACOMODACAO': record.get('acomodacao'),
+                            'Validade': record.get('data_validade'),
+                            'CPF': record.get('nr_cpf'),
+                            'NOME': record.get('nome_beneficiario'),
+                            'DATA_NASCIMENTO': format_date(record.get('nascto')),
+                            'SN_ATIVO': record.get('sn_ativo'),
+                            'MATRICULA_SOUL': record.get('matricula_soul'),
+                            'CONTRATO': record.get('contrato'),
+                            'NR_CNS': record.get('nr_cns'),
+                            'NM_SOCIAL': record.get('nm_social'),
+                            'CONTRATANTE': record.get('tipo_contratacao'),
+                            'NOME_TITULAR': record.get('nome_titular'),
+                            'REDE_ATENDIMENTO': record.get('rede_atendimento'),
+                            'VIGENCIA': format_date_iso(record.get('data_adesao')),
+                        })
+                    elif tipo == 'RECIPROCIDADE':
+                        # Format for OracleReciprocidade interface
+                        reciprocidade.append({
+                            'CD_MATRICULA_RECIPROCIDADE': record.get('matricula_rede'),
+                            'PRESTADOR_RECIPROCIDADE': record.get('prestador_rede'),
+                            'DT_VALIDADE_CARTEIRA': record.get('data_validade'),
+                            'PLANO_ELOSAUDE': record.get('plano_nome'),
+                            'NR_CPF': record.get('nr_cpf'),
+                            'NOME_BENEFICIARIO': record.get('nome_beneficiario'),
+                            'DT_NASCIMENTO': format_date(record.get('nascto')),
+                            'SN_ATIVO': record.get('sn_ativo'),
+                            'MATRICULA_SOUL': record.get('matricula_soul'),
+                            'CONTRATO': record.get('contrato'),
+                            'MATRICULA': record.get('matricula'),
+                            'NR_CNS': record.get('nr_cns'),
+                            'NM_SOCIAL': record.get('nm_social'),
+                            'DT_ADESAO': format_date_iso(record.get('data_adesao')),
+                        })
+
+            total_cards = len(carteirinha) + len(unimed) + len(reciprocidade)
+
+            return Response({
+                'carteirinha': carteirinha,
+                'unimed': unimed,
+                'reciprocidade': reciprocidade,
+                'total_cards': total_cards,
+            })
+
+        except Beneficiary.DoesNotExist:
+            return Response(
+                {'error': 'Beneficiary profile not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
