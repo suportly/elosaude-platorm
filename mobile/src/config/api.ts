@@ -22,7 +22,7 @@ const getDevAPIUrl = () => {
 
 export const API_URL = __DEV__
   ? getDevAPIUrl()
-  : 'https://api.elosaude.com/api';
+  : 'http://192.168.40.25:8005/api';
 
 // Log API URL for debugging
 if (__DEV__) {

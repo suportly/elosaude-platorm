@@ -22,6 +22,11 @@
         "ACCESS_COARSE_LOCATION"
       ]
     },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/elosaude_logo.png"
+    },
     "plugins": [
       "expo-location",
       "expo-asset",

@@ -9,6 +9,10 @@ Auto-generated from all feature plans. Last updated: 2025-12-15
 - N/A (CI/CD configuration only) (003-ios-appstore-deploy)
 - TypeScript 5+ (Mobile) + React Native + Expo 0.73+, React Native Paper 5+, React Navigation 6+ (004-ui-modernization)
 - N/A (UI-only changes) (004-ui-modernization)
+- TypeScript 5+, Python 3.11 (backend existente) + Next.js 14+, React 18+, Tailwind CSS, shadcn/ui, TanStack Query, React Hook Form, Zod (006-web-admin)
+- PostgreSQL 14+ (backend existente via Django ORM) (006-web-admin)
+- TypeScript 5+ + Next.js 14, Tailwind CSS 3.4, lucide-react, @tanstack/react-query (007-admin-design-system)
+- N/A (frontend-only, APIs existentes) (007-admin-design-system)
 
 - TypeScript 5+ (Mobile), Python 3.11 (Backend) (001-reimbursement-screen)
 
@@ -28,9 +32,9 @@ cd src [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLO
 TypeScript 5+ (Mobile), Python 3.11 (Backend): Follow standard conventions
 
 ## Recent Changes
+- 007-admin-design-system: Added TypeScript 5+ + Next.js 14, Tailwind CSS 3.4, lucide-react, @tanstack/react-query
+- 006-web-admin: Added TypeScript 5+, Python 3.11 (backend existente) + Next.js 14+, React 18+, Tailwind CSS, shadcn/ui, TanStack Query, React Hook Form, Zod
 - 004-ui-modernization: Added TypeScript 5+ (Mobile) + React Native + Expo 0.73+, React Native Paper 5+, React Navigation 6+
-- 003-ios-appstore-deploy: Added TypeScript 5+ (Mobile), YAML (GitHub Actions) + Expo SDK, EAS CLI, GitHub Actions
-- 002-postgres-config: Added Python 3.11 (Backend) + Django 4.2+, python-decouple, psycopg2-binary
 
 
 <!-- MANUAL ADDITIONS START -->

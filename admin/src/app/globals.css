@@ -1,0 +1,205 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   ELO SAÚDE DESIGN SYSTEM TOKENS
+   ============================================ */
+
+@layer base {
+  :root {
+    /* === PRIMARY COLORS - Elo Saúde Brand === */
+    --color-primary: #1bb198;
+    --color-primary-light: #4ecdc4;
+    --color-primary-dark: #159383;
+    --color-primary-h: 168;
+    --color-primary-s: 76%;
+    --color-primary-l: 41%;
+
+    /* === SECONDARY COLORS === */
+    --color-secondary: #1976D2;
+    --color-secondary-light: #42A5F5;
+    --color-secondary-dark: #1565C0;
+
+    /* === SIDEBAR/DARK THEME === */
+    --color-sidebar-bg: #1E2530;
+    --color-sidebar-hover: #2A3441;
+    --color-sidebar-active: #1bb198;
+    --color-sidebar-text: #B0BEC5;
+    --color-sidebar-text-active: #FFFFFF;
+
+    /* === NEUTRAL COLORS === */
+    --color-background: #F5F7FA;
+    --color-surface: #FFFFFF;
+    --color-border: #E0E0E0;
+    --color-text-primary: #212121;
+    --color-text-secondary: #757575;
+    --color-text-disabled: #BDBDBD;
+
+    /* === SEMANTIC COLORS === */
+    --color-success: #4CAF50;
+    --color-warning: #FF9800;
+    --color-error: #F44336;
+    --color-info: #2196F3;
+
+    /* === TYPOGRAPHY SCALE === */
+    --font-family: 'Inter', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+    --text-xs: 0.75rem;     /* 12px */
+    --text-sm: 0.875rem;    /* 14px */
+    --text-base: 1rem;      /* 16px */
+    --text-lg: 1.125rem;    /* 18px */
+    --text-xl: 1.25rem;     /* 20px */
+    --text-2xl: 1.5rem;     /* 24px */
+    --text-3xl: 1.875rem;   /* 30px */
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* === SPACING SCALE === */
+    --space-1: 0.25rem;   /* 4px */
+    --space-2: 0.5rem;    /* 8px */
+    --space-3: 0.75rem;   /* 12px */
+    --space-4: 1rem;      /* 16px */
+    --space-5: 1.25rem;   /* 20px */
+    --space-6: 1.5rem;    /* 24px */
+    --space-8: 2rem;      /* 32px */
+    --space-10: 2.5rem;   /* 40px */
+    --space-12: 3rem;     /* 48px */
+
+    /* === SHADOWS === */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+
+    /* === BORDER RADIUS === */
+    --radius-sm: 0.25rem;   /* 4px */
+    --radius-md: 0.5rem;    /* 8px */
+    --radius-lg: 0.75rem;   /* 12px */
+    --radius-xl: 1rem;      /* 16px */
+    --radius-full: 9999px;
+
+    /* === TRANSITIONS === */
+    --transition-fast: 150ms ease;
+    --transition-normal: 200ms ease;
+    --transition-slow: 300ms ease;
+
+    /* === SHADCN/UI COMPATIBLE TOKENS (HSL format) === */
+    --background: 210 20% 98%;
+    --foreground: 0 0% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 13%;
+    --primary: 168 76% 41%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 207 74% 46%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 0 0% 46%;
+    --accent: 210 20% 96%;
+    --accent-foreground: 0 0% 13%;
+    --destructive: 4 90% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 168 76% 41%;
+    --radius: 0.5rem;
+
+    /* === SIDEBAR SPECIFIC (HSL format for Tailwind) === */
+    --sidebar-background: 216 22% 15%;
+    --sidebar-foreground: 200 15% 73%;
+    --sidebar-primary: 168 76% 41%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 216 18% 21%;
+    --sidebar-accent-foreground: 200 15% 73%;
+    --sidebar-border: 216 18% 21%;
+    --sidebar-ring: 168 76% 41%;
+  }
+}
+
+/* === SKELETON LOADING ANIMATION === */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--border)) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+/* === REDUCED MOTION SUPPORT === */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skeleton {
+    animation: none;
+    background: hsl(var(--muted));
+  }
+}
+
+/* === BASE STYLES === */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-family);
+  }
+
+  /* Focus visible for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+/* === UTILITY CLASSES === */
+@layer utilities {
+  /* Sidebar width utilities */
+  .sidebar-expanded {
+    width: 240px;
+  }
+
+  .sidebar-collapsed {
+    width: 72px;
+  }
+
+  /* Stats card hover effect */
+  .stats-card-hover {
+    @apply transition-all duration-200;
+  }
+
+  .stats-card-hover:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Smooth transitions */
+  .transition-sidebar {
+    transition: width var(--transition-normal),
+                padding var(--transition-normal),
+                margin var(--transition-normal);
+  }
+}

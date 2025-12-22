@@ -1,0 +1,1306 @@
+openapi: 3.1.0
+info:
+  title: Elosaude Admin API
+  description: API endpoints for the admin panel
+  version: 1.0.0
+  contact:
+    name: Elosaude Team
+
+servers:
+  - url: /api/admin
+    description: Admin API base path
+
+tags:
+  - name: Auth
+    description: Authentication endpoints
+  - name: Dashboard
+    description: Dashboard metrics and activity
+  - name: Users
+    description: User management (Beneficiaries)
+  - name: Providers
+    description: Provider management
+  - name: Reimbursements
+    description: Reimbursement management
+  - name: Reports
+    description: Report generation
+  - name: Settings
+    description: System configuration
+  - name: Audit
+    description: Audit log viewing
+
+paths:
+  # ============================================
+  # AUTH
+  # ============================================
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Admin login
+      description: Authenticate admin user and return JWT tokens
+      operationId: adminLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid credentials
+        '403':
+          description: Account locked
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid refresh token
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current admin profile
+      operationId: getCurrentAdmin
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Admin profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminProfile'
+
+  # ============================================
+  # DASHBOARD
+  # ============================================
+  /dashboard/metrics:
+    get:
+      tags: [Dashboard]
+      summary: Get dashboard metrics
+      operationId: getDashboardMetrics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [today, week, month, year]
+            default: month
+      responses:
+        '200':
+          description: Dashboard metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardMetrics'
+
+  /dashboard/activity:
+    get:
+      tags: [Dashboard]
+      summary: Get recent activity
+      operationId: getRecentActivity
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 50
+      responses:
+        '200':
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLogEntry'
+
+  # ============================================
+  # USERS (Beneficiaries)
+  # ============================================
+  /users:
+    get:
+      tags: [Users]
+      summary: List users (beneficiaries)
+      operationId: listUsers
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ACTIVE, SUSPENDED, CANCELLED]
+        - name: beneficiary_type
+          in: query
+          schema:
+            type: string
+            enum: [TITULAR, DEPENDENT]
+      responses:
+        '200':
+          description: Paginated user list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBeneficiaries'
+
+    post:
+      tags: [Users]
+      summary: Create new user
+      operationId: createUser
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BeneficiaryCreate'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Beneficiary'
+        '400':
+          description: Validation error
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user details
+      operationId: getUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BeneficiaryDetail'
+        '404':
+          description: User not found
+
+    patch:
+      tags: [Users]
+      summary: Update user
+      operationId: updateUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BeneficiaryUpdate'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Beneficiary'
+        '404':
+          description: User not found
+
+  /users/{id}/deactivate:
+    post:
+      tags: [Users]
+      summary: Deactivate user (soft delete)
+      operationId: deactivateUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: User deactivated
+        '404':
+          description: User not found
+
+  # ============================================
+  # PROVIDERS
+  # ============================================
+  /providers:
+    get:
+      tags: [Providers]
+      summary: List providers
+      operationId: listProviders
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: provider_type
+          in: query
+          schema:
+            type: string
+            enum: [DOCTOR, CLINIC, LABORATORY, HOSPITAL, PHARMACY]
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+        - name: specialty
+          in: query
+          schema:
+            type: integer
+          description: Filter by specialty ID
+      responses:
+        '200':
+          description: Paginated provider list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProviders'
+
+    post:
+      tags: [Providers]
+      summary: Create new provider
+      operationId: createProvider
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderCreate'
+      responses:
+        '201':
+          description: Provider created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Provider'
+
+  /providers/{id}:
+    get:
+      tags: [Providers]
+      summary: Get provider details
+      operationId: getProvider
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Provider details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderDetail'
+
+    patch:
+      tags: [Providers]
+      summary: Update provider
+      operationId: updateProvider
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderUpdate'
+      responses:
+        '200':
+          description: Provider updated
+
+  /providers/{id}/approve:
+    post:
+      tags: [Providers]
+      summary: Approve pending provider
+      operationId: approveProvider
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Provider approved
+
+  /providers/{id}/reject:
+    post:
+      tags: [Providers]
+      summary: Reject pending provider
+      operationId: rejectProvider
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Provider rejected
+
+  # ============================================
+  # REIMBURSEMENTS
+  # ============================================
+  /reimbursements:
+    get:
+      tags: [Reimbursements]
+      summary: List reimbursement requests
+      operationId: listReimbursements
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [IN_ANALYSIS, APPROVED, PARTIALLY_APPROVED, DENIED, PAID, CANCELLED]
+        - name: expense_type
+          in: query
+          schema:
+            type: string
+            enum: [CONSULTATION, EXAM, MEDICATION, HOSPITALIZATION, SURGERY, THERAPY, OTHER]
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Paginated reimbursement list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReimbursements'
+
+  /reimbursements/{id}:
+    get:
+      tags: [Reimbursements]
+      summary: Get reimbursement details
+      operationId: getReimbursement
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Reimbursement details with documents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReimbursementDetail'
+
+  /reimbursements/{id}/approve:
+    post:
+      tags: [Reimbursements]
+      summary: Approve reimbursement
+      operationId: approveReimbursement
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [approved_amount]
+              properties:
+                approved_amount:
+                  type: number
+                  format: decimal
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Reimbursement approved
+
+  /reimbursements/{id}/reject:
+    post:
+      tags: [Reimbursements]
+      summary: Reject reimbursement
+      operationId: rejectReimbursement
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [denial_reason]
+              properties:
+                denial_reason:
+                  type: string
+      responses:
+        '200':
+          description: Reimbursement rejected
+
+  /reimbursements/{id}/history:
+    get:
+      tags: [Reimbursements]
+      summary: Get reimbursement history
+      operationId: getReimbursementHistory
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Status change history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLogEntry'
+
+  # ============================================
+  # REPORTS
+  # ============================================
+  /reports/generate:
+    post:
+      tags: [Reports]
+      summary: Generate report
+      operationId: generateReport
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportRequest'
+      responses:
+        '200':
+          description: Report data (for preview or small reports)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportResponse'
+        '202':
+          description: Large report queued for background processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                  message:
+                    type: string
+
+  /reports/export/{format}:
+    post:
+      tags: [Reports]
+      summary: Export report to file
+      operationId: exportReport
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: format
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [csv, pdf]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportRequest'
+      responses:
+        '200':
+          description: File download
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '202':
+          description: Large export queued
+
+  # ============================================
+  # SETTINGS
+  # ============================================
+  /settings:
+    get:
+      tags: [Settings]
+      summary: List all settings
+      operationId: listSettings
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [GENERAL, SECURITY, NOTIFICATIONS, REPORTS, INTEGRATION]
+      responses:
+        '200':
+          description: Settings list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SystemConfiguration'
+
+  /settings/{key}:
+    get:
+      tags: [Settings]
+      summary: Get setting value
+      operationId: getSetting
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Setting value
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemConfiguration'
+
+    put:
+      tags: [Settings]
+      summary: Update setting value
+      operationId: updateSetting
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [value]
+              properties:
+                value:
+                  type: object
+      responses:
+        '200':
+          description: Setting updated
+
+  /settings/history:
+    get:
+      tags: [Settings]
+      summary: Get settings change history
+      operationId: getSettingsHistory
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Change history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLogEntry'
+
+  # ============================================
+  # AUDIT
+  # ============================================
+  /audit-logs:
+    get:
+      tags: [Audit]
+      summary: List audit logs
+      operationId: listAuditLogs
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: admin_id
+          in: query
+          schema:
+            type: integer
+        - name: action
+          in: query
+          schema:
+            type: string
+            enum: [CREATE, UPDATE, DELETE, VIEW, APPROVE, REJECT, EXPORT]
+        - name: entity_type
+          in: query
+          schema:
+            type: string
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Paginated audit logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditLogs'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+
+    PageSizeParam:
+      name: page_size
+      in: query
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+
+    SearchParam:
+      name: search
+      in: query
+      schema:
+        type: string
+      description: Search term
+
+  schemas:
+    # Auth
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    RefreshRequest:
+      type: object
+      required: [refresh]
+      properties:
+        refresh:
+          type: string
+
+    TokenResponse:
+      type: object
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+
+    AdminProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, SUPER_ADMIN, VIEWER]
+        department:
+          type: string
+        last_login:
+          type: string
+          format: date-time
+
+    # Dashboard
+    DashboardMetrics:
+      type: object
+      properties:
+        total_beneficiaries:
+          type: integer
+        active_beneficiaries:
+          type: integer
+        total_providers:
+          type: integer
+        pending_reimbursements:
+          type: integer
+        total_reimbursement_value:
+          type: number
+          format: decimal
+        approved_this_period:
+          type: integer
+        rejected_this_period:
+          type: integer
+        new_users_this_period:
+          type: integer
+
+    # Beneficiary
+    Beneficiary:
+      type: object
+      properties:
+        id:
+          type: integer
+        registration_number:
+          type: string
+        cpf:
+          type: string
+        full_name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        status:
+          type: string
+        beneficiary_type:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    BeneficiaryDetail:
+      allOf:
+        - $ref: '#/components/schemas/Beneficiary'
+        - type: object
+          properties:
+            birth_date:
+              type: string
+              format: date
+            gender:
+              type: string
+            address:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+            zip_code:
+              type: string
+            company:
+              $ref: '#/components/schemas/CompanyRef'
+            health_plan:
+              $ref: '#/components/schemas/HealthPlanRef'
+            titular:
+              $ref: '#/components/schemas/BeneficiaryRef'
+            dependents:
+              type: array
+              items:
+                $ref: '#/components/schemas/BeneficiaryRef'
+
+    BeneficiaryCreate:
+      type: object
+      required: [cpf, full_name, birth_date, gender, beneficiary_type, company_id, health_plan_id]
+      properties:
+        cpf:
+          type: string
+        full_name:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [M, F, OTHER]
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip_code:
+          type: string
+        beneficiary_type:
+          type: string
+          enum: [TITULAR, DEPENDENT]
+        titular_id:
+          type: integer
+        company_id:
+          type: integer
+        health_plan_id:
+          type: integer
+
+    BeneficiaryUpdate:
+      type: object
+      properties:
+        full_name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip_code:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, SUSPENDED]
+
+    BeneficiaryRef:
+      type: object
+      properties:
+        id:
+          type: integer
+        full_name:
+          type: string
+        registration_number:
+          type: string
+
+    CompanyRef:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+
+    HealthPlanRef:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        plan_type:
+          type: string
+
+    PaginatedBeneficiaries:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Beneficiary'
+
+    # Provider
+    Provider:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        trade_name:
+          type: string
+        provider_type:
+          type: string
+        cnpj:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        is_active:
+          type: boolean
+        rating:
+          type: number
+        total_reviews:
+          type: integer
+
+    ProviderDetail:
+      allOf:
+        - $ref: '#/components/schemas/Provider'
+        - type: object
+          properties:
+            crm:
+              type: string
+            phone:
+              type: string
+            email:
+              type: string
+            website:
+              type: string
+            address:
+              type: string
+            zip_code:
+              type: string
+            latitude:
+              type: number
+            longitude:
+              type: number
+            specialties:
+              type: array
+              items:
+                $ref: '#/components/schemas/SpecialtyRef'
+            accepts_telemedicine:
+              type: boolean
+            accepts_emergency:
+              type: boolean
+            working_hours:
+              type: object
+
+    ProviderCreate:
+      type: object
+      required: [name, provider_type, phone, email, address, city, state, zip_code]
+      properties:
+        name:
+          type: string
+        trade_name:
+          type: string
+        provider_type:
+          type: string
+          enum: [DOCTOR, CLINIC, LABORATORY, HOSPITAL, PHARMACY]
+        cnpj:
+          type: string
+        crm:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip_code:
+          type: string
+        specialty_ids:
+          type: array
+          items:
+            type: integer
+        accepts_telemedicine:
+          type: boolean
+        accepts_emergency:
+          type: boolean
+        working_hours:
+          type: object
+
+    ProviderUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        trade_name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip_code:
+          type: string
+        specialty_ids:
+          type: array
+          items:
+            type: integer
+        accepts_telemedicine:
+          type: boolean
+        accepts_emergency:
+          type: boolean
+        working_hours:
+          type: object
+        is_active:
+          type: boolean
+
+    SpecialtyRef:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+
+    PaginatedProviders:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Provider'
+
+    # Reimbursement
+    Reimbursement:
+      type: object
+      properties:
+        id:
+          type: integer
+        protocol_number:
+          type: string
+        beneficiary_name:
+          type: string
+        expense_type:
+          type: string
+        service_date:
+          type: string
+          format: date
+        requested_amount:
+          type: number
+        approved_amount:
+          type: number
+          nullable: true
+        status:
+          type: string
+        request_date:
+          type: string
+          format: date-time
+
+    ReimbursementDetail:
+      allOf:
+        - $ref: '#/components/schemas/Reimbursement'
+        - type: object
+          properties:
+            beneficiary:
+              $ref: '#/components/schemas/BeneficiaryRef'
+            service_description:
+              type: string
+            provider_name:
+              type: string
+            provider_cnpj_cpf:
+              type: string
+            bank_details:
+              type: object
+            analysis_date:
+              type: string
+              format: date-time
+              nullable: true
+            payment_date:
+              type: string
+              format: date
+              nullable: true
+            notes:
+              type: string
+            denial_reason:
+              type: string
+            documents:
+              type: array
+              items:
+                $ref: '#/components/schemas/ReimbursementDocument'
+
+    ReimbursementDocument:
+      type: object
+      properties:
+        id:
+          type: integer
+        document_type:
+          type: string
+        file_url:
+          type: string
+        description:
+          type: string
+        uploaded_at:
+          type: string
+          format: date-time
+
+    PaginatedReimbursements:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reimbursement'
+
+    # Reports
+    ReportRequest:
+      type: object
+      required: [report_type, date_from, date_to]
+      properties:
+        report_type:
+          type: string
+          enum: [users, providers, reimbursements]
+        date_from:
+          type: string
+          format: date
+        date_to:
+          type: string
+          format: date
+        filters:
+          type: object
+
+    ReportResponse:
+      type: object
+      properties:
+        report_type:
+          type: string
+        generated_at:
+          type: string
+          format: date-time
+        total_records:
+          type: integer
+        data:
+          type: array
+          items:
+            type: object
+
+    # Settings
+    SystemConfiguration:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: object
+        category:
+          type: string
+        description:
+          type: string
+        is_sensitive:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+
+    # Audit
+    AuditLogEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        admin_name:
+          type: string
+        action:
+          type: string
+        entity_type:
+          type: string
+        entity_id:
+          type: integer
+        entity_repr:
+          type: string
+        changes:
+          type: object
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+        ip_address:
+          type: string
+
+    PaginatedAuditLogs:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLogEntry'
