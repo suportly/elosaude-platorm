@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'apps.notifications',
     'apps.uploads',
     'apps.health_records',
+    'apps.admin_api',
 ]
 
 MIDDLEWARE = [
@@ -164,8 +165,8 @@ SIMPLE_JWT = {
 }
 
 # CORS Settings
-CORS_ALLOW_ALL_ORIGINS = DEBUG
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='', cast=Csv()) if not DEBUG else []
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 # Celery Configuration
 CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')

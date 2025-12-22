@@ -76,6 +76,9 @@ urlpatterns = [
     path('api/notifications/', include('apps.notifications.urls')),
     path('api/uploads/', include('apps.uploads.urls')),
     path('api/health/', include('apps.health_records.urls')),
+
+    # Admin API
+    path('api/admin/', include('apps.admin_api.urls')),
 ]
 
 if settings.DEBUG:

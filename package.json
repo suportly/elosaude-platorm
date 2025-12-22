@@ -1,0 +1,20 @@
+{
+  "name": "elosaude-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "EloSaude Platform - Mobile, API e Admin",
+  "scripts": {
+    "dev:mobile": "cd mobile && npm run start",
+    "dev:api": "cd backend && ~/.pyenv/versions/elosaude-platforma-3.11.11/bin/python manage.py runserver 0.0.0.0:8000",
+    "dev:admin": "cd admin && npm run dev",
+    "dev:all": "concurrently \"npm run dev:api\" \"npm run dev:admin\"",
+    "install:mobile": "cd mobile && npm install",
+    "install:admin": "cd admin && npm install",
+    "install:all": "npm run install:mobile && npm run install:admin",
+    "build:admin": "cd admin && npm run build",
+    "lint:admin": "cd admin && npm run lint"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

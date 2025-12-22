@@ -115,3 +115,15 @@ htmlcov/
 *.tmp
 *.temp
 .claude/
+
+# Next.js Admin Panel
+admin/node_modules/
+admin/.next/
+admin/out/
+admin/build/
+admin/.env*.local
+admin/npm-debug.log*
+admin/yarn-debug.log*
+admin/yarn-error.log*
+admin/.pnpm-debug.log*
+admin/next-env.d.ts
