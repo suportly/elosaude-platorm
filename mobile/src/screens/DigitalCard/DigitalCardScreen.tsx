@@ -34,6 +34,9 @@ import {
 import { useColors } from '../../config';
 import { Button, ErrorState, LoadingSpinner } from '../../components/ui';
 import { useGetOracleCardsQuery } from '../../store/services/api';
+import { useAppSelector } from '../../store';
+import { UnimedCardTemplate } from './components/UnimedCardTemplate';
+import { ElosaúdeCardTemplate } from './components/ElosaúdeCardTemplate';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_MARGIN = Spacing.md;
@@ -206,13 +209,48 @@ interface DigitalCardProps {
   showQR: boolean;
   width: number;
   colors: typeof StaticColors;
+  beneficiary?: any;
 }
 
-const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width, colors }) => {
+const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width, colors, beneficiary }) => {
   const CARD_TYPE_CONFIG = getCardTypeConfig(colors);
   const cardType = item._type as keyof typeof CARD_TYPE_CONFIG;
   const config = CARD_TYPE_CONFIG[cardType] || CARD_TYPE_CONFIG.CARTEIRINHA;
   const cardInfo = extractCardInfo(item, cardType);
+
+  // Use template EloSaude especializado para cartões CARTEIRINHA
+  if (cardType === 'CARTEIRINHA' && beneficiary) {
+    return (
+      <View style={{ marginHorizontal: CARD_MARGIN / 2 }}>
+        <ElosaúdeCardTemplate
+          cardData={item}
+          beneficiary={{
+            full_name: beneficiary.full_name || cardInfo.name,
+            company: beneficiary.company,
+            birth_date: beneficiary.birth_date || cardInfo.birthDate,
+            effective_date: beneficiary.effective_date,
+          }}
+        />
+      </View>
+    );
+  }
+
+  // Use template Unimed especializado para cartões UNIMED
+  if (cardType === 'UNIMED' && beneficiary) {
+    return (
+      <View style={{ marginHorizontal: CARD_MARGIN / 2 }}>
+        <UnimedCardTemplate
+          cardData={item}
+          beneficiary={{
+            full_name: beneficiary.full_name || cardInfo.name,
+            company: beneficiary.company,
+            birth_date: beneficiary.birth_date || cardInfo.birthDate,
+            effective_date: beneficiary.effective_date,
+          }}
+        />
+      </View>
+    );
+  }
 
   const qrData = JSON.stringify({
     type: cardType,
@@ -457,6 +495,7 @@ const DigitalCardScreen = () => {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { data: oracleCards, isLoading, error, refetch } = useGetOracleCardsQuery();
+  const { beneficiary } = useAppSelector((state) => state.auth);
 
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showQR, setShowQR] = useState(true);
@@ -561,7 +600,7 @@ const DigitalCardScreen = () => {
         ref={flatListRef}
         data={allCards}
         renderItem={({ item }) => (
-          <DigitalCard item={item} showQR={showQR} width={CARD_WIDTH} colors={colors} />
+          <DigitalCard item={item} showQR={showQR} width={CARD_WIDTH} colors={colors} beneficiary={beneficiary} />
         )}
         keyExtractor={(item, index) => `${item._type}-${index}`}
         horizontal

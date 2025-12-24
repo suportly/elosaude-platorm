@@ -4,6 +4,9 @@ import authReducer from './slices/authSlice';
 import { api } from './services/api';
 import { authApi } from './services/authApi';
 
+// Re-export hooks for convenience
+export { useAppDispatch, useAppSelector } from './hooks';
+
 export const store = configureStore({
   reducer: {
     auth: authReducer,
