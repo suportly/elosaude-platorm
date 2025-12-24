@@ -304,28 +304,6 @@ export default function LoginScreen() {
           </View>
         </View>
 
-        {/* Demo Credentials Card */}
-        <View style={styles.demoCard}>
-          <View style={styles.demoHeader}>
-            <MaterialCommunityIcons
-              name="information-outline"
-              size={24}
-              color={colors.primary.main}
-            />
-            <Text style={styles.demoTitle}>Acesso Demonstração</Text>
-          </View>
-          <View style={styles.demoCredentials}>
-            <View style={styles.demoRow}>
-              <Text style={styles.demoLabel}>CPF:</Text>
-              <Text style={styles.demoValue}>951.974.949-72</Text>
-            </View>
-            <View style={styles.demoRow}>
-              <Text style={styles.demoLabel}>Senha:</Text>
-              <Text style={styles.demoValue}>Demo@123</Text>
-            </View>
-          </View>
-        </View>
-
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
@@ -421,44 +399,6 @@ const createStyles = (colors: ReturnType<typeof useColors>) => StyleSheet.create
     fontSize: Typography.sizes.body,
     color: colors.primary.main,
     fontWeight: Typography.weights.medium,
-  },
-
-  // Demo Card
-  demoCard: {
-    marginTop: Spacing.xl,
-    backgroundColor: colors.primary.lighter,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: colors.primary.light,
-  },
-  demoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-    gap: Spacing.sm,
-  },
-  demoTitle: {
-    fontSize: Typography.sizes.body,
-    fontWeight: Typography.weights.semibold,
-    color: colors.primary.dark,
-  },
-  demoCredentials: {
-    gap: Spacing.xs,
-  },
-  demoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  demoLabel: {
-    fontSize: Typography.sizes.body,
-    color: colors.text.secondary,
-    width: 60,
-  },
-  demoValue: {
-    fontSize: Typography.sizes.body,
-    fontWeight: Typography.weights.semibold,
-    color: colors.primary.main,
   },
 
   // Footer
