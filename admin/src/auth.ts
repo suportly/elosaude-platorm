@@ -2,7 +2,7 @@ import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 
 // Server-side API URL (uses Docker network name for container-to-container communication)
-const API_BASE_URL = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8005/api';
 
 interface AdminUser {
   id: string;
@@ -83,7 +83,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             accessToken: response.access,
             refreshToken: response.refresh,
           };
-        } catch {
+        } catch (error) {
+          console.error('[Auth] Login error:', error);
           return null;
         }
       },
