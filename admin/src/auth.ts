@@ -1,7 +1,8 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+// Server-side API URL (uses Docker network name for container-to-container communication)
+const API_BASE_URL = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 interface AdminUser {
   id: string;
@@ -25,6 +26,9 @@ declare module 'next-auth' {
       role: 'SUPER_ADMIN' | 'ADMIN' | 'VIEWER';
       is_super_admin: boolean;
       permissions: string[];
+      emailVerified?: Date | null;
+      accessToken?: string;
+      refreshToken?: string;
     };
   }
 
@@ -105,13 +109,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     session({ session, token }) {
       session.accessToken = token.accessToken as string;
       session.refreshToken = token.refreshToken as string;
-      session.user = token.user as {
+      const userFromToken = token.user as {
         id: string;
         email: string;
         name: string;
         role: 'SUPER_ADMIN' | 'ADMIN' | 'VIEWER';
         is_super_admin: boolean;
         permissions: string[];
+      };
+      session.user = {
+        ...userFromToken,
+        emailVerified: null,
+        accessToken: token.accessToken as string,
+        refreshToken: token.refreshToken as string,
       };
       return session;
     },

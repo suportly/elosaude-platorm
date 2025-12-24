@@ -100,11 +100,24 @@ export const Colors = {
       primary: '#2563EB',
       secondary: '#1D4ED8',
       accent: '#60A5FA',
+      // Design oficial EloSaude
+      header: '#FFFFFF',       // Branco (header)
+      body: '#32A898',         // Teal/Verde-azulado (corpo)
+      footer: '#FFFFFF',       // Branco (rodapé ANS)
+      textLight: '#FFFFFF',    // Texto em fundos escuros
+      textDark: '#333333',     // Texto no header/footer
+      labelText: '#E0F2F1',    // Labels (mais claro que corpo)
     },
     unimed: {
       primary: '#059669',
       secondary: '#047857',
       accent: '#34D399',
+      // Design oficial Unimed Santa Catarina
+      header: '#00995D',       // Verde Unimed (header)
+      body: '#C4D668',         // Verde Lima (corpo)
+      footer: '#0B504B',       // Verde Petróleo (rodapé)
+      textLight: '#FFFFFF',    // Texto em fundos escuros
+      textDark: '#333333',     // Texto no body
     },
     reciprocidade: {
       primary: '#7C3AED',
@@ -757,11 +770,24 @@ export const DarkColors = {
       primary: '#3B82F6',
       secondary: '#2563EB',
       accent: '#93C5FD',
+      // Design oficial EloSaude (dark mode)
+      header: '#FFFFFF',
+      body: '#32A898',
+      footer: '#FFFFFF',
+      textLight: '#FFFFFF',
+      textDark: '#333333',
+      labelText: '#E0F2F1',
     },
     unimed: {
       primary: '#10B981',
       secondary: '#059669',
       accent: '#6EE7B7',
+      // Design oficial Unimed Santa Catarina (dark mode)
+      header: '#00995D',
+      body: '#C4D668',
+      footer: '#0B504B',
+      textLight: '#FFFFFF',
+      textDark: '#333333',
     },
     reciprocidade: {
       primary: '#8B5CF6',
