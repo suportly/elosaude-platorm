@@ -10,7 +10,7 @@
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
-import { Image, TouchableOpacity, View, StyleSheet, Platform } from 'react-native';
+import { Image, TouchableOpacity, View, StyleSheet, Platform, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Text } from 'react-native-paper';
@@ -47,7 +47,6 @@ import AboutScreen from '../screens/Support/AboutScreen';
 import HealthRecordsScreen from '../screens/Health/HealthRecordsScreen';
 import VaccinationCardScreen from '../screens/Health/VaccinationCardScreen';
 import GuidesStack from './GuidesStack';
-import { useGetNotificationsQuery } from '../store/services/api';
 
 const Tab = createBottomTabNavigator();
 
@@ -56,8 +55,14 @@ const Tab = createBottomTabNavigator();
 // =============================================================================
 
 const HeaderWithNotification = ({ navigation }: any) => {
-  const { data: notifications } = useGetNotificationsQuery({ is_read: false });
-  const unreadCount = notifications?.results?.length || 0;
+  // Show "coming soon" alert for notifications
+  const showComingSoonAlert = () => {
+    Alert.alert(
+      'Em Breve',
+      'A funcionalidade "Notificações" estará disponível em breve. Estamos trabalhando para trazer esta novidade para você!',
+      [{ text: 'Entendi', style: 'default' }]
+    );
+  };
 
   return (
     <View style={headerStyles.container}>
@@ -71,20 +76,15 @@ const HeaderWithNotification = ({ navigation }: any) => {
 
       <TouchableOpacity
         style={headerStyles.notificationButton}
-        onPress={() => navigation.navigate('Notifications')}
-        accessibilityLabel={`Notificações${unreadCount > 0 ? `, ${unreadCount} não lidas` : ''}`}
+        onPress={showComingSoonAlert}
+        accessibilityLabel="Notificações"
         accessibilityRole="button"
       >
         <MaterialCommunityIcons
-          name={unreadCount > 0 ? 'bell-ring' : 'bell-outline'}
+          name="bell-outline"
           size={24}
-          color={unreadCount > 0 ? Colors.primary.main : Colors.text.secondary}
+          color={Colors.text.secondary}
         />
-        {unreadCount > 0 && (
-          <View style={headerStyles.badgeContainer}>
-            <CountBadge count={unreadCount} size="small" />
-          </View>
-        )}
       </TouchableOpacity>
     </View>
   );
@@ -255,6 +255,16 @@ export default function MainNavigator() {
             />
           ),
         })}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            Alert.alert(
+              'Em Breve',
+              'A funcionalidade "Rede Credenciada" estará disponível em breve. Estamos trabalhando para trazer esta novidade para você!',
+              [{ text: 'Entendi', style: 'default' }]
+            );
+          },
+        }}
       />
 
       <Tab.Screen
@@ -273,6 +283,16 @@ export default function MainNavigator() {
             />
           ),
         })}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            Alert.alert(
+              'Em Breve',
+              'A funcionalidade "Guias Médicas" estará disponível em breve. Estamos trabalhando para trazer esta novidade para você!',
+              [{ text: 'Entendi', style: 'default' }]
+            );
+          },
+        }}
       />
 
       <Tab.Screen

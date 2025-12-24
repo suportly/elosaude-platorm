@@ -18,6 +18,7 @@ import {
   RefreshControl,
   Animated,
   Image,
+  Alert,
 } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -224,6 +225,15 @@ export default function HomeScreen({ navigation }: any) {
     setTimeout(() => setRefreshing(false), 1000);
   }, []);
 
+  // Show "coming soon" alert for features under development
+  const showComingSoonAlert = useCallback((featureName: string) => {
+    Alert.alert(
+      'Em Breve',
+      `A funcionalidade "${featureName}" estará disponível em breve. Estamos trabalhando para trazer esta novidade para você!`,
+      [{ text: 'Entendi', style: 'default' }]
+    );
+  }, []);
+
   // Get first name for personalized greeting
   const firstName = beneficiary?.full_name?.split(' ')[0] || 'Beneficiário';
 
@@ -349,7 +359,7 @@ export default function HomeScreen({ navigation }: any) {
             icon="hospital-building"
             color={colors.secondary.main}
             backgroundColor={colors.secondary.lighter}
-            onPress={() => navigation.navigate('Network')}
+            onPress={() => showComingSoonAlert('Rede Credenciada')}
             cardBackgroundColor={colors.surface.card}
             textPrimaryColor={colors.text.primary}
             textSecondaryColor={colors.text.secondary}
@@ -360,7 +370,7 @@ export default function HomeScreen({ navigation }: any) {
             icon="file-document-multiple"
             color={colors.feedback.warning}
             backgroundColor={colors.feedback.warningLight}
-            onPress={() => navigation.navigate('Guides')}
+            onPress={() => showComingSoonAlert('Guias Médicas')}
             cardBackgroundColor={colors.surface.card}
             textPrimaryColor={colors.text.primary}
             textSecondaryColor={colors.text.secondary}
@@ -371,7 +381,7 @@ export default function HomeScreen({ navigation }: any) {
             icon="heart-pulse"
             color="#E91E63"
             backgroundColor="#FCE4EC"
-            onPress={() => navigation.navigate('HealthRecords')}
+            onPress={() => showComingSoonAlert('Minha Saúde')}
             cardBackgroundColor={colors.surface.card}
             textPrimaryColor={colors.text.primary}
             textSecondaryColor={colors.text.secondary}
@@ -390,7 +400,7 @@ export default function HomeScreen({ navigation }: any) {
           <QuickActionInternal
             title="2ª Via de Boleto"
             icon="file-download-outline"
-            onPress={() => navigation.navigate('Invoices')}
+            onPress={() => showComingSoonAlert('2ª Via de Boleto')}
             primaryColor={colors.primary.main}
             primaryLighter={colors.primary.lighter}
             textPrimary={colors.text.primary}
@@ -400,7 +410,7 @@ export default function HomeScreen({ navigation }: any) {
           <QuickActionInternal
             title="Informe de IR"
             icon="file-chart-outline"
-            onPress={() => navigation.navigate('TaxStatements')}
+            onPress={() => showComingSoonAlert('Informe de IR')}
             primaryColor={colors.primary.main}
             primaryLighter={colors.primary.lighter}
             textPrimary={colors.text.primary}
@@ -410,7 +420,7 @@ export default function HomeScreen({ navigation }: any) {
           <QuickActionInternal
             title="Dependentes"
             icon="account-group"
-            onPress={() => navigation.navigate('Dependents')}
+            onPress={() => showComingSoonAlert('Dependentes')}
             primaryColor={colors.primary.main}
             primaryLighter={colors.primary.lighter}
             textPrimary={colors.text.primary}

@@ -15,6 +15,15 @@ const MoreScreen = () => {
   const colors = useColors();
   const { user, beneficiary } = useSelector((state: RootState) => state.auth);
 
+  // Show "coming soon" alert for features under development
+  const showComingSoonAlert = (featureName: string) => {
+    Alert.alert(
+      'Em Breve',
+      `A funcionalidade "${featureName}" estará disponível em breve. Estamos trabalhando para trazer esta novidade para você!`,
+      [{ text: 'Entendi', style: 'default' }]
+    );
+  };
+
   const handleSair = () => {
     Alert.alert('Sair', 'Tem certeza que deseja sair?', [
       {
@@ -83,7 +92,7 @@ const MoreScreen = () => {
             description="Gerenciar seus dependentes"
             left={(props) => <List.Icon {...props} icon="account-multiple" color={colors.primary.main} />}
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => navigation.navigate('Dependents' as never)}
+            onPress={() => showComingSoonAlert('Dependentes')}
             accessibilityLabel="Dependentes"
             accessibilityHint="Permite gerenciar seus dependentes"
           />
@@ -109,7 +118,7 @@ const MoreScreen = () => {
             description="Ver seu histórico médico"
             left={(props) => <List.Icon {...props} icon="file-document-multiple" color={colors.secondary.main} />}
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => navigation.navigate('HealthRecords' as never)}
+            onPress={() => showComingSoonAlert('Minha Saúde')}
             accessibilityLabel="Meus Registros de Saúde"
             accessibilityHint="Permite visualizar seu histórico médico"
           />
@@ -119,7 +128,7 @@ const MoreScreen = () => {
             description="Ver seu histórico de vacinações"
             left={(props) => <List.Icon {...props} icon="needle" color={colors.secondary.main} />}
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => navigation.navigate('VaccinationCard' as never)}
+            onPress={() => showComingSoonAlert('Cartão de Vacinação')}
             accessibilityLabel="Cartão de Vacinação"
             accessibilityHint="Permite visualizar seu histórico de vacinações"
           />
@@ -145,7 +154,7 @@ const MoreScreen = () => {
             description="Ver e baixar faturas"
             left={(props) => <List.Icon {...props} icon="file-document" color={colors.feedback.warning} />}
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => navigation.navigate('Invoices' as never)}
+            onPress={() => showComingSoonAlert('Faturas')}
             accessibilityLabel="Faturas"
             accessibilityHint="Permite visualizar e baixar suas faturas"
           />
@@ -155,7 +164,7 @@ const MoreScreen = () => {
             description="Gerenciar opções de pagamento"
             left={(props) => <List.Icon {...props} icon="credit-card" color={colors.feedback.warning} />}
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => Alert.alert('Em breve', 'Esta funcionalidade estará disponível em breve.')}
+            onPress={() => showComingSoonAlert('Formas de Pagamento')}
             accessibilityLabel="Formas de Pagamento"
             accessibilityHint="Funcionalidade para gerenciar opções de pagamento em breve"
           />
@@ -217,7 +226,7 @@ const MoreScreen = () => {
             description="Ver suas notificações"
             left={(props) => <List.Icon {...props} icon="bell" color={colors.text.secondary} />}
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => navigation.navigate('Notifications' as never)}
+            onPress={() => showComingSoonAlert('Notificações')}
             accessibilityLabel="Notificações"
             accessibilityHint="Permite visualizar suas notificações"
           />
@@ -227,7 +236,7 @@ const MoreScreen = () => {
             description="Informes de rendimentos para IR"
             left={(props) => <List.Icon {...props} icon="file-chart" color={colors.text.secondary} />}
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => navigation.navigate('TaxStatements' as never)}
+            onPress={() => showComingSoonAlert('Informe de IR')}
             accessibilityLabel="Demonstrativo IR"
             accessibilityHint="Permite acessar informes de rendimentos para IR"
           />
