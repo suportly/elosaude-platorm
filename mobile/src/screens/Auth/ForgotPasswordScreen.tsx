@@ -1,47 +1,58 @@
+/**
+ * ForgotPasswordScreen - Tela de Recuperação de Senha
+ *
+ * Redesign UX/UI otimizado para usuários 35-65 anos:
+ * - Formulário simples e claro
+ * - Mensagens de erro amigáveis
+ * - CTA primário destacado
+ */
+
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Image,
+} from 'react-native';
 import { Text, TextInput, Button, Card, HelperText } from 'react-native-paper';
-import { useForm, Controller } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useColors, Typography, Spacing, ComponentSizes, Shadows } from '../../config';
+import { useColors } from '../../config/ThemeContext';
+import { Typography, Spacing, BorderRadius, ComponentSizes, Shadows } from '../../config/theme';
 import { formatCPF as maskCPF } from '../../utils/formatters';
 import { API_URL } from '../../config/api';
 
-const schema = yup.object().shape({
-  cpf: yup.string().required('CPF é obrigatório').min(14, 'CPF inválido'),
-});
-
-interface FormData {
-  cpf: string;
-}
-
 export default function ForgotPasswordScreen({ navigation }: any) {
   const colors = useColors();
+  const [cpf, setCpf] = useState('');
+  const [cpfError, setCpfError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-    watch,
-  } = useForm<FormData>({
-    resolver: yupResolver(schema),
-    defaultValues: {
-      cpf: '',
-    },
-  });
-
-  const cpf = watch('cpf');
 
   const handleCPFChange = (text: string) => {
     const masked = maskCPF(text);
-    setValue('cpf', masked);
+    setCpf(masked);
+    if (cpfError) setCpfError('');
   };
 
-  const onSubmit = async (data: FormData) => {
+  const validateCPF = (): boolean => {
+    if (!cpf.trim()) {
+      setCpfError('CPF é obrigatório');
+      return false;
+    }
+
+    const numbers = cpf.replace(/\D/g, '');
+    if (numbers.length !== 11) {
+      setCpfError('CPF deve conter 11 dígitos');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateCPF()) return;
+
     try {
       setIsLoading(true);
 
@@ -50,7 +61,7 @@ export default function ForgotPasswordScreen({ navigation }: any) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ cpf: data.cpf }),
+        body: JSON.stringify({ cpf }),
       });
 
       const result = await response.json();
@@ -63,7 +74,7 @@ export default function ForgotPasswordScreen({ navigation }: any) {
             {
               text: 'OK',
               onPress: () => {
-                navigation.navigate('ResetPassword', { cpf: data.cpf });
+                navigation.navigate('ResetPassword', { cpf });
               },
             },
           ]
@@ -79,155 +90,153 @@ export default function ForgotPasswordScreen({ navigation }: any) {
     }
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface.background,
+    },
+    scrollContainer: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      padding: Spacing.screenPadding,
+    },
+    logoContainer: {
+      alignItems: 'center',
+      marginBottom: Spacing.xl,
+    },
+    logoImage: {
+      width: 160,
+      height: 80,
+      marginBottom: Spacing.md,
+    },
+    title: {
+      color: colors.primary.main,
+      fontWeight: Typography.weights.bold,
+      fontSize: Typography.sizes.h2,
+      marginBottom: Spacing.sm,
+    },
+    subtitle: {
+      color: colors.text.secondary,
+      fontSize: Typography.sizes.body,
+      textAlign: 'center',
+      paddingHorizontal: Spacing.screenPadding,
+    },
+    formContainer: {
+      backgroundColor: colors.surface.card,
+      borderRadius: BorderRadius.card,
+      padding: Spacing.lg,
+      ...Shadows.card,
+    },
+    input: {
+      marginBottom: Spacing.sm,
+      backgroundColor: colors.surface.card,
+    },
+    button: {
+      marginTop: Spacing.md,
+      backgroundColor: colors.primary.main,
+      minHeight: ComponentSizes.touchTarget,
+    },
+    buttonContent: {
+      paddingVertical: Spacing.sm,
+      minHeight: ComponentSizes.touchTarget,
+    },
+    backButton: {
+      marginTop: Spacing.sm,
+      minHeight: ComponentSizes.touchTarget,
+    },
+    infoCard: {
+      marginTop: Spacing.lg,
+      backgroundColor: colors.feedback.infoLight,
+      borderRadius: BorderRadius.card,
+    },
+    infoContent: {
+      padding: Spacing.md,
+    },
+    infoText: {
+      color: colors.feedback.info,
+      fontSize: Typography.sizes.bodySmall,
+      textAlign: 'center',
+      marginBottom: Spacing.xs,
+    },
+  });
+
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.surface.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Icon name="lock-reset" size={ComponentSizes.icon.xl} color={colors.primary.main} />
-          <Text variant="headlineMedium" style={[styles.title, { color: colors.text.primary }]}>
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../../assets/images/elosaude_logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+          <Text variant="headlineSmall" style={styles.title}>
             Esqueci minha senha
           </Text>
-          <Text variant="bodyMedium" style={[styles.subtitle, { color: colors.text.secondary }]}>
+          <Text variant="bodyMedium" style={styles.subtitle}>
             Digite seu CPF para receber um código de recuperação por e-mail
           </Text>
         </View>
 
-        {/* Form */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Controller
-              control={control}
-              name="cpf"
-              render={({ field: { onBlur } }) => (
-                <>
-                  <TextInput
-                    label="CPF"
-                    mode="outlined"
-                    value={cpf}
-                    onChangeText={handleCPFChange}
-                    onBlur={onBlur}
-                    error={!!errors.cpf}
-                    keyboardType="numeric"
-                    maxLength={14}
-                    left={<TextInput.Icon icon="card-account-details" />}
-                    placeholder="000.000.000-00"
-                    disabled={isLoading}
-                    style={styles.input}
-                    accessibilityLabel="Campo de CPF"
-                    accessibilityHint="Digite seu número de CPF no formato 000.000.000-00 para receber um código de recuperação de senha"
-                    accessibilityRole="text"
-                  />
-                  {errors.cpf && (
-                    <HelperText type="error" visible={!!errors.cpf}>
-                      {errors.cpf.message}
-                    </HelperText>
-                  )}
-                </>
-              )}
-            />
+        <View style={styles.formContainer}>
+          <TextInput
+            label="CPF"
+            value={cpf}
+            onChangeText={handleCPFChange}
+            keyboardType="numeric"
+            maxLength={14}
+            mode="outlined"
+            style={styles.input}
+            left={<TextInput.Icon icon="account" />}
+            placeholder="000.000.000-00"
+            error={!!cpfError}
+            disabled={isLoading}
+            accessibilityLabel="Campo de CPF"
+            accessibilityHint="Digite seu CPF para receber o código de recuperação"
+          />
+          <HelperText type="error" visible={!!cpfError}>
+            {cpfError}
+          </HelperText>
 
-            <Button
-              mode="contained"
-              onPress={handleSubmit(onSubmit)}
-              loading={isLoading}
-              disabled={isLoading}
-              style={styles.button}
-              icon="send"
-              accessibilityLabel="Enviar Código de Recuperação"
-              accessibilityHint="Envia um código de recuperação de senha para o seu e-mail cadastrado"
-              accessibilityRole="button"
-            >
-              Enviar Código
-            </Button>
+          <Button
+            mode="contained"
+            onPress={handleSubmit}
+            loading={isLoading}
+            disabled={isLoading}
+            style={styles.button}
+            contentStyle={styles.buttonContent}
+            icon="send"
+            accessibilityLabel="Enviar Código"
+            accessibilityHint="Envia um código de recuperação para o seu e-mail"
+          >
+            Enviar Código
+          </Button>
 
-            <Button
-              mode="text"
-              onPress={() => navigation.goBack()}
-              disabled={isLoading}
-              style={styles.backButton}
-              accessibilityLabel="Voltar para Login"
-              accessibilityHint="Retorna para a tela de login"
-              accessibilityRole="button"
-            >
-              Voltar para Login
-            </Button>
-          </Card.Content>
-        </Card>
+          <Button
+            mode="text"
+            onPress={() => navigation.goBack()}
+            disabled={isLoading}
+            style={styles.backButton}
+            accessibilityLabel="Voltar para Login"
+            accessibilityHint="Retorna para a tela de login"
+          >
+            Voltar para Login
+          </Button>
+        </View>
 
-        {/* Info Card */}
-        <Card style={[styles.infoCard, { backgroundColor: colors.feedback.info + '10' }]}>
-          <Card.Content>
-            <View style={styles.infoRow}>
-              <Icon name="information-outline" size={ComponentSizes.icon.sm} color={colors.feedback.info} />
-              <Text variant="bodySmall" style={[styles.infoText, { color: colors.feedback.info }]}>
-                O código de recuperação será enviado para o e-mail cadastrado
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Icon name="clock-outline" size={ComponentSizes.icon.sm} color={colors.feedback.info} />
-              <Text variant="bodySmall" style={[styles.infoText, { color: colors.feedback.info }]}>
-                O código expira em 1 hora
-              </Text>
-            </View>
-          </Card.Content>
+        <Card style={styles.infoCard}>
+          <View style={styles.infoContent}>
+            <Text style={styles.infoText}>
+              O código será enviado para o e-mail cadastrado
+            </Text>
+            <Text style={styles.infoText}>
+              O código expira em 1 hora
+            </Text>
+          </View>
         </Card>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    padding: Spacing.screenPadding,
-    justifyContent: 'center',
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-  },
-  title: {
-    marginTop: Spacing.md,
-    marginBottom: Spacing.sm,
-    fontWeight: 'bold',
-  },
-  subtitle: {
-    textAlign: 'center',
-    paddingHorizontal: Spacing.screenPadding,
-  },
-  card: {
-    marginBottom: Spacing.screenPadding,
-    ...Shadows.card,
-  },
-  input: {
-    marginBottom: Spacing.sm,
-  },
-  button: {
-    marginTop: Spacing.md,
-    paddingVertical: Spacing.xs,
-    minHeight: ComponentSizes.touchTarget,
-  },
-  backButton: {
-    marginTop: Spacing.sm,
-    minHeight: ComponentSizes.touchTarget,
-  },
-  infoCard: {
-    ...Shadows.card,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: Spacing.xs,
-    gap: Spacing.sm,
-  },
-  infoText: {
-    flex: 1,
-  },
-});

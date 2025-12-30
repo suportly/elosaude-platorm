@@ -192,10 +192,12 @@ export default function MainNavigator() {
         },
         headerStyle: {
           backgroundColor: Colors.surface.card,
-          elevation: 0,
-          shadowOpacity: 0,
-          borderBottomWidth: 1,
-          borderBottomColor: Colors.border.light,
+          elevation: 4,
+          shadowOpacity: 0.1,
+          shadowOffset: { width: 0, height: 2 },
+          shadowRadius: 4,
+          borderBottomWidth: 0,
+          zIndex: 10,
         },
         headerTitleStyle: {
           fontSize: Typography.sizes.h4,
@@ -227,7 +229,7 @@ export default function MainNavigator() {
         name="DigitalCard"
         component={DigitalCardScreen}
         options={({ navigation }) => ({
-          title: 'Carteirinha',
+          title: 'Cartão',
           headerTitle: () => <HeaderWithNotification navigation={navigation} />,
           tabBarIcon: ({ color, focused }) => (
             <TabIcon

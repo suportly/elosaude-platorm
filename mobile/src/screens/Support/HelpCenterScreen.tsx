@@ -25,9 +25,9 @@ const faqData: FAQItem[] = [
   },
   {
     id: '3',
-    question: 'Onde encontro minha carteirinha digital?',
-    answer: 'Sua carteirinha digital está disponível na aba "Carteirinha" do menu principal. Você pode apresentá-la nos prestadores credenciados.',
-    category: 'Carteirinha',
+    question: 'Onde encontro meu cartão de saúde digital?',
+    answer: 'Seu cartão de saúde digital está disponível na aba "Cartão de Saúde" do menu principal. Você pode apresentá-lo nos prestadores credenciados.',
+    category: 'Cartão de Saúde',
   },
   {
     id: '4',

@@ -19,13 +19,9 @@ import {
   ScrollView,
   StyleSheet,
   View,
-  Animated,
-  TouchableOpacity,
 } from 'react-native';
-import { Text } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Text, TextInput, Button, HelperText } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Typography,
   Spacing,
@@ -34,7 +30,6 @@ import {
   ComponentSizes,
 } from '../../config/theme';
 import { useColors } from '../../config/ThemeContext';
-import { Input, Button } from '../../components/ui';
 import { useLoginMutation } from '../../store/services/api';
 import { setCredentials } from '../../store/slices/authSlice';
 
@@ -122,20 +117,17 @@ const getErrorMessage = (error: any): { title: string; message: string } => {
 export default function LoginScreen() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const insets = useSafeAreaInsets();
   const colors = useColors();
 
   const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [cpfError, setCpfError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
   const [login, { isLoading }] = useLoginMutation();
 
   const passwordInputRef = useRef<any>(null);
-
-  // Create styles with dynamic colors
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const handleCPFChange = useCallback((text: string) => {
     const formatted = formatCPF(text);
@@ -194,227 +186,198 @@ export default function LoginScreen() {
     }
   }, [cpf, password, login, dispatch]);
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface.background,
+    },
+    scrollContainer: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      padding: Spacing.screenPadding,
+    },
+    logoContainer: {
+      alignItems: 'center',
+      marginBottom: Spacing.xl,
+    },
+    logoImage: {
+      width: 160,
+      height: 80,
+      marginBottom: Spacing.md,
+    },
+    title: {
+      color: colors.primary.main,
+      fontWeight: Typography.weights.bold,
+      fontSize: Typography.sizes.h2,
+      marginBottom: Spacing.sm,
+    },
+    subtitle: {
+      color: colors.text.secondary,
+      fontSize: Typography.sizes.body,
+      textAlign: 'center',
+      paddingHorizontal: Spacing.screenPadding,
+    },
+    formContainer: {
+      backgroundColor: colors.surface.card,
+      borderRadius: BorderRadius.card,
+      padding: Spacing.lg,
+      ...Shadows.card,
+    },
+    input: {
+      marginBottom: Spacing.sm,
+      backgroundColor: colors.surface.card,
+    },
+    button: {
+      marginTop: Spacing.md,
+      backgroundColor: colors.primary.main,
+      minHeight: ComponentSizes.touchTarget,
+    },
+    buttonContent: {
+      paddingVertical: Spacing.sm,
+      minHeight: ComponentSizes.touchTarget,
+    },
+    linksContainer: {
+      marginTop: Spacing.lg,
+      gap: Spacing.sm,
+    },
+    linkButton: {
+      minHeight: ComponentSizes.touchTarget,
+    },
+    footerText: {
+      fontSize: Typography.sizes.bodySmall,
+      color: colors.text.tertiary,
+      textAlign: 'center',
+      marginTop: Spacing.xl,
+    },
+    footerLink: {
+      fontSize: Typography.sizes.bodySmall,
+      color: colors.primary.main,
+      fontWeight: Typography.weights.medium,
+      textAlign: 'center',
+    },
+  });
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContainer,
-          { paddingTop: insets.top + Spacing.lg },
-        ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={styles.headerSection}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../../../assets/images/elosaude_logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </View>
-          <Text style={styles.welcomeTitle}>Bem-vindo de volta</Text>
-          <Text style={styles.welcomeSubtitle}>
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../../assets/images/elosaude_logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+          <Text variant="headlineSmall" style={styles.title}>
+            Bem-vindo
+          </Text>
+          <Text variant="bodyMedium" style={styles.subtitle}>
             Entre com seu CPF e senha para acessar sua conta
           </Text>
         </View>
 
-        {/* Form */}
         <View style={styles.formContainer}>
-          <Input
+          <TextInput
             label="CPF"
             value={cpf}
             onChangeText={handleCPFChange}
-            error={cpfError}
-            leftIcon="account-outline"
             keyboardType="numeric"
             maxLength={14}
+            mode="outlined"
+            style={styles.input}
+            left={<TextInput.Icon icon="account" />}
             placeholder="000.000.000-00"
+            error={!!cpfError}
+            disabled={isLoading}
             returnKeyType="next"
             onSubmitEditing={() => passwordInputRef.current?.focus()}
-            autoCapitalize="none"
-            autoCorrect={false}
-            disabled={isLoading}
-            accessibilityLabel="CPF"
+            accessibilityLabel="Campo de CPF"
             accessibilityHint="Digite seu CPF com 11 dígitos"
           />
+          <HelperText type="error" visible={!!cpfError}>
+            {cpfError}
+          </HelperText>
 
-          <Input
+          <TextInput
             ref={passwordInputRef}
             label="Senha"
             value={password}
             onChangeText={handlePasswordChange}
-            error={passwordError}
-            leftIcon="lock-outline"
-            secureTextEntry
+            secureTextEntry={!showPassword}
+            mode="outlined"
+            style={styles.input}
+            left={<TextInput.Icon icon="lock" />}
+            right={
+              <TextInput.Icon
+                icon={showPassword ? 'eye-off' : 'eye'}
+                onPress={() => setShowPassword(!showPassword)}
+                accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+              />
+            }
             placeholder="Digite sua senha"
+            error={!!passwordError}
+            disabled={isLoading}
             returnKeyType="done"
             onSubmitEditing={handleLogin}
-            autoCapitalize="none"
-            autoCorrect={false}
-            disabled={isLoading}
-            accessibilityLabel="Senha"
+            accessibilityLabel="Campo de Senha"
             accessibilityHint="Digite sua senha de acesso"
           />
+          <HelperText type="error" visible={!!passwordError}>
+            {passwordError}
+          </HelperText>
 
           <Button
-            title="Entrar"
+            mode="contained"
             onPress={handleLogin}
             loading={isLoading}
             disabled={isLoading}
-            fullWidth
-            size="large"
-            style={styles.loginButton}
+            style={styles.button}
+            contentStyle={styles.buttonContent}
             accessibilityLabel="Entrar na conta"
             accessibilityHint="Toque para fazer login com as credenciais informadas"
-          />
+          >
+            Entrar
+          </Button>
 
-          {/* Links */}
           <View style={styles.linksContainer}>
-            <TouchableOpacity
-              style={styles.linkButton}
+            <Button
+              mode="text"
               onPress={() => navigation.navigate('ForgotPassword' as never)}
-              accessibilityRole="link"
-              accessibilityLabel="Esqueci minha senha"
-            >
-              <MaterialCommunityIcons
-                name="help-circle-outline"
-                size={20}
-                color={colors.primary.main}
-              />
-              <Text style={styles.linkText}>Esqueci minha senha</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
+              disabled={isLoading}
               style={styles.linkButton}
-              onPress={() => navigation.navigate('FirstAccess' as never)}
-              accessibilityRole="link"
-              accessibilityLabel="Primeiro acesso"
+              icon="help-circle-outline"
+              accessibilityLabel="Esqueci minha senha"
+              accessibilityHint="Abre a tela para recuperar sua senha"
             >
-              <MaterialCommunityIcons
-                name="account-plus-outline"
-                size={20}
-                color={colors.primary.main}
-              />
-              <Text style={styles.linkText}>Primeiro acesso</Text>
-            </TouchableOpacity>
+              Esqueci minha senha
+            </Button>
+
+            <Button
+              mode="text"
+              onPress={() => navigation.navigate('FirstAccess' as never)}
+              disabled={isLoading}
+              style={styles.linkButton}
+              icon="account-plus-outline"
+              accessibilityLabel="Primeiro acesso"
+              accessibilityHint="Abre a tela para ativar sua conta pela primeira vez"
+            >
+              Primeiro acesso
+            </Button>
           </View>
         </View>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Ao entrar, você concorda com nossos
-          </Text>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Terms' as never)}
-            accessibilityRole="link"
-          >
-            <Text style={styles.footerLink}>Termos de Uso</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.footerText}>
+          Ao entrar, você concorda com nossos
+        </Text>
+        <Text
+          style={styles.footerLink}
+          onPress={() => navigation.navigate('Terms' as never)}
+          accessibilityRole="link"
+        >
+          Termos de Uso
+        </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-// =============================================================================
-// STYLES
-// =============================================================================
-
-const createStyles = (colors: ReturnType<typeof useColors>) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface.background,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingHorizontal: Spacing.screenPadding,
-    paddingBottom: Spacing.xxl,
-  },
-
-  // Header
-  headerSection: {
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-  },
-  logoContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: colors.surface.card,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-    ...Shadows.md,
-  },
-  logo: {
-    width: 80,
-    height: 80,
-  },
-  welcomeTitle: {
-    fontSize: Typography.sizes.h2,
-    fontWeight: Typography.weights.bold,
-    color: colors.text.primary,
-    textAlign: 'center',
-    marginBottom: Spacing.xs,
-  },
-  welcomeSubtitle: {
-    fontSize: Typography.sizes.body,
-    color: colors.text.secondary,
-    textAlign: 'center',
-    lineHeight: Typography.sizes.body * Typography.lineHeight.normal,
-    maxWidth: 280,
-  },
-
-  // Form
-  formContainer: {
-    backgroundColor: colors.surface.card,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.cardPadding,
-    ...Shadows.md,
-  },
-  loginButton: {
-    marginTop: Spacing.md,
-    marginBottom: Spacing.sm,
-  },
-
-  // Links
-  linksContainer: {
-    marginTop: Spacing.md,
-    gap: Spacing.sm,
-  },
-  linkButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.sm,
-    minHeight: ComponentSizes.touchTarget,
-    gap: Spacing.xs,
-  },
-  linkText: {
-    fontSize: Typography.sizes.body,
-    color: colors.primary.main,
-    fontWeight: Typography.weights.medium,
-  },
-
-  // Footer
-  footer: {
-    marginTop: Spacing.xl,
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: Typography.sizes.bodySmall,
-    color: colors.text.tertiary,
-    textAlign: 'center',
-  },
-  footerLink: {
-    fontSize: Typography.sizes.bodySmall,
-    color: colors.primary.main,
-    fontWeight: Typography.weights.medium,
-    marginTop: Spacing.xxs,
-  },
-});

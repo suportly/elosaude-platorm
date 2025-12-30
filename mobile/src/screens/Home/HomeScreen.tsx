@@ -343,8 +343,8 @@ export default function HomeScreen({ navigation }: any) {
         />
         <View style={styles.modulesGrid}>
           <ModuleCard
-            title="Carteirinha Digital"
-            description="Sua carteirinha virtual"
+            title="Cartão de Saúde"
+            description="Seu cartão digital"
             icon="card-account-details"
             color={colors.primary.main}
             backgroundColor={colors.primary.lighter}

@@ -1,6 +1,6 @@
 import React from 'react';
-import { ScrollView, StyleSheet, View, Image, Linking } from 'react-native';
-import { Card, Title, Paragraph, List, Button } from 'react-native-paper';
+import { Image, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Button, Card, List, Paragraph, Title } from 'react-native-paper';
 import { Colors } from '../../config/theme';
 
 export default function AboutScreen() {
@@ -11,6 +11,10 @@ export default function AboutScreen() {
   const handleRateApp = () => {
     // Link para loja de apps
     Linking.openURL('https://play.google.com/store/apps/details?id=com.elosaude');
+  };
+
+  const handleOpenWhatsApp = () => {
+    Linking.openURL('https://wa.me/554832985555');
   };
 
   return (
@@ -24,9 +28,7 @@ export default function AboutScreen() {
           />
           <Title style={styles.title}>Elosaúde</Title>
           <Paragraph style={styles.version}>Versão 1.0.0</Paragraph>
-          <Paragraph style={styles.subtitle}>
-            Gestão de Plano de Saúde
-          </Paragraph>
+          <Paragraph style={styles.subtitle}>Gestão de Plano de Saúde</Paragraph>
         </Card.Content>
       </Card>
 
@@ -34,7 +36,9 @@ export default function AboutScreen() {
         <Card.Content>
           <Title style={styles.sectionTitle}>Sobre o Aplicativo</Title>
           <Paragraph style={styles.paragraph}>
-            O aplicativo Elosaúde foi desenvolvido para facilitar o acesso dos beneficiários aos serviços de saúde, oferecendo uma plataforma completa para gestão do seu plano de saúde na palma da sua mão.
+            O aplicativo Elosaúde foi desenvolvido para facilitar o acesso dos beneficiários aos
+            serviços de saúde, oferecendo uma plataforma completa para gestão do seu plano de saúde
+            na palma da sua mão.
           </Paragraph>
         </Card.Content>
       </Card>
@@ -44,9 +48,11 @@ export default function AboutScreen() {
           <Title style={styles.sectionTitle}>Funcionalidades</Title>
           <List.Section>
             <List.Item
-              title="Carteirinha Digital"
-              description="Acesso rápido à sua carteirinha"
-              left={(props) => <List.Icon {...props} icon="card-account-details" color={Colors.primary} />}
+              title="Cartão de Saúde Digital"
+              description="Acesso rápido ao seu cartão"
+              left={(props) => (
+                <List.Icon {...props} icon="card-account-details" color={Colors.primary} />
+              )}
             />
             <List.Item
               title="Rede Credenciada"
@@ -77,35 +83,27 @@ export default function AboutScreen() {
           <Title style={styles.sectionTitle}>Informações</Title>
           <View style={styles.infoRow}>
             <Paragraph style={styles.label}>Desenvolvido por:</Paragraph>
-            <Paragraph style={styles.value}>Elosaúde Tech</Paragraph>
+            <Paragraph style={styles.value}>NZR Group</Paragraph>
           </View>
           <View style={styles.infoRow}>
             <Paragraph style={styles.label}>Lançamento:</Paragraph>
-            <Paragraph style={styles.value}>Outubro 2025</Paragraph>
+            <Paragraph style={styles.value}>Janeiro 2026</Paragraph>
           </View>
           <View style={styles.infoRow}>
-            <Paragraph style={styles.label}>Suporte:</Paragraph>
-            <Paragraph style={styles.value}>0800 777 1234</Paragraph>
+            <Paragraph style={styles.label}>Suporte (WhatsApp):</Paragraph>
+            <TouchableOpacity onPress={handleOpenWhatsApp}>
+              <Paragraph style={styles.link}>(48) 3298-5555</Paragraph>
+            </TouchableOpacity>
           </View>
         </Card.Content>
       </Card>
 
       <Card style={styles.card}>
         <Card.Content>
-          <Button
-            mode="outlined"
-            onPress={handleOpenWebsite}
-            style={styles.button}
-            icon="web"
-          >
+          <Button mode="outlined" onPress={handleOpenWebsite} style={styles.button} icon="web">
             Visitar Site
           </Button>
-          <Button
-            mode="outlined"
-            onPress={handleRateApp}
-            style={styles.button}
-            icon="star"
-          >
+          <Button mode="outlined" onPress={handleRateApp} style={styles.button} icon="star">
             Avaliar Aplicativo
           </Button>
         </Card.Content>
@@ -178,6 +176,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     fontWeight: 'bold',
+  },
+  link: {
+    fontSize: 14,
+    color: Colors.primary.main,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
   button: {
     marginTop: 12,

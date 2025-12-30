@@ -279,7 +279,7 @@ const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width, colors, 
           />
           <View style={cardStyles.headerText}>
             <Text style={[cardStyles.headerTitle, { color: colors.text.inverse }]}>{config.title}</Text>
-            <Text style={cardStyles.headerSubtitle}>Carteirinha Digital</Text>
+            <Text style={cardStyles.headerSubtitle}>Cartão de Saúde Digital</Text>
           </View>
         </View>
         {cardInfo.validity && (
@@ -581,14 +581,14 @@ const DigitalCardScreen = () => {
       <View
         style={styles.header}
         accessible
-        accessibilityLabel="Seção de carteirinhas digitais"
+        accessibilityLabel="Seção de cartões de saúde"
         accessibilityRole="header"
       >
-        <Text style={[styles.title, { color: colors.text.primary }]}>Suas Carteirinhas</Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>Seus Cartões de Saúde</Text>
         <Text
           style={[styles.subtitle, { color: colors.text.secondary }]}
           accessible
-          accessibilityLabel={`Exibindo carteirinha ${currentCardIndex + 1} de ${allCards.length}. Deslize para ver mais carteirinhas`}
+          accessibilityLabel={`Exibindo cartão ${currentCardIndex + 1} de ${allCards.length}. Deslize para ver mais`}
           accessibilityRole="text"
         >
           {currentCardIndex + 1} de {allCards.length} • Deslize para ver mais
@@ -633,8 +633,8 @@ const DigitalCardScreen = () => {
                   ],
                 ]}
                 accessible
-                accessibilityLabel={`Carteirinha ${index + 1} de ${allCards.length}`}
-                accessibilityHint={isActive ? 'Carteirinha selecionada' : 'Toque para ver esta carteirinha'}
+                accessibilityLabel={`Cartão ${index + 1} de ${allCards.length}`}
+                accessibilityHint={isActive ? 'Cartão selecionado' : 'Toque para ver este cartão'}
                 accessibilityRole="button"
               />
             );

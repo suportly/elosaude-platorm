@@ -21,12 +21,12 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 // =============================================================================
 
 export const Colors = {
-  // Primárias - Azul saúde confiável
+  // Primárias - Verde EloSaude
   primary: {
-    main: '#2563EB',        // Azul principal - confiança e saúde
-    light: '#3B82F6',       // Hover states
-    dark: '#1D4ED8',        // Pressed states
-    lighter: '#DBEAFE',     // Backgrounds sutis
+    main: '#1BB198',        // Verde principal - identidade EloSaude
+    light: '#3DC7AD',       // Hover states
+    dark: '#159780',        // Pressed states
+    lighter: '#D1F5EE',     // Backgrounds sutis
     contrast: '#FFFFFF',    // Texto sobre primário
   },
 
@@ -54,7 +54,7 @@ export const Colors = {
     tertiary: '#94A3B8',    // Texto terciário/placeholder
     disabled: '#CBD5E1',    // Texto desabilitado
     inverse: '#FFFFFF',     // Texto sobre cores escuras
-    link: '#2563EB',        // Links
+    link: '#1BB198',        // Links
   },
 
   // Feedback
@@ -74,7 +74,7 @@ export const Colors = {
     light: '#E2E8F0',       // Bordas sutis
     medium: '#CBD5E1',      // Bordas visíveis
     dark: '#94A3B8',        // Bordas de foco
-    focus: '#2563EB',       // Borda de foco/ativo
+    focus: '#1BB198',       // Borda de foco/ativo
   },
 
   // Status (guias, reembolsos, etc.)
@@ -89,7 +89,7 @@ export const Colors = {
 
   // Gradientes
   gradient: {
-    primary: ['#2563EB', '#1D4ED8'],
+    primary: ['#1BB198', '#159780'],
     secondary: ['#10B981', '#059669'],
     card: ['#FFFFFF', '#F8FAFC'],
   },
@@ -97,7 +97,7 @@ export const Colors = {
   // Cards específicos (carteirinhas)
   cards: {
     elosaude: {
-      primary: '#2563EB',
+      primary: '#1BB198',
       secondary: '#1D4ED8',
       accent: '#60A5FA',
       // Design oficial EloSaude
@@ -691,12 +691,12 @@ export const getStatusBackgroundColor = (status: string): string => {
 // =============================================================================
 
 export const DarkColors = {
-  // Primárias - Azul (ligeiramente mais claro para contraste)
+  // Primárias - Verde EloSaude (ligeiramente mais claro para contraste)
   primary: {
-    main: '#3B82F6',
-    light: '#60A5FA',
-    dark: '#2563EB',
-    lighter: '#1E3A5F',
+    main: '#3DC7AD',
+    light: '#5FD9C0',
+    dark: '#1BB198',
+    lighter: '#0D4A40',
     contrast: '#FFFFFF',
   },
 
@@ -724,7 +724,7 @@ export const DarkColors = {
     tertiary: '#64748B',     // Slate 500
     disabled: '#475569',     // Slate 600
     inverse: '#1E293B',      // Para texto em superfícies claras
-    link: '#60A5FA',         // Azul mais claro para links
+    link: '#3DC7AD',         // Verde mais claro para links
   },
 
   // Feedback (mesmas cores, ajustadas para dark)
@@ -744,7 +744,7 @@ export const DarkColors = {
     light: '#334155',
     medium: '#475569',
     dark: '#64748B',
-    focus: '#3B82F6',
+    focus: '#3DC7AD',
   },
 
   // Status
@@ -759,7 +759,7 @@ export const DarkColors = {
 
   // Gradientes
   gradient: {
-    primary: ['#3B82F6', '#2563EB'],
+    primary: ['#3DC7AD', '#1BB198'],
     secondary: ['#34D399', '#10B981'],
     card: ['#1E293B', '#0F172A'],
   },
@@ -767,8 +767,8 @@ export const DarkColors = {
   // Cards específicos (ajustados para dark)
   cards: {
     elosaude: {
-      primary: '#3B82F6',
-      secondary: '#2563EB',
+      primary: '#3DC7AD',
+      secondary: '#1BB198',
       accent: '#93C5FD',
       // Design oficial EloSaude (dark mode)
       header: '#FFFFFF',
