@@ -37,6 +37,8 @@ import { useGetOracleCardsQuery } from '../../store/services/api';
 import { useAppSelector } from '../../store';
 import { UnimedCardTemplate } from './components/UnimedCardTemplate';
 import { ElosaúdeCardTemplate } from './components/ElosaúdeCardTemplate';
+import { VIVESTCardTemplate } from './components/VIVESTCardTemplate';
+import { isVIVESTEligible } from '../../utils/cardUtils';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_MARGIN = Spacing.md;
@@ -246,6 +248,24 @@ const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width, colors, 
             company: beneficiary.company,
             birth_date: beneficiary.birth_date || cardInfo.birthDate,
             effective_date: beneficiary.effective_date,
+          }}
+        />
+      </View>
+    );
+  }
+
+  // Use template Vivest especializado para cartões RECIPROCIDADE elegíveis
+  if (cardType === 'RECIPROCIDADE' && beneficiary && isVIVESTEligible(item)) {
+    return (
+      <View style={{ marginHorizontal: CARD_MARGIN / 2 }}>
+        <VIVESTCardTemplate
+          cardData={item}
+          beneficiary={{
+            full_name: beneficiary.full_name || cardInfo.name,
+            company: beneficiary.company,
+            birth_date: beneficiary.birth_date || cardInfo.birthDate,
+            effective_date: beneficiary.effective_date,
+            cns: beneficiary.cns,
           }}
         />
       </View>
