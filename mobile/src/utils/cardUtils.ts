@@ -2,9 +2,11 @@
  * Funções utilitárias para formatação de dados das carteirinhas
  */
 
-import type { OracleCarteirinha, OracleUnimed } from '../types/oracle';
+import type { OracleCarteirinha, OracleUnimed, OracleReciprocidade } from '../types/oracle';
 import type { ElosaúdeCardData } from '../types/elosaude';
 import type { UnimedCardData } from '../types/unimed';
+import type { VIVESTCardData } from '../types/vivest';
+import { VIVEST_ELIGIBLE_PLANS, VIVEST_STATIC_INFO } from '../types/vivest';
 
 /**
  * Formata número da carteirinha com espaços
@@ -186,5 +188,73 @@ export function extractElosaúdeCardData(
 
     // Footer - ANS
     ansRegistry: '418650',
+  };
+}
+
+/**
+ * Verifica se um cartao de reciprocidade e elegivel para template Vivest
+ * Condicoes: PRESTADOR_RECIPROCIDADE = 'VIVEST' E PLANO_ELOSAUDE na lista de planos elegiveis
+ */
+export function isVIVESTEligible(card: OracleReciprocidade): boolean {
+  return (
+    card.PRESTADOR_RECIPROCIDADE === 'VIVEST' &&
+    VIVEST_ELIGIBLE_PLANS.includes(card.PLANO_ELOSAUDE as typeof VIVEST_ELIGIBLE_PLANS[number])
+  );
+}
+
+/**
+ * Transforma dados da API em formato para exibicao no template Vivest
+ */
+export function extractVIVESTCardData(
+  oracleData: OracleReciprocidade,
+  beneficiary: {
+    full_name: string;
+    company?: string;
+    birth_date?: string;
+    effective_date?: string;
+    cns?: string;
+  }
+): VIVESTCardData {
+  return {
+    // === FRENTE ===
+
+    // Header
+    planName: oracleData.PLANO_ELOSAUDE || '-',
+
+    // Body - Identificacao
+    registrationNumber: oracleData.CD_MATRICULA_RECIPROCIDADE || '-',
+    beneficiaryName: (oracleData.NOME_BENEFICIARIO || beneficiary.full_name || '-').toUpperCase(),
+
+    // Body - Grid Principal
+    birthDate: formatDate(oracleData.DT_NASCIMENTO || beneficiary.birth_date),
+    effectiveDate: formatDate(beneficiary.effective_date),
+    planRegistry: '0',
+    accommodation: 'APARTAMENTO',
+    coverage: 'ESTADUAL',
+    contractor: beneficiary.company || 'ELOS',
+
+    // Body - Footer
+    segmentation: 'AMBULAT. + HOSP. C/ OBSTETRÍCIA',
+    partialCoverage: 'NÃO HÁ',
+
+    // === VERSO ===
+
+    // Header
+    gracePeriodTitle: VIVEST_STATIC_INFO.gracePeriodTitle,
+    planAnsNumber: VIVEST_STATIC_INFO.planAnsNumber,
+
+    // Body
+    gracePeriodText: VIVEST_STATIC_INFO.gracePeriodText,
+
+    // Footer - ANS Operadora
+    operatorLabel: VIVEST_STATIC_INFO.operatorLabel,
+    operatorAnsNumber: VIVEST_STATIC_INFO.operatorAnsNumber,
+
+    // Footer - CNS
+    regulatedPlanLabel: VIVEST_STATIC_INFO.regulatedPlanLabel,
+    cnsNumber: beneficiary.cns || '-',
+
+    // Footer - Contatos
+    contacts: VIVEST_STATIC_INFO.contacts,
   };
 }

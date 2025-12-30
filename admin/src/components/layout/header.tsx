@@ -1,10 +1,10 @@
 'use client';
 
-import { Bell, Menu } from 'lucide-react';
-import { UserSearchInput } from '@/components/ui/user-search-input';
 import { UserDropdownMenu } from '@/components/ui/user-dropdown-menu';
-import { useSidebar } from './sidebar-context';
+import { UserSearchInput } from '@/components/ui/user-search-input';
 import { cn } from '@/lib/utils';
+import { Bell, Menu } from 'lucide-react';
+import { useSidebar } from './sidebar-context';
 
 interface HeaderProps {
   title: string;
@@ -34,9 +34,7 @@ export function Header({ title, description }: HeaderProps) {
         {/* Page Title */}
         <div>
           <h1 className="text-xl font-semibold">{title}</h1>
-          {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
-          )}
+          {description && <p className="text-sm text-muted-foreground">{description}</p>}
         </div>
       </div>
 

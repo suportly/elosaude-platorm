@@ -12,26 +12,7 @@ import {
   TrendingUp,
   AlertCircle,
 } from 'lucide-react';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
-
-// Mock chart data (will be replaced with real API data)
-const chartData = [
-  { name: 'Jan', users: 40, providers: 24 },
-  { name: 'Fev', users: 30, providers: 28 },
-  { name: 'Mar', users: 45, providers: 32 },
-  { name: 'Abr', users: 50, providers: 35 },
-  { name: 'Mai', users: 65, providers: 40 },
-  { name: 'Jun', users: 80, providers: 48 },
-];
 
 export default function DashboardPage() {
   const { data: metrics, isLoading, error } = useQuery({
@@ -108,52 +89,8 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Charts and Recent Activity */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Chart */}
-          <div className="lg:col-span-2 rounded-lg border bg-card p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold">Crescimento Mensal</h3>
-            {isLoading ? (
-              <div className="h-[300px] flex items-center justify-center">
-                <Skeleton className="h-full w-full" />
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="name" className="text-muted-foreground" />
-                  <YAxis className="text-muted-foreground" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: 'var(--radius)',
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="users"
-                    stackId="1"
-                    stroke="hsl(var(--primary))"
-                    fill="hsl(var(--primary))"
-                    fillOpacity={0.3}
-                    name="Usuários"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="providers"
-                    stackId="2"
-                    stroke="hsl(var(--secondary))"
-                    fill="hsl(var(--secondary))"
-                    fillOpacity={0.3}
-                    name="Prestadores"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-
-          {/* Recent Activity */}
+        {/* Recent Activity */}
+        <div className="grid gap-6">
           <div className="rounded-lg border bg-card p-6 shadow-sm">
             <h3 className="mb-4 text-lg font-semibold">Atividade Recente</h3>
             <div className="space-y-4">
