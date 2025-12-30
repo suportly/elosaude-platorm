@@ -6,7 +6,9 @@ import type { OracleCarteirinha, OracleUnimed, OracleReciprocidade } from '../ty
 import type { ElosaúdeCardData } from '../types/elosaude';
 import type { UnimedCardData } from '../types/unimed';
 import type { VIVESTCardData } from '../types/vivest';
+import type { ELETROSCardData } from '../types/eletros';
 import { VIVEST_ELIGIBLE_PLANS, VIVEST_STATIC_INFO } from '../types/vivest';
+import { ELETROS_STATIC_INFO } from '../types/eletros';
 
 /**
  * Formata número da carteirinha com espaços
@@ -256,5 +258,59 @@ export function extractVIVESTCardData(
 
     // Footer - Contatos
     contacts: VIVEST_STATIC_INFO.contacts,
+  };
+}
+
+/**
+ * Verifica se um cartao de reciprocidade e elegivel para template Eletros-Saude
+ * Condicao: PRESTADOR_RECIPROCIDADE = 'ELETROS'
+ */
+export function isELETROSEligible(card: OracleReciprocidade): boolean {
+  return card.PRESTADOR_RECIPROCIDADE?.toUpperCase() === 'ELETROS';
+}
+
+/**
+ * Transforma dados da API em formato para exibicao no template Eletros-Saude
+ */
+export function extractELETROSCardData(
+  oracleData: OracleReciprocidade,
+  beneficiary: {
+    full_name: string;
+    birth_date?: string;
+  }
+): ELETROSCardData {
+  return {
+    // === FRENTE ===
+
+    // Header
+    ansNumber: ELETROS_STATIC_INFO.ansNumber,
+
+    // Body - Identificacao
+    registrationNumber: oracleData.CD_MATRICULA_RECIPROCIDADE || '-',
+    beneficiaryName: (oracleData.NOME_BENEFICIARIO || beneficiary.full_name || '-').toUpperCase(),
+
+    // Body - Grid Principal
+    birthDate: formatDate(oracleData.DT_NASCIMENTO || beneficiary.birth_date),
+    validityDate: formatDate(oracleData.DT_VALIDADE_CARTEIRA),
+    planName: oracleData.PLANO_ELOSAUDE || 'RECIPROCIDADE ES ELOSAUDE',
+
+    // Body - Footer
+    legalText: ELETROS_STATIC_INFO.legalText,
+
+    // === VERSO ===
+
+    // Body - Dados Tecnicos
+    segmentation: 'AMBULATORIAL MAIS HOSPITALAR COM OBSTETRICIA',
+    accommodation: 'APARTAMENTO STANDARD',
+    coverage: 'ESTADUAL',
+    contractType: 'OUTROS',
+    utiMobile: 'N',
+    cpt: 'NAO HA',
+
+    // Body - Contatos
+    contacts: ELETROS_STATIC_INFO.contacts,
+
+    // Body - Nota
+    transferabilityNote: ELETROS_STATIC_INFO.transferabilityNote,
   };
 }
