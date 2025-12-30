@@ -17,6 +17,7 @@ Auto-generated from all feature plans. Last updated: 2025-12-15
 - N/A (dados via API existente) (008-unimed-card-template)
 - TypeScript 5+ + React Native + Expo 0.73+, React Native Paper 5+, react-native-reanimated 3.x (para animacao flip) (009-vivest-card-template)
 - N/A (dados vindos da API existente via OracleReciprocidade) (009-vivest-card-template)
+- TypeScript 5+ + React Native + Expo 0.73+, React Native Paper 5+, react-native-reanimated 3.x (para animacao flip), react-native-svg (para header curvo e logo) (010-eletros-card-template)
 
 - TypeScript 5+ (Mobile), Python 3.11 (Backend) (001-reimbursement-screen)
 
@@ -36,9 +37,9 @@ cd src [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLO
 TypeScript 5+ (Mobile), Python 3.11 (Backend): Follow standard conventions
 
 ## Recent Changes
+- 010-eletros-card-template: Added TypeScript 5+ + React Native + Expo 0.73+, React Native Paper 5+, react-native-reanimated 3.x (para animacao flip), react-native-svg (para header curvo e logo)
 - 009-vivest-card-template: Added TypeScript 5+ + React Native + Expo 0.73+, React Native Paper 5+, react-native-reanimated 3.x (para animacao flip)
 - 008-unimed-card-template: Added TypeScript 5+ + React Native, Expo 0.73+, React Native Paper 5+
-- 007-admin-design-system: Added TypeScript 5+ + Next.js 14, Tailwind CSS 3.4, lucide-react, @tanstack/react-query
 
 
 <!-- MANUAL ADDITIONS START -->
