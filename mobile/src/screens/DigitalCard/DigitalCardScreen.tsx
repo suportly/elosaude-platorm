@@ -39,7 +39,8 @@ import { UnimedCardTemplate } from './components/UnimedCardTemplate';
 import { ElosaúdeCardTemplate } from './components/ElosaúdeCardTemplate';
 import { VIVESTCardTemplate } from './components/VIVESTCardTemplate';
 import { ELETROSCardTemplate } from './components/ELETROSCardTemplate';
-import { isVIVESTEligible, isELETROSEligible } from '../../utils/cardUtils';
+import { FACHESFCardTemplate } from './components/FACHESFCardTemplate';
+import { isVIVESTEligible, isELETROSEligible, isFACHESFEligible } from '../../utils/cardUtils';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_MARGIN = Spacing.md;
@@ -264,6 +265,22 @@ const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width, colors, 
           beneficiary={{
             full_name: beneficiary.full_name || cardInfo.name,
             birth_date: beneficiary.birth_date || cardInfo.birthDate,
+          }}
+        />
+      </View>
+    );
+  }
+
+  // Use template Fachesf especializado para cartões RECIPROCIDADE elegíveis
+  if (cardType === 'RECIPROCIDADE' && beneficiary && isFACHESFEligible(item)) {
+    return (
+      <View style={{ marginHorizontal: CARD_MARGIN / 2 }}>
+        <FACHESFCardTemplate
+          cardData={item}
+          beneficiary={{
+            full_name: beneficiary.full_name || cardInfo.name,
+            birth_date: beneficiary.birth_date || cardInfo.birthDate,
+            cns: beneficiary.cns,
           }}
         />
       </View>
@@ -640,11 +657,11 @@ const DigitalCardScreen = () => {
         )}
         keyExtractor={(item, index) => `${item._type}-${index}`}
         horizontal
-        pagingEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
         snapToInterval={CARD_ITEM_WIDTH}
+        snapToAlignment="start"
         decelerationRate="fast"
         contentContainerStyle={styles.carouselContent}
       />

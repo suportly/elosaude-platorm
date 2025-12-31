@@ -111,8 +111,6 @@ const headerStyles = StyleSheet.create({
     height: ComponentSizes.touchTarget,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: ComponentSizes.touchTarget / 2,
-    backgroundColor: Colors.surface.muted,
   },
   badgeContainer: {
     position: 'absolute',

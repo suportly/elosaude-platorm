@@ -12,3 +12,9 @@ export { ELETROSCurvedBackground } from './ELETROSCurvedBackground';
 export { ELETROSHeader } from './ELETROSHeader';
 export { ELETROSBodyFront } from './ELETROSBodyFront';
 export { ELETROSBodyBack } from './ELETROSBodyBack';
+
+// FACHESF components
+export { FACHESFLogo } from './FACHESFLogo';
+export { FACHESFHeader } from './FACHESFHeader';
+export { FACHESFBody } from './FACHESFBody';
+export { FACHESFFooter } from './FACHESFFooter';
