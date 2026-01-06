@@ -2,13 +2,16 @@
  * Funções utilitárias para formatação de dados das carteirinhas
  */
 
-import type { OracleCarteirinha, OracleUnimed, OracleReciprocidade } from '../types/oracle';
+import type { ELETROSCardData } from '../types/eletros';
+import { ELETROS_STATIC_INFO } from '../types/eletros';
 import type { ElosaúdeCardData } from '../types/elosaude';
+import type { FACHESFCardData } from '../types/fachesf';
+import { FACHESF_STATIC_INFO } from '../types/fachesf';
+import type { OperatorType } from '../types/medicalGuide';
+import type { OracleCarteirinha, OracleReciprocidade, OracleUnimed } from '../types/oracle';
 import type { UnimedCardData } from '../types/unimed';
 import type { VIVESTCardData } from '../types/vivest';
-import type { ELETROSCardData } from '../types/eletros';
 import { VIVEST_ELIGIBLE_PLANS, VIVEST_STATIC_INFO } from '../types/vivest';
-import { ELETROS_STATIC_INFO } from '../types/eletros';
 
 /**
  * Formata número da carteirinha com espaços
@@ -166,7 +169,12 @@ export function extractElosaúdeCardData(
     logoUrl: undefined,
 
     // Body - Identificação Principal
-    beneficiaryName: (oracleData.NOME_DO_BENEFICIARIO || oracleData.NM_SOCIAL || beneficiary.full_name || '-').toUpperCase(),
+    beneficiaryName: (
+      oracleData.NOME_DO_BENEFICIARIO ||
+      oracleData.NM_SOCIAL ||
+      beneficiary.full_name ||
+      '-'
+    ).toUpperCase(),
     cardNumber: oracleData.MATRICULA || '-',
     birthDate: oracleData.NASCTO || formatDate(beneficiary.birth_date) || '-',
 
@@ -200,7 +208,7 @@ export function extractElosaúdeCardData(
 export function isVIVESTEligible(card: OracleReciprocidade): boolean {
   return (
     card.PRESTADOR_RECIPROCIDADE === 'VIVEST' &&
-    VIVEST_ELIGIBLE_PLANS.includes(card.PLANO_ELOSAUDE as typeof VIVEST_ELIGIBLE_PLANS[number])
+    VIVEST_ELIGIBLE_PLANS.includes(card.PLANO_ELOSAUDE as (typeof VIVEST_ELIGIBLE_PLANS)[number])
   );
 }
 
@@ -313,4 +321,85 @@ export function extractELETROSCardData(
     // Body - Nota
     transferabilityNote: ELETROS_STATIC_INFO.transferabilityNote,
   };
+}
+
+/**
+ * Verifica se um cartao de reciprocidade e elegivel para template Fachesf
+ * Condicao: PRESTADOR_RECIPROCIDADE = 'FACHESF'
+ */
+export function isFACHESFEligible(card: OracleReciprocidade): boolean {
+  return card.PRESTADOR_RECIPROCIDADE?.toUpperCase() === 'FACHESF';
+}
+
+/**
+ * Transforma dados da API em formato para exibicao no template Fachesf
+ */
+export function extractFACHESFCardData(
+  oracleData: OracleReciprocidade,
+  beneficiary: {
+    full_name: string;
+    birth_date?: string;
+    cns?: string;
+  }
+): FACHESFCardData {
+  return {
+    // Header
+    planType: 'ESPECIAL',
+
+    // Beneficiario
+    beneficiaryName: (oracleData.NOME_BENEFICIARIO || beneficiary.full_name || '-').toUpperCase(),
+
+    // Grid Linha 1
+    registrationCode: oracleData.CD_MATRICULA_RECIPROCIDADE || '-',
+    validityDate: formatDate(oracleData.DT_VALIDADE_CARTEIRA),
+    cnsNumber: beneficiary.cns || '-',
+
+    // Grid Linha 2
+    accommodation: 'Apartamento',
+    coverage: 'Ambulatorial + Hospitalar c/obstetricia',
+
+    // Footer
+    contactsTitle: FACHESF_STATIC_INFO.contactsTitle,
+    contacts: FACHESF_STATIC_INFO.contacts,
+    ansNumber: FACHESF_STATIC_INFO.ansNumber,
+
+    // Legal
+    legalText: FACHESF_STATIC_INFO.legalText,
+  };
+}
+
+// ============================================================================
+// Medical Guide Helpers
+// ============================================================================
+
+/**
+ * Extrai o tipo de operadora a partir dos dados de um cartão
+ */
+export function getOperatorFromCard(card: {
+  _type: string;
+  PRESTADOR_RECIPROCIDADE?: string;
+}): OperatorType | null {
+  if (card._type === 'CARTEIRINHA') return 'ELOSAUDE';
+  if (card._type === 'UNIMED') return 'UNIMED';
+  if (card._type === 'RECIPROCIDADE') {
+    const prestador = card.PRESTADOR_RECIPROCIDADE?.toUpperCase();
+    if (prestador === 'FACHESF') return 'FACHESF';
+    if (prestador === 'VIVEST') return 'VIVEST';
+    if (prestador === 'ELETROS') return 'ELETROS';
+  }
+  return null;
+}
+
+/**
+ * Extrai lista única de operadoras a partir dos cartões do usuário
+ */
+export function getUserOperators(
+  cards: Array<{ _type: string; PRESTADOR_RECIPROCIDADE?: string }>
+): OperatorType[] {
+  const operators = new Set<OperatorType>();
+  cards.forEach((card) => {
+    const operator = getOperatorFromCard(card);
+    if (operator) operators.add(operator);
+  });
+  return Array.from(operators);
 }

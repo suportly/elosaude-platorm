@@ -359,7 +359,7 @@ export default function HomeScreen({ navigation }: any) {
             icon="hospital-building"
             color={colors.secondary.main}
             backgroundColor={colors.secondary.lighter}
-            onPress={() => showComingSoonAlert('Rede Credenciada')}
+            onPress={() => navigation.navigate('Network')}
             cardBackgroundColor={colors.surface.card}
             textPrimaryColor={colors.text.primary}
             textSecondaryColor={colors.text.secondary}

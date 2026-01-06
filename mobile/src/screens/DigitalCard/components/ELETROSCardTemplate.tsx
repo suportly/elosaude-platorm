@@ -156,8 +156,8 @@ export function ELETROSCardTemplate({
   style,
   initialFlipped = false,
 }: ELETROSCardTemplateProps) {
-  // Card dimensions
-  const cardWidth = SCREEN_WIDTH - Spacing.screenPadding * 3;
+  // Card dimensions - must match CARD_WIDTH in DigitalCardScreen
+  const cardWidth = SCREEN_WIDTH - (Spacing.screenPadding * 2);
   const cardHeight = cardWidth / CARD_ASPECT_RATIO;
 
   // Flip state

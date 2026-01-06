@@ -18,6 +18,10 @@ Auto-generated from all feature plans. Last updated: 2025-12-15
 - TypeScript 5+ + React Native + Expo 0.73+, React Native Paper 5+, react-native-reanimated 3.x (para animacao flip) (009-vivest-card-template)
 - N/A (dados vindos da API existente via OracleReciprocidade) (009-vivest-card-template)
 - TypeScript 5+ + React Native + Expo 0.73+, React Native Paper 5+, react-native-reanimated 3.x (para animacao flip), react-native-svg (para header curvo e logo) (010-eletros-card-template)
+- TypeScript 5+ + React Native 0.73+, Expo, React Native Paper 5+ (011-fachesf-card-template)
+- N/A (dados via API existente - OracleReciprocidade) (011-fachesf-card-template)
+- TypeScript 5+ + React Native 0.73+, Expo, React Native Paper 5+, React Navigation 6+ (012-guia-medico-links)
+- N/A (dados já disponíveis via API existente) (012-guia-medico-links)
 
 - TypeScript 5+ (Mobile), Python 3.11 (Backend) (001-reimbursement-screen)
 
@@ -37,9 +41,9 @@ cd src [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLO
 TypeScript 5+ (Mobile), Python 3.11 (Backend): Follow standard conventions
 
 ## Recent Changes
-- 010-eletros-card-template: Added TypeScript 5+ + React Native + Expo 0.73+, React Native Paper 5+, react-native-reanimated 3.x (para animacao flip), react-native-svg (para header curvo e logo)
-- 009-vivest-card-template: Added TypeScript 5+ + React Native + Expo 0.73+, React Native Paper 5+, react-native-reanimated 3.x (para animacao flip)
-- 008-unimed-card-template: Added TypeScript 5+ + React Native, Expo 0.73+, React Native Paper 5+
+- 012-guia-medico-links: Added TypeScript 5+ + React Native 0.73+, Expo, React Native Paper 5+, React Navigation 6+
+- 012-guia-medico-links: Added TypeScript 5+ + React Native 0.73+, Expo, React Native Paper 5+, React Navigation 6+
+- 011-fachesf-card-template: Added TypeScript 5+ + React Native 0.73+, Expo, React Native Paper 5+
 
 
 <!-- MANUAL ADDITIONS START -->

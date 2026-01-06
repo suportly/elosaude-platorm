@@ -111,8 +111,6 @@ const headerStyles = StyleSheet.create({
     height: ComponentSizes.touchTarget,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: ComponentSizes.touchTarget / 2,
-    backgroundColor: Colors.surface.muted,
   },
   badgeContainer: {
     position: 'absolute',
@@ -257,16 +255,6 @@ export default function MainNavigator() {
             />
           ),
         })}
-        listeners={{
-          tabPress: (e) => {
-            e.preventDefault();
-            Alert.alert(
-              'Em Breve',
-              'A funcionalidade "Rede Credenciada" estará disponível em breve. Estamos trabalhando para trazer esta novidade para você!',
-              [{ text: 'Entendi', style: 'default' }]
-            );
-          },
-        }}
       />
 
       <Tab.Screen

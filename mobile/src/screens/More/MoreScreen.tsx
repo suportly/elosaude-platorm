@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
+import { api } from '../../store/services/api';
 import { useColors } from '../../config/ThemeContext';
 import { Typography, Spacing } from '../../config/theme';
 
@@ -34,6 +35,7 @@ const MoreScreen = () => {
         text: 'Sair',
         style: 'destructive',
         onPress: () => {
+          dispatch(api.util.resetApiState());
           dispatch(logout());
         },
       },
