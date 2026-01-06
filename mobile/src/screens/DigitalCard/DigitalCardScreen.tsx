@@ -40,7 +40,8 @@ import { ElosaúdeCardTemplate } from './components/ElosaúdeCardTemplate';
 import { VIVESTCardTemplate } from './components/VIVESTCardTemplate';
 import { ELETROSCardTemplate } from './components/ELETROSCardTemplate';
 import { FACHESFCardTemplate } from './components/FACHESFCardTemplate';
-import { isVIVESTEligible, isELETROSEligible, isFACHESFEligible } from '../../utils/cardUtils';
+import { isVIVESTEligible, isELETROSEligible, isFACHESFEligible, getOperatorFromCard } from '../../utils/cardUtils';
+import { MedicalGuideButton } from '../../components/cards/MedicalGuideButton';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_MARGIN = Spacing.md;
@@ -709,6 +710,17 @@ const DigitalCardScreen = () => {
         />
       </View>
 
+      {/* Medical Guide Button */}
+      {allCards[currentCardIndex] && (() => {
+        const currentCard = allCards[currentCardIndex];
+        const operator = getOperatorFromCard(currentCard);
+        return operator ? (
+          <View style={styles.medicalGuideContainer}>
+            <MedicalGuideButton operator={operator} />
+          </View>
+        ) : null;
+      })()}
+
       {/* Info Card */}
       <View
         style={[styles.infoCard, { backgroundColor: colors.primary.lighter, borderColor: colors.primary.light }]}
@@ -821,6 +833,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.screenPadding,
     marginTop: Spacing.lg,
     alignItems: 'center',
+  },
+
+  // Medical Guide Button
+  medicalGuideContainer: {
+    paddingHorizontal: Spacing.screenPadding,
+    marginTop: Spacing.md,
   },
 
   // Info Card

@@ -7,6 +7,7 @@ import { ELETROS_STATIC_INFO } from '../types/eletros';
 import type { ElosaúdeCardData } from '../types/elosaude';
 import type { FACHESFCardData } from '../types/fachesf';
 import { FACHESF_STATIC_INFO } from '../types/fachesf';
+import type { OperatorType } from '../types/medicalGuide';
 import type { OracleCarteirinha, OracleReciprocidade, OracleUnimed } from '../types/oracle';
 import type { UnimedCardData } from '../types/unimed';
 import type { VIVESTCardData } from '../types/vivest';
@@ -365,4 +366,40 @@ export function extractFACHESFCardData(
     // Legal
     legalText: FACHESF_STATIC_INFO.legalText,
   };
+}
+
+// ============================================================================
+// Medical Guide Helpers
+// ============================================================================
+
+/**
+ * Extrai o tipo de operadora a partir dos dados de um cartão
+ */
+export function getOperatorFromCard(card: {
+  _type: string;
+  PRESTADOR_RECIPROCIDADE?: string;
+}): OperatorType | null {
+  if (card._type === 'CARTEIRINHA') return 'ELOSAUDE';
+  if (card._type === 'UNIMED') return 'UNIMED';
+  if (card._type === 'RECIPROCIDADE') {
+    const prestador = card.PRESTADOR_RECIPROCIDADE?.toUpperCase();
+    if (prestador === 'FACHESF') return 'FACHESF';
+    if (prestador === 'VIVEST') return 'VIVEST';
+    if (prestador === 'ELETROS') return 'ELETROS';
+  }
+  return null;
+}
+
+/**
+ * Extrai lista única de operadoras a partir dos cartões do usuário
+ */
+export function getUserOperators(
+  cards: Array<{ _type: string; PRESTADOR_RECIPROCIDADE?: string }>
+): OperatorType[] {
+  const operators = new Set<OperatorType>();
+  cards.forEach((card) => {
+    const operator = getOperatorFromCard(card);
+    if (operator) operators.add(operator);
+  });
+  return Array.from(operators);
 }
