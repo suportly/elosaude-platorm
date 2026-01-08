@@ -145,6 +145,39 @@ class EmailService:
         )
 
     @classmethod
+    def send_verification_token(cls, email: str, token: str, beneficiary_name: str) -> bool:
+        """
+        Send 6-digit verification token email for first access
+
+        Args:
+            email: Recipient email address
+            token: 6-digit verification token
+            beneficiary_name: Beneficiary's name for personalization
+
+        Returns:
+            bool: Success status
+        """
+        logger.info(f"[EMAIL] Enviando token de verificação para: {email[:3]}***@***")
+        try:
+            result = cls.send_templated_email(
+                to_email=email,
+                subject='Código de Verificação - Elosaúde',
+                template_name='verification_email',
+                context={
+                    'beneficiary_name': beneficiary_name,
+                    'token': token
+                }
+            )
+            if result:
+                logger.info(f"[EMAIL] Token enviado com sucesso para: {email[:3]}***@***")
+            else:
+                logger.warning(f"[EMAIL] Falha ao enviar token para: {email[:3]}***@***")
+            return result
+        except Exception as e:
+            logger.error(f"[EMAIL] Erro ao enviar token: {str(e)}")
+            return False
+
+    @classmethod
     def send_guide_authorized(cls, user, guide_data: Dict) -> bool:
         """
         Send guide authorization notification
@@ -255,6 +288,7 @@ class EmailService:
 # Convenience functions for direct import
 send_password_reset = EmailService.send_password_reset
 send_activation_email = EmailService.send_activation_email
+send_verification_token = EmailService.send_verification_token
 send_guide_authorized = EmailService.send_guide_authorized
 send_reimbursement_approved = EmailService.send_reimbursement_approved
 send_invoice_reminder = EmailService.send_invoice_reminder

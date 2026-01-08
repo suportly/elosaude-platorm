@@ -13,7 +13,9 @@
 
 import React, { useMemo } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
+import { useColors } from '../../../config';
 import { FACHESFBody } from '../../../components/cards/FACHESFBody';
 import { FACHESFFooter } from '../../../components/cards/FACHESFFooter';
 import { FACHESFHeader } from '../../../components/cards/FACHESFHeader';
@@ -91,7 +93,9 @@ export function FACHESFCardTemplate({
   beneficiary,
   onPress,
   style,
+  showQR = true,
 }: FACHESFCardTemplateProps) {
+  const colors = useColors();
   // Card dimensions - must match CARD_WIDTH in DigitalCardScreen
   const cardWidth = SCREEN_WIDTH - Spacing.screenPadding * 2;
   const cardHeight = cardWidth + 2;
@@ -101,6 +105,14 @@ export function FACHESFCardTemplate({
     () => extractFACHESFCardData(cardData, beneficiary),
     [cardData, beneficiary]
   );
+
+  // QR Code data
+  const qrData = JSON.stringify({
+    type: 'RECIPROCIDADE',
+    name: displayData.beneficiaryName,
+    registration: displayData.registrationCode,
+    cns: displayData.cnsNumber,
+  });
 
   return (
     <View style={[styles.container, { width: cardWidth }, style]}>
@@ -147,6 +159,28 @@ export function FACHESFCardTemplate({
           <Text style={styles.ansText}>ANS {displayData.ansNumber}</Text>
         </View>
       </View>
+
+      {/* QR Code */}
+      {showQR && (
+        <View
+          style={styles.qrSection}
+          accessible
+          accessibilityLabel="Código QR da carteirinha"
+          accessibilityRole="image"
+        >
+          <View style={[styles.qrContainer, { backgroundColor: colors.surface.muted }]}>
+            <QRCode
+              value={qrData}
+              size={140}
+              color={colors.text.primary}
+              backgroundColor={colors.surface.card}
+            />
+          </View>
+          <Text style={[styles.qrHint, { color: colors.text.tertiary }]}>
+            Apresente este QR Code nos prestadores credenciados
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -192,6 +226,23 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.medium,
     color: FACHESF_COLORS.textLabel,
     letterSpacing: 0.5,
+  },
+  qrSection: {
+    marginTop: Spacing.md,
+    padding: Spacing.md,
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: BorderRadius.md,
+  },
+  qrContainer: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+  },
+  qrHint: {
+    fontSize: Typography.sizes.caption,
+    textAlign: 'center',
+    marginTop: Spacing.sm,
   },
 });
 

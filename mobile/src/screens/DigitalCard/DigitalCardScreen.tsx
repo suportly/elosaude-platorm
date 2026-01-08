@@ -235,6 +235,7 @@ const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width, colors, 
             birth_date: beneficiary.birth_date || cardInfo.birthDate,
             effective_date: beneficiary.effective_date,
           }}
+          showQR={showQR}
         />
       </View>
     );
@@ -252,6 +253,7 @@ const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width, colors, 
             birth_date: beneficiary.birth_date || cardInfo.birthDate,
             effective_date: beneficiary.effective_date,
           }}
+          showQR={showQR}
         />
       </View>
     );
@@ -267,6 +269,7 @@ const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width, colors, 
             full_name: beneficiary.full_name || cardInfo.name,
             birth_date: beneficiary.birth_date || cardInfo.birthDate,
           }}
+          showQR={showQR}
         />
       </View>
     );
@@ -283,6 +286,7 @@ const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width, colors, 
             birth_date: beneficiary.birth_date || cardInfo.birthDate,
             cns: beneficiary.cns,
           }}
+          showQR={showQR}
         />
       </View>
     );
@@ -301,6 +305,7 @@ const DigitalCard: React.FC<DigitalCardProps> = ({ item, showQR, width, colors, 
             effective_date: beneficiary.effective_date,
             cns: beneficiary.cns,
           }}
+          showQR={showQR}
         />
       </View>
     );

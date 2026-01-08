@@ -22,6 +22,8 @@ Auto-generated from all feature plans. Last updated: 2025-12-15
 - N/A (dados via API existente - OracleReciprocidade) (011-fachesf-card-template)
 - TypeScript 5+ + React Native 0.73+, Expo, React Native Paper 5+, React Navigation 6+ (012-guia-medico-links)
 - N/A (dados já disponíveis via API existente) (012-guia-medico-links)
+- Python 3.11 (Backend), TypeScript 5+ (Mobile) + Django 4.2+ / DRF, React Native + Expo 0.73+, React Native Paper 5+ (013-email-token-onboarding)
+- PostgreSQL 14+ (existing database) (013-email-token-onboarding)
 
 - TypeScript 5+ (Mobile), Python 3.11 (Backend) (001-reimbursement-screen)
 
@@ -41,9 +43,9 @@ cd src [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLO
 TypeScript 5+ (Mobile), Python 3.11 (Backend): Follow standard conventions
 
 ## Recent Changes
+- 013-email-token-onboarding: Added Python 3.11 (Backend), TypeScript 5+ (Mobile) + Django 4.2+ / DRF, React Native + Expo 0.73+, React Native Paper 5+
 - 012-guia-medico-links: Added TypeScript 5+ + React Native 0.73+, Expo, React Native Paper 5+, React Navigation 6+
 - 012-guia-medico-links: Added TypeScript 5+ + React Native 0.73+, Expo, React Native Paper 5+, React Navigation 6+
-- 011-fachesf-card-template: Added TypeScript 5+ + React Native 0.73+, Expo, React Native Paper 5+
 
 
 <!-- MANUAL ADDITIONS START -->

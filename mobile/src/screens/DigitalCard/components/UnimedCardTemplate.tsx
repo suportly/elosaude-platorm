@@ -10,8 +10,10 @@
  */
 
 import React, { useMemo } from 'react';
-import { View, StyleSheet, Dimensions, Pressable } from 'react-native';
-import { Shadows, Spacing } from '../../../config/theme';
+import { View, StyleSheet, Dimensions, Pressable, Text } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
+import { Shadows, Spacing, BorderRadius, Typography } from '../../../config/theme';
+import { useColors } from '../../../config';
 import { UnimedHeader } from '../../../components/cards/UnimedHeader';
 import { UnimedBody } from '../../../components/cards/UnimedBody';
 import { UnimedFooter } from '../../../components/cards/UnimedFooter';
@@ -26,7 +28,9 @@ export function UnimedCardTemplate({
   beneficiary,
   onPress,
   style,
+  showQR = true,
 }: UnimedCardTemplateProps) {
+  const colors = useColors();
   // Calcula dimensões do cartão mantendo proporção
   const cardWidth = SCREEN_WIDTH - (Spacing.screenPadding * 2);
   const cardHeight = cardWidth / CARD_ASPECT_RATIO;
@@ -36,6 +40,13 @@ export function UnimedCardTemplate({
     () => extractUnimedCardData(cardData, beneficiary),
     [cardData, beneficiary]
   );
+
+  // QR Code data
+  const qrData = JSON.stringify({
+    type: 'UNIMED',
+    name: displayData.beneficiaryName,
+    registration: displayData.cardNumber,
+  });
 
   const content = (
     <View
@@ -74,6 +85,28 @@ export function UnimedCardTemplate({
         contractor={displayData.contractor}
         ansInfo={displayData.ansInfo}
       />
+
+      {/* QR Code */}
+      {showQR && (
+        <View
+          style={styles.qrSection}
+          accessible
+          accessibilityLabel="Código QR da carteirinha"
+          accessibilityRole="image"
+        >
+          <View style={[styles.qrContainer, { backgroundColor: colors.surface.muted }]}>
+            <QRCode
+              value={qrData}
+              size={140}
+              color={colors.text.primary}
+              backgroundColor={colors.surface.card}
+            />
+          </View>
+          <Text style={[styles.qrHint, { color: colors.text.tertiary }]}>
+            Apresente este QR Code nos prestadores credenciados
+          </Text>
+        </View>
+      )}
     </View>
   );
 
@@ -104,6 +137,21 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.95,
     transform: [{ scale: 0.995 }],
+  },
+  qrSection: {
+    padding: Spacing.md,
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  qrContainer: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+  },
+  qrHint: {
+    fontSize: Typography.sizes.caption,
+    textAlign: 'center',
+    marginTop: Spacing.sm,
   },
 });
 

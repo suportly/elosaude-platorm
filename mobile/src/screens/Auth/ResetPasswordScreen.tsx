@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { Text, TextInput, Button, Card, HelperText } from 'react-native-paper';
+import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
+import { Text, TextInput, Button, HelperText, Card } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useColors } from '../../config/ThemeContext';
-import { Typography, Spacing, ComponentSizes } from '../../config/theme';
+import { Typography, Spacing, BorderRadius, Shadows, ComponentSizes } from '../../config/theme';
 import { API_URL } from '../../config/api';
 
 const schema = yup.object().shape({
@@ -97,257 +97,273 @@ export default function ResetPasswordScreen({ route, navigation }: any) {
     }
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface.background,
+    },
+    scrollContainer: {
+      flexGrow: 1,
+      padding: Spacing.screenPadding,
+      paddingTop: Spacing.xl,
+    },
+    logoContainer: {
+      alignItems: 'center',
+      marginBottom: Spacing.xl,
+    },
+    logoImage: {
+      width: 160,
+      height: 80,
+      marginBottom: Spacing.md,
+    },
+    title: {
+      color: colors.primary.main,
+      fontWeight: Typography.weights.bold,
+      fontSize: Typography.sizes.h2,
+      marginBottom: Spacing.sm,
+    },
+    subtitle: {
+      color: colors.text.secondary,
+      fontSize: Typography.sizes.body,
+      textAlign: 'center',
+      paddingHorizontal: Spacing.screenPadding,
+    },
+    formContainer: {
+      backgroundColor: colors.surface.card,
+      borderRadius: BorderRadius.card,
+      padding: Spacing.lg,
+      ...Shadows.card,
+    },
+    infoCard: {
+      marginBottom: Spacing.md,
+      backgroundColor: colors.feedback.infoLight,
+    },
+    infoText: {
+      color: colors.feedback.info,
+      fontSize: Typography.sizes.body,
+      textAlign: 'center',
+    },
+    input: {
+      marginBottom: Spacing.sm,
+      backgroundColor: colors.surface.card,
+    },
+    codeInput: {
+      marginBottom: Spacing.sm,
+      backgroundColor: colors.surface.card,
+      fontSize: 24,
+      letterSpacing: 8,
+      textAlign: 'center',
+    },
+    button: {
+      marginTop: Spacing.md,
+      backgroundColor: colors.primary.main,
+      minHeight: ComponentSizes.touchTarget,
+    },
+    buttonContent: {
+      paddingVertical: Spacing.sm,
+      minHeight: ComponentSizes.touchTarget,
+    },
+    backButton: {
+      marginTop: Spacing.sm,
+      minHeight: ComponentSizes.touchTarget,
+    },
+    requirementsContainer: {
+      marginTop: Spacing.md,
+      padding: Spacing.md,
+      backgroundColor: colors.surface.background,
+      borderRadius: BorderRadius.md,
+    },
+    requirementsTitle: {
+      color: colors.text.primary,
+      fontWeight: Typography.weights.semibold,
+      fontSize: Typography.sizes.label,
+      marginBottom: Spacing.sm,
+    },
+    requirementRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: Spacing.xs,
+      gap: Spacing.sm,
+    },
+    requirementText: {
+      color: colors.text.secondary,
+      fontSize: Typography.sizes.caption,
+    },
+  });
+
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.surface.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Icon name="shield-lock" size={ComponentSizes.icon.xl} color={colors.primary.main} />
-          <Text variant="headlineMedium" style={[styles.title, { color: colors.text.primary }]}>
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../../assets/images/elosaude_logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+          <Text variant="headlineSmall" style={styles.title}>
             Nova Senha
           </Text>
-          <Text variant="bodyMedium" style={[styles.subtitle, { color: colors.text.secondary }]}>
+          <Text variant="bodyMedium" style={styles.subtitle}>
             Digite o código recebido por e-mail e sua nova senha
           </Text>
         </View>
 
-        {/* Form */}
-        <Card style={styles.card}>
-          <Card.Content>
-            {/* Code */}
-            <Controller
-              control={control}
-              name="code"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <>
-                  <TextInput
-                    label="Código de Verificação"
-                    mode="outlined"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    error={!!errors.code}
-                    keyboardType="numeric"
-                    maxLength={6}
-                    left={<TextInput.Icon icon="numeric" />}
-                    placeholder="000000"
-                    disabled={isLoading}
-                    style={styles.input}
-                    accessibilityLabel="Código de Verificação"
-                    accessibilityHint="Digite o código de 6 dígitos recebido por e-mail"
-                    accessibilityRole="none"
-                  />
-                  {errors.code && (
-                    <HelperText type="error" visible={!!errors.code}>
-                      {errors.code.message}
-                    </HelperText>
-                  )}
-                </>
-              )}
-            />
-
-            {/* New Password */}
-            <Controller
-              control={control}
-              name="new_password"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <>
-                  <TextInput
-                    label="Nova Senha"
-                    mode="outlined"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    error={!!errors.new_password}
-                    secureTextEntry={!showPassword}
-                    left={<TextInput.Icon icon="lock" />}
-                    right={
-                      <TextInput.Icon
-                        icon={showPassword ? 'eye-off' : 'eye'}
-                        onPress={() => setShowPassword(!showPassword)}
-                        accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                        accessibilityHint="Toque para alternar a visibilidade da senha"
-                        accessibilityRole="button"
-                      />
-                    }
-                    disabled={isLoading}
-                    style={styles.input}
-                    accessibilityLabel="Nova Senha"
-                    accessibilityHint="Digite sua nova senha com pelo menos 8 caracteres, incluindo maiúsculas, minúsculas e números"
-                    accessibilityRole="none"
-                  />
-                  {errors.new_password && (
-                    <HelperText type="error" visible={!!errors.new_password}>
-                      {errors.new_password.message}
-                    </HelperText>
-                  )}
-                </>
-              )}
-            />
-
-            {/* Confirm Password */}
-            <Controller
-              control={control}
-              name="confirm_password"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <>
-                  <TextInput
-                    label="Confirmar Nova Senha"
-                    mode="outlined"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    error={!!errors.confirm_password}
-                    secureTextEntry={!showConfirmPassword}
-                    left={<TextInput.Icon icon="lock-check" />}
-                    right={
-                      <TextInput.Icon
-                        icon={showConfirmPassword ? 'eye-off' : 'eye'}
-                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                        accessibilityLabel={showConfirmPassword ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}
-                        accessibilityHint="Toque para alternar a visibilidade da confirmação de senha"
-                        accessibilityRole="button"
-                      />
-                    }
-                    disabled={isLoading}
-                    style={styles.input}
-                    accessibilityLabel="Confirmar Nova Senha"
-                    accessibilityHint="Digite a mesma senha novamente para confirmar"
-                    accessibilityRole="none"
-                  />
-                  {errors.confirm_password && (
-                    <HelperText type="error" visible={!!errors.confirm_password}>
-                      {errors.confirm_password.message}
-                    </HelperText>
-                  )}
-                </>
-              )}
-            />
-
-            <Button
-              mode="contained"
-              onPress={handleSubmit(onSubmit)}
-              loading={isLoading}
-              disabled={isLoading}
-              style={styles.button}
-              icon="check"
-              accessibilityLabel="Redefinir Senha"
-              accessibilityHint="Submete o formulário para redefinir sua senha"
-              accessibilityRole="button"
-            >
-              Redefinir Senha
-            </Button>
-
-            <Button
-              mode="text"
-              onPress={() => navigation.goBack()}
-              disabled={isLoading}
-              style={styles.backButton}
-              accessibilityLabel="Voltar"
-              accessibilityHint="Retorna à tela anterior"
-              accessibilityRole="button"
-            >
-              Voltar
-            </Button>
-          </Card.Content>
-        </Card>
-
-        {/* Requirements Card */}
-        <Card style={[styles.requirementsCard, { backgroundColor: colors.feedback.successLight }]}>
-          <Card.Content>
-            <Text variant="titleSmall" style={[styles.requirementsTitle, { color: colors.text.primary }]}>
-              Requisitos da senha:
-            </Text>
-            <View style={styles.requirementRow}>
-              <Icon name="check-circle" size={ComponentSizes.icon.xs} color={colors.feedback.success} />
-              <Text variant="bodySmall" style={[styles.requirementText, { color: colors.text.primary }]}>
-                Mínimo de 8 caracteres
+        <View style={styles.formContainer}>
+          {/* Info Card */}
+          <Card style={styles.infoCard}>
+            <Card.Content>
+              <Text variant="bodyMedium" style={styles.infoText}>
+                Insira o código de 6 dígitos enviado para seu e-mail e crie uma nova senha segura.
               </Text>
+            </Card.Content>
+          </Card>
+
+          {/* Code */}
+          <Controller
+            control={control}
+            name="code"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <>
+                <TextInput
+                  label="Código de Verificação"
+                  mode="outlined"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={!!errors.code}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  left={<TextInput.Icon icon="numeric" />}
+                  placeholder="000000"
+                  disabled={isLoading}
+                  style={styles.codeInput}
+                  accessibilityLabel="Código de Verificação"
+                  accessibilityHint="Digite o código de 6 dígitos recebido por e-mail"
+                />
+                <HelperText type="error" visible={!!errors.code}>
+                  {errors.code?.message}
+                </HelperText>
+              </>
+            )}
+          />
+
+          {/* New Password */}
+          <Controller
+            control={control}
+            name="new_password"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <>
+                <TextInput
+                  label="Nova Senha"
+                  mode="outlined"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={!!errors.new_password}
+                  secureTextEntry={!showPassword}
+                  left={<TextInput.Icon icon="lock" />}
+                  right={
+                    <TextInput.Icon
+                      icon={showPassword ? 'eye-off' : 'eye'}
+                      onPress={() => setShowPassword(!showPassword)}
+                      accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                    />
+                  }
+                  disabled={isLoading}
+                  style={styles.input}
+                  accessibilityLabel="Nova Senha"
+                  accessibilityHint="Digite sua nova senha"
+                />
+                <HelperText type="error" visible={!!errors.new_password}>
+                  {errors.new_password?.message}
+                </HelperText>
+              </>
+            )}
+          />
+
+          {/* Confirm Password */}
+          <Controller
+            control={control}
+            name="confirm_password"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <>
+                <TextInput
+                  label="Confirmar Senha"
+                  mode="outlined"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={!!errors.confirm_password}
+                  secureTextEntry={!showConfirmPassword}
+                  left={<TextInput.Icon icon="lock-check" />}
+                  right={
+                    <TextInput.Icon
+                      icon={showConfirmPassword ? 'eye-off' : 'eye'}
+                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                      accessibilityLabel={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'}
+                    />
+                  }
+                  disabled={isLoading}
+                  style={styles.input}
+                  accessibilityLabel="Confirmar Senha"
+                  accessibilityHint="Digite a mesma senha novamente"
+                />
+                <HelperText type="error" visible={!!errors.confirm_password}>
+                  {errors.confirm_password?.message}
+                </HelperText>
+              </>
+            )}
+          />
+
+          {/* Password Requirements */}
+          <View style={styles.requirementsContainer}>
+            <Text style={styles.requirementsTitle}>Requisitos da senha:</Text>
+            <View style={styles.requirementRow}>
+              <Icon name="check-circle" size={16} color={colors.feedback.success} />
+              <Text style={styles.requirementText}>Mínimo de 8 caracteres</Text>
             </View>
             <View style={styles.requirementRow}>
-              <Icon name="check-circle" size={ComponentSizes.icon.xs} color={colors.feedback.success} />
-              <Text variant="bodySmall" style={[styles.requirementText, { color: colors.text.primary }]}>
-                Pelo menos uma letra maiúscula
-              </Text>
+              <Icon name="check-circle" size={16} color={colors.feedback.success} />
+              <Text style={styles.requirementText}>Uma letra maiúscula</Text>
             </View>
             <View style={styles.requirementRow}>
-              <Icon name="check-circle" size={ComponentSizes.icon.xs} color={colors.feedback.success} />
-              <Text variant="bodySmall" style={[styles.requirementText, { color: colors.text.primary }]}>
-                Pelo menos uma letra minúscula
-              </Text>
+              <Icon name="check-circle" size={16} color={colors.feedback.success} />
+              <Text style={styles.requirementText}>Uma letra minúscula</Text>
             </View>
             <View style={styles.requirementRow}>
-              <Icon name="check-circle" size={ComponentSizes.icon.xs} color={colors.feedback.success} />
-              <Text variant="bodySmall" style={[styles.requirementText, { color: colors.text.primary }]}>
-                Pelo menos um número
-              </Text>
+              <Icon name="check-circle" size={16} color={colors.feedback.success} />
+              <Text style={styles.requirementText}>Um número</Text>
             </View>
-          </Card.Content>
-        </Card>
+          </View>
+
+          <Button
+            mode="contained"
+            onPress={handleSubmit(onSubmit)}
+            loading={isLoading}
+            disabled={isLoading}
+            style={styles.button}
+            contentStyle={styles.buttonContent}
+            accessibilityLabel="Redefinir Senha"
+            accessibilityHint="Submete o formulário para redefinir sua senha"
+          >
+            Redefinir Senha
+          </Button>
+
+          <Button
+            mode="text"
+            onPress={() => navigation.goBack()}
+            disabled={isLoading}
+            style={styles.backButton}
+            accessibilityLabel="Voltar"
+            accessibilityHint="Retorna à tela anterior"
+          >
+            Voltar
+          </Button>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    // backgroundColor is applied dynamically via colors hook
-  },
-  scrollContent: {
-    flexGrow: 1,
-    padding: Spacing.screenPadding,
-    justifyContent: 'center',
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-  },
-  title: {
-    marginTop: Spacing.md,
-    marginBottom: Spacing.sm,
-    fontWeight: 'bold',
-    // color is applied dynamically via colors hook
-  },
-  subtitle: {
-    textAlign: 'center',
-    paddingHorizontal: Spacing.screenPadding,
-    // color is applied dynamically via colors hook
-  },
-  card: {
-    marginBottom: Spacing.screenPadding,
-    elevation: 2,
-  },
-  input: {
-    marginBottom: Spacing.sm,
-  },
-  button: {
-    marginTop: Spacing.md,
-    paddingVertical: Spacing.xs,
-    minHeight: ComponentSizes.touchTarget,
-  },
-  backButton: {
-    marginTop: Spacing.sm,
-    minHeight: ComponentSizes.touchTarget,
-  },
-  requirementsCard: {
-    // backgroundColor is applied dynamically via colors hook
-  },
-  requirementsTitle: {
-    fontWeight: 'bold',
-    marginBottom: Spacing.sm,
-    // color is applied dynamically via colors hook
-  },
-  requirementRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: Spacing.xs,
-    gap: Spacing.sm,
-  },
-  requirementText: {
-    // color is applied dynamically via colors hook
-  },
-});

@@ -236,6 +236,43 @@ class BeneficiaryViewSet(viewsets.ModelViewSet):
         serializer = BeneficiarySerializer(dependents, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['post'], url_path='complete-onboarding')
+    def complete_onboarding(self, request):
+        """
+        Complete or skip onboarding
+        Updates beneficiary profile data (phone, email) and marks onboarding as completed
+        """
+        try:
+            beneficiary = request.user.beneficiary
+
+            skip = request.data.get('skip', False)
+
+            if not skip:
+                # Update profile data
+                phone = request.data.get('phone')
+                email = request.data.get('email')
+
+                if phone:
+                    beneficiary.phone = phone
+                if email:
+                    beneficiary.email = email
+
+                beneficiary.save()
+
+            # Mark onboarding as completed
+            beneficiary.complete_onboarding()
+
+            return Response({
+                'message': 'Dados atualizados com sucesso' if not skip else 'Onboarding concluído',
+                'beneficiary': BeneficiarySerializer(beneficiary).data
+            })
+
+        except Beneficiary.DoesNotExist:
+            return Response(
+                {'error': 'Beneficiary profile not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
     @action(detail=False, methods=['get'])
     def my_cards(self, request):
         """Get all cards for current user from PostgreSQL view"""

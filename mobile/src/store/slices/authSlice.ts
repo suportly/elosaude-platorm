@@ -14,17 +14,21 @@ interface Beneficiary {
   registration_number: string;
   cpf: string;
   full_name: string;
+  birth_date: string | null;
+  phone?: string;
+  email?: string;
   status: string;
   beneficiary_type: string;
   company: string;
   health_plan: string;
-  phone?: string;
   address?: string;
   city?: string;
   state?: string;
   zip_code?: string;
   emergency_contact?: string;
   emergency_phone?: string;
+  onboarding_completed: boolean;
+  onboarding_completed_at: string | null;
 }
 
 interface AuthState {
@@ -101,8 +105,22 @@ const authSlice = createSlice({
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
     },
+    setOnboardingCompleted: (state) => {
+      if (state.beneficiary) {
+        state.beneficiary.onboarding_completed = true;
+        state.beneficiary.onboarding_completed_at = new Date().toISOString();
+        // Update AsyncStorage
+        AsyncStorage.setItem('beneficiary', JSON.stringify(state.beneficiary));
+      }
+    },
+    updateBeneficiary: (state, action: PayloadAction<Partial<Beneficiary>>) => {
+      if (state.beneficiary) {
+        state.beneficiary = { ...state.beneficiary, ...action.payload };
+        AsyncStorage.setItem('beneficiary', JSON.stringify(state.beneficiary));
+      }
+    },
   },
 });
 
-export const { setCredentials, updateTokens, logout, setLoading } = authSlice.actions;
+export const { setCredentials, updateTokens, logout, setLoading, setOnboardingCompleted, updateBeneficiary } = authSlice.actions;
 export default authSlice.reducer;

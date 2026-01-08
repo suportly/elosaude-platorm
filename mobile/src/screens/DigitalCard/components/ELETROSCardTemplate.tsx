@@ -10,6 +10,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 import Animated, {
   Easing,
   interpolate,
@@ -21,6 +22,7 @@ import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 import { ELETROSBodyBack } from '../../../components/cards/ELETROSBodyBack';
 import { ELETROSBodyFront } from '../../../components/cards/ELETROSBodyFront';
 import { ELETROSHeader } from '../../../components/cards/ELETROSHeader';
+import { useColors } from '../../../config';
 import { BorderRadius, Shadows, Spacing, Typography } from '../../../config/theme';
 import type { ELETROSCardTemplateProps } from '../../../types/eletros';
 import { ELETROS_COLORS } from '../../../types/eletros';
@@ -155,7 +157,9 @@ export function ELETROSCardTemplate({
   onPress,
   style,
   initialFlipped = false,
+  showQR = true,
 }: ELETROSCardTemplateProps) {
+  const colors = useColors();
   // Card dimensions - must match CARD_WIDTH in DigitalCardScreen
   const cardWidth = SCREEN_WIDTH - (Spacing.screenPadding * 2);
   const cardHeight = cardWidth / CARD_ASPECT_RATIO;
@@ -170,6 +174,13 @@ export function ELETROSCardTemplate({
     () => extractELETROSCardData(cardData, beneficiary),
     [cardData, beneficiary]
   );
+
+  // QR Code data
+  const qrData = JSON.stringify({
+    type: 'RECIPROCIDADE',
+    name: displayData.beneficiaryName,
+    registration: displayData.registrationNumber,
+  });
 
   // Handle flip animation
   const handleFlip = useCallback(() => {
@@ -284,6 +295,28 @@ export function ELETROSCardTemplate({
           <Text style={styles.flipButtonText}>{isFlipped ? 'Ver Frente' : 'Ver Verso'}</Text>
         </View>
       </TouchableOpacity>
+
+      {/* QR Code */}
+      {showQR && (
+        <View
+          style={styles.qrSection}
+          accessible
+          accessibilityLabel="Código QR da carteirinha"
+          accessibilityRole="image"
+        >
+          <View style={[styles.qrContainer, { backgroundColor: colors.surface.muted }]}>
+            <QRCode
+              value={qrData}
+              size={140}
+              color={colors.text.primary}
+              backgroundColor={colors.surface.card}
+            />
+          </View>
+          <Text style={[styles.qrHint, { color: colors.text.tertiary }]}>
+            Apresente este QR Code nos prestadores credenciados
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -342,6 +375,23 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.bodySmall,
     fontWeight: Typography.weights.medium,
     marginLeft: Spacing.xs,
+  },
+  qrSection: {
+    marginTop: Spacing.md,
+    padding: Spacing.md,
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: BorderRadius.md,
+  },
+  qrContainer: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+  },
+  qrHint: {
+    fontSize: Typography.sizes.caption,
+    textAlign: 'center',
+    marginTop: Spacing.sm,
   },
 });
 

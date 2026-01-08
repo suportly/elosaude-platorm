@@ -83,10 +83,15 @@ class CPFTokenObtainPairSerializer(TokenObtainPairSerializer):
                 'registration_number': beneficiary.registration_number,
                 'cpf': beneficiary.cpf,
                 'full_name': beneficiary.full_name,
+                'birth_date': str(beneficiary.birth_date) if beneficiary.birth_date else None,
+                'phone': beneficiary.phone,
+                'email': beneficiary.email,
                 'status': beneficiary.status,
                 'beneficiary_type': beneficiary.beneficiary_type,
                 'company': beneficiary.company.name,
                 'health_plan': beneficiary.health_plan.name,
+                'onboarding_completed': beneficiary.onboarding_completed,
+                'onboarding_completed_at': beneficiary.onboarding_completed_at.isoformat() if beneficiary.onboarding_completed_at else None,
             }
         }
 
