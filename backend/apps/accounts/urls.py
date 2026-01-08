@@ -14,5 +14,6 @@ urlpatterns = [
     path('first-access/request/', views.request_first_access, name='request-first-access'),
     path('first-access/verify/', views.verify_activation_token, name='verify-activation-token'),
     path('first-access/activate/', views.activate_account, name='activate-account'),
+    path('first-access/resend/', views.resend_verification_token, name='resend-verification-token'),
     path('', include(router.urls)),
 ]

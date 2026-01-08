@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Alert,
   Image,
@@ -20,18 +20,36 @@ export default function FirstAccessScreen() {
   const [step, setStep] = useState(1); // 1: CPF, 2: Token, 3: Senha
   const [cpf, setCpf] = useState('');
   const [registrationNumber, setRegistrationNumber] = useState('');
-  const [activationToken, setActivationToken] = useState('');
+  const [email, setEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [maskedEmail, setMaskedEmail] = useState('');
+
+  // Resend state
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [resendCount, setResendCount] = useState(0);
+  const [maxResends] = useState(5);
+  const [isResending, setIsResending] = useState(false);
 
   const [cpfError, setCpfError] = useState('');
   const [registrationError, setRegistrationError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [tokenError, setTokenError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
+
+  // Countdown timer for resend
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (resendCountdown > 0) {
+      timer = setTimeout(() => setResendCountdown(resendCountdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCountdown]);
 
   const formatCPF = (value: string) => {
     const numbers = value.replace(/\D/g, '');
@@ -50,6 +68,13 @@ export default function FirstAccessScreen() {
     if (cpfError) setCpfError('');
   };
 
+  const handleCodeChange = (text: string) => {
+    // Only allow digits and limit to 6
+    const digits = text.replace(/\D/g, '').slice(0, 6);
+    setVerificationCode(digits);
+    if (tokenError) setTokenError('');
+  };
+
   const validateCPF = (cpf: string): boolean => {
     const numbers = cpf.replace(/\D/g, '');
     if (numbers.length !== 11) {
@@ -59,9 +84,19 @@ export default function FirstAccessScreen() {
     return true;
   };
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError('Email inválido');
+      return false;
+    }
+    return true;
+  };
+
   const validateStep1 = () => {
     setCpfError('');
     setRegistrationError('');
+    setEmailError('');
 
     if (!cpf.trim()) {
       setCpfError('CPF é obrigatório');
@@ -77,19 +112,28 @@ export default function FirstAccessScreen() {
       return false;
     }
 
+    if (!email.trim()) {
+      setEmailError('Email é obrigatório');
+      return false;
+    }
+
+    if (!validateEmail(email)) {
+      return false;
+    }
+
     return true;
   };
 
   const validateStep2 = () => {
     setTokenError('');
 
-    if (!activationToken.trim()) {
-      setTokenError('Token de ativação é obrigatório');
+    if (!verificationCode.trim()) {
+      setTokenError('Código de verificação é obrigatório');
       return false;
     }
 
-    if (activationToken.length < 6) {
-      setTokenError('Token deve ter pelo menos 6 caracteres');
+    if (verificationCode.length !== 6) {
+      setTokenError('Código deve ter 6 dígitos');
       return false;
     }
 
@@ -150,19 +194,23 @@ export default function FirstAccessScreen() {
         body: JSON.stringify({
           cpf: cpf.replace(/\D/g, ''),
           registration_number: registrationNumber,
+          email: email.trim(),
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
+        setMaskedEmail(data.email_masked || email);
+        setResendCountdown(60); // Start 60 second countdown
+        setResendCount(0);
         Alert.alert(
-          'Token Enviado',
-          'Um token de ativação foi enviado para seu email cadastrado. Por favor, verifique sua caixa de entrada.',
+          'Código Enviado',
+          `Um código de verificação foi enviado para ${data.email_masked || 'seu email'}. O código expira em 10 minutos.`,
           [{ text: 'OK', onPress: () => setStep(2) }]
         );
       } else {
-        const errorMessage = data.error || 'Não foi possível enviar o token. Verifique seus dados.';
+        const errorMessage = data.error || 'Não foi possível enviar o código. Verifique seus dados.';
         Alert.alert('Erro', errorMessage);
       }
     } catch (error) {
@@ -171,6 +219,41 @@ export default function FirstAccessScreen() {
       setIsLoading(false);
     }
   };
+
+  const handleResendCode = useCallback(async () => {
+    if (resendCountdown > 0 || isResending) return;
+
+    setIsResending(true);
+
+    try {
+      const response = await fetch(`${API_URL}/accounts/first-access/resend/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cpf: cpf.replace(/\D/g, ''),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setResendCount(data.resend_count || resendCount + 1);
+        setResendCountdown(60);
+        setVerificationCode(''); // Clear old code
+        Alert.alert('Código Reenviado', 'Um novo código foi enviado para seu email.');
+      } else if (response.status === 429) {
+        // Rate limited
+        setResendCountdown(data.wait_seconds || 60);
+        Alert.alert('Aguarde', data.error || 'Aguarde para reenviar o código.');
+      } else {
+        Alert.alert('Erro', data.error || 'Não foi possível reenviar o código.');
+      }
+    } catch (error) {
+      Alert.alert('Erro', 'Erro de conexão. Por favor, tente novamente.');
+    } finally {
+      setIsResending(false);
+    }
+  }, [cpf, resendCountdown, isResending, resendCount]);
 
   const handleVerifyToken = async () => {
     if (!validateStep2()) return;
@@ -183,7 +266,7 @@ export default function FirstAccessScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cpf: cpf.replace(/\D/g, ''),
-          token: activationToken,
+          token: verificationCode,
         }),
       });
 
@@ -192,8 +275,11 @@ export default function FirstAccessScreen() {
       if (response.ok) {
         setStep(3);
       } else {
-        const errorMessage = data.error || 'Token inválido ou expirado';
-        setTokenError(errorMessage);
+        if (data.expired) {
+          setTokenError('Código expirado. Solicite um novo código.');
+        } else {
+          setTokenError(data.error || 'Código inválido ou expirado');
+        }
       }
     } catch (error) {
       Alert.alert('Erro', 'Erro de conexão. Por favor, tente novamente.');
@@ -213,8 +299,8 @@ export default function FirstAccessScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cpf: cpf.replace(/\D/g, ''),
-          token: activationToken,
-          new_password: newPassword,
+          token: verificationCode,
+          password: newPassword,
         }),
       });
 
@@ -232,8 +318,14 @@ export default function FirstAccessScreen() {
           ]
         );
       } else {
-        const errorMessage = data.error || 'Não foi possível ativar sua conta. Tente novamente.';
-        Alert.alert('Erro', errorMessage);
+        if (data.expired) {
+          Alert.alert('Código Expirado', 'O código expirou. Por favor, solicite um novo código.', [
+            { text: 'OK', onPress: () => setStep(2) },
+          ]);
+        } else {
+          const errorMessage = data.error || 'Não foi possível ativar sua conta. Tente novamente.';
+          Alert.alert('Erro', errorMessage);
+        }
       }
     } catch (error) {
       Alert.alert('Erro', 'Erro de conexão. Por favor, tente novamente.');
@@ -313,6 +405,13 @@ export default function FirstAccessScreen() {
       marginBottom: Spacing.sm,
       backgroundColor: colors.surface.card,
     },
+    codeInput: {
+      marginBottom: Spacing.sm,
+      backgroundColor: colors.surface.card,
+      fontSize: 24,
+      letterSpacing: 8,
+      textAlign: 'center',
+    },
     infoCard: {
       marginBottom: Spacing.md,
       backgroundColor: colors.feedback.infoLight,
@@ -339,6 +438,33 @@ export default function FirstAccessScreen() {
       marginTop: Spacing.md,
       minHeight: ComponentSizes.touchTarget,
     },
+    resendContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: Spacing.md,
+    },
+    resendText: {
+      color: colors.text.secondary,
+      fontSize: Typography.sizes.caption,
+    },
+    resendButton: {
+      marginLeft: Spacing.xs,
+    },
+    resendButtonText: {
+      color: colors.primary.main,
+      fontSize: Typography.sizes.caption,
+      fontWeight: Typography.weights.medium,
+    },
+    resendDisabledText: {
+      color: colors.text.tertiary,
+    },
+    resendInfo: {
+      textAlign: 'center',
+      color: colors.text.tertiary,
+      fontSize: Typography.sizes.caption,
+      marginTop: Spacing.sm,
+    },
   });
 
   return (
@@ -358,7 +484,7 @@ export default function FirstAccessScreen() {
           </Text>
           <Text variant="bodyMedium" style={styles.subtitle}>
             {step === 1 && 'Insira seus dados para solicitar a ativação'}
-            {step === 2 && 'Digite o token enviado para seu email'}
+            {step === 2 && 'Digite o código de 6 dígitos enviado para seu email'}
             {step === 3 && 'Crie sua senha de acesso'}
           </Text>
         </View>
@@ -379,7 +505,7 @@ export default function FirstAccessScreen() {
             </View>
           </View>
 
-          {/* Step 1: CPF and Registration */}
+          {/* Step 1: CPF, Registration and Email */}
           {step === 1 && (
             <>
               <TextInput
@@ -394,7 +520,7 @@ export default function FirstAccessScreen() {
                 error={!!cpfError}
                 disabled={isLoading}
                 accessibilityLabel="Campo de CPF"
-                accessibilityHint="Insira seu CPF com 11 dígitos para solicitar a ativação da conta"
+                accessibilityHint="Insira seu CPF com 11 dígitos"
               />
               <HelperText type="error" visible={!!cpfError}>
                 {cpfError}
@@ -413,10 +539,31 @@ export default function FirstAccessScreen() {
                 error={!!registrationError}
                 disabled={isLoading}
                 accessibilityLabel="Campo de Número de Matrícula"
-                accessibilityHint="Insira seu número de matrícula para solicitar a ativação da conta"
+                accessibilityHint="Insira seu número de matrícula"
               />
               <HelperText type="error" visible={!!registrationError}>
                 {registrationError}
+              </HelperText>
+
+              <TextInput
+                label="Email"
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (emailError) setEmailError('');
+                }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                mode="outlined"
+                style={styles.input}
+                left={<TextInput.Icon icon="email" />}
+                error={!!emailError}
+                disabled={isLoading}
+                accessibilityLabel="Campo de Email"
+                accessibilityHint="Insira seu email para receber o código de verificação"
+              />
+              <HelperText type="error" visible={!!emailError}>
+                {emailError}
               </HelperText>
 
               <Button
@@ -426,40 +573,39 @@ export default function FirstAccessScreen() {
                 disabled={isLoading}
                 style={styles.button}
                 contentStyle={styles.buttonContent}
-                accessibilityLabel="Solicitar Token de Ativação"
-                accessibilityHint="Envia um token de ativação para seu email cadastrado"
+                accessibilityLabel="Solicitar Código"
+                accessibilityHint="Envia um código de verificação para seu email"
               >
-                Solicitar Token
+                Solicitar Código
               </Button>
             </>
           )}
 
-          {/* Step 2: Activation Token */}
+          {/* Step 2: Verification Code */}
           {step === 2 && (
             <>
               <Card style={styles.infoCard}>
                 <Card.Content>
                   <Text variant="bodyMedium" style={styles.infoText}>
-                    Um token de ativação foi enviado para o email cadastrado em seu perfil.
-                    Digite-o abaixo para continuar.
+                    Um código de 6 dígitos foi enviado para {maskedEmail}.{'\n'}
+                    O código expira em 10 minutos.
                   </Text>
                 </Card.Content>
               </Card>
 
               <TextInput
-                label="Token de Ativação"
-                value={activationToken}
-                onChangeText={(text) => {
-                  setActivationToken(text);
-                  if (tokenError) setTokenError('');
-                }}
+                label="Código de Verificação"
+                value={verificationCode}
+                onChangeText={handleCodeChange}
+                keyboardType="number-pad"
+                maxLength={6}
                 mode="outlined"
-                style={styles.input}
-                left={<TextInput.Icon icon="key" />}
+                style={styles.codeInput}
+                left={<TextInput.Icon icon="numeric" />}
                 error={!!tokenError}
                 disabled={isLoading}
-                accessibilityLabel="Campo de Token de Ativação"
-                accessibilityHint="Insira o token recebido em seu email para verificar sua identidade"
+                accessibilityLabel="Campo de Código de Verificação"
+                accessibilityHint="Insira o código de 6 dígitos recebido em seu email"
               />
               <HelperText type="error" visible={!!tokenError}>
                 {tokenError}
@@ -469,14 +615,45 @@ export default function FirstAccessScreen() {
                 mode="contained"
                 onPress={handleVerifyToken}
                 loading={isLoading}
-                disabled={isLoading}
+                disabled={isLoading || verificationCode.length !== 6}
                 style={styles.button}
                 contentStyle={styles.buttonContent}
-                accessibilityLabel="Verificar Token"
-                accessibilityHint="Valida o token de ativação e avança para a criação de senha"
+                accessibilityLabel="Verificar Código"
+                accessibilityHint="Valida o código de verificação e avança para a criação de senha"
               >
-                Verificar Token
+                Verificar Código
               </Button>
+
+              {/* Resend code section */}
+              <View style={styles.resendContainer}>
+                <Text style={styles.resendText}>Não recebeu o código?</Text>
+                <Button
+                  mode="text"
+                  onPress={handleResendCode}
+                  disabled={resendCountdown > 0 || isResending || resendCount >= maxResends}
+                  loading={isResending}
+                  compact
+                  style={styles.resendButton}
+                  labelStyle={[
+                    styles.resendButtonText,
+                    (resendCountdown > 0 || resendCount >= maxResends) && styles.resendDisabledText,
+                  ]}
+                  accessibilityLabel="Reenviar código"
+                  accessibilityHint="Envia um novo código de verificação para seu email"
+                >
+                  {resendCountdown > 0
+                    ? `Reenviar (${resendCountdown}s)`
+                    : resendCount >= maxResends
+                    ? 'Limite atingido'
+                    : 'Reenviar'}
+                </Button>
+              </View>
+
+              {resendCount > 0 && (
+                <Text style={styles.resendInfo}>
+                  Reenvios: {resendCount}/{maxResends}
+                </Text>
+              )}
 
               <Button
                 mode="text"
@@ -484,7 +661,7 @@ export default function FirstAccessScreen() {
                 disabled={isLoading}
                 style={styles.backButton}
                 accessibilityLabel="Voltar"
-                accessibilityHint="Retorna à etapa anterior para inserir novamente seus dados"
+                accessibilityHint="Retorna à etapa anterior"
               >
                 Voltar
               </Button>
@@ -519,13 +696,12 @@ export default function FirstAccessScreen() {
                     icon={showPassword ? 'eye-off' : 'eye'}
                     onPress={() => setShowPassword(!showPassword)}
                     accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                    accessibilityHint={showPassword ? 'Oculta a senha digitada' : 'Exibe a senha digitada'}
                   />
                 }
                 error={!!passwordError}
                 disabled={isLoading}
                 accessibilityLabel="Campo de Nova Senha"
-                accessibilityHint="Insira uma senha com no mínimo 8 caracteres, incluindo maiúsculas, minúsculas e números"
+                accessibilityHint="Insira uma senha com no mínimo 8 caracteres"
               />
               <HelperText type="error" visible={!!passwordError}>
                 {passwordError}
@@ -546,14 +722,13 @@ export default function FirstAccessScreen() {
                   <TextInput.Icon
                     icon={showConfirmPassword ? 'eye-off' : 'eye'}
                     onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    accessibilityLabel={showConfirmPassword ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}
-                    accessibilityHint={showConfirmPassword ? 'Oculta a confirmação de senha digitada' : 'Exibe a confirmação de senha digitada'}
+                    accessibilityLabel={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'}
                   />
                 }
                 error={!!confirmPasswordError}
                 disabled={isLoading}
                 accessibilityLabel="Campo de Confirmação de Senha"
-                accessibilityHint="Digite novamente sua senha para confirmar que digitou corretamente"
+                accessibilityHint="Digite novamente sua senha para confirmar"
               />
               <HelperText type="error" visible={!!confirmPasswordError}>
                 {confirmPasswordError}
@@ -567,7 +742,7 @@ export default function FirstAccessScreen() {
                 style={styles.button}
                 contentStyle={styles.buttonContent}
                 accessibilityLabel="Ativar Conta"
-                accessibilityHint="Ativa sua conta com a senha criada e leva você para o login"
+                accessibilityHint="Ativa sua conta com a senha criada"
               >
                 Ativar Conta
               </Button>
@@ -580,7 +755,7 @@ export default function FirstAccessScreen() {
             disabled={isLoading}
             style={styles.cancelButton}
             accessibilityLabel="Cancelar"
-            accessibilityHint="Cancela o processo de primeiro acesso e volta à tela anterior"
+            accessibilityHint="Cancela o processo de primeiro acesso"
           >
             Cancelar
           </Button>

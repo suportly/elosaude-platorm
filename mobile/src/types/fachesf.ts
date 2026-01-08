@@ -124,6 +124,9 @@ export interface FACHESFCardTemplateProps {
 
   /** Estilo customizado do container (opcional) */
   style?: ViewStyle;
+
+  /** Mostrar QR Code (opcional) */
+  showQR?: boolean;
 }
 
 /**

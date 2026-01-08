@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 import random
 import string
 
@@ -99,6 +100,17 @@ class Beneficiary(models.Model):
     cpf_document = models.FileField(upload_to='documents/cpf/', null=True, blank=True)
     photo = models.ImageField(upload_to='photos/', null=True, blank=True)
 
+    # Onboarding tracking
+    onboarding_completed = models.BooleanField(
+        default=False,
+        verbose_name=_('Onboarding Completed')
+    )
+    onboarding_completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_('Onboarding Completed At')
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -121,3 +133,9 @@ class Beneficiary(models.Model):
         prefix = 'ELO'
         number = ''.join(random.choices(string.digits, k=8))
         return f"{prefix}{number}"
+
+    def complete_onboarding(self):
+        """Mark onboarding as completed"""
+        self.onboarding_completed = True
+        self.onboarding_completed_at = timezone.now()
+        self.save(update_fields=['onboarding_completed', 'onboarding_completed_at'])

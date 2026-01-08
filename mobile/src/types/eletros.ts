@@ -156,6 +156,9 @@ export interface ELETROSCardTemplateProps {
 
   /** Estado inicial do flip - true = verso visivel (opcional) */
   initialFlipped?: boolean;
+
+  /** Mostrar QR Code (opcional) */
+  showQR?: boolean;
 }
 
 /**

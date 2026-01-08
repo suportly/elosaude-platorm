@@ -30,7 +30,7 @@
             padding: 0;
             width: 100% !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f5f9f8;
+            background-color: #e8f5f2;
         }
 
         /* Container */
@@ -38,82 +38,93 @@
             max-width: 600px;
             margin: 0 auto;
             background-color: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(32, 164, 144, 0.12);
         }
 
         /* Header */
         .email-header {
-            background: linear-gradient(135deg, #20a490 0%, #1a8c7a 100%);
-            padding: 40px 30px;
+            background-color: #ffffff;
+            padding: 40px 30px 32px 30px;
             text-align: center;
+            border-bottom: 3px solid #20a490;
         }
         .email-header h1 {
-            color: #ffffff;
+            color: #20a490;
             font-size: 32px;
             font-weight: bold;
             margin: 0;
             letter-spacing: 1px;
         }
         .email-header p {
-            color: #e0f5f2;
+            color: #666666;
             font-size: 14px;
-            margin: 10px 0 0 0;
+            margin: 16px 0 0 0;
+            font-weight: 500;
+            letter-spacing: 0.3px;
         }
 
         /* Content */
         .email-content {
-            padding: 40px 30px;
+            padding: 48px 40px;
             color: #333333;
-            line-height: 1.6;
+            line-height: 1.7;
         }
         .email-content h2 {
             color: #20a490;
             font-size: 24px;
-            margin: 0 0 20px 0;
+            margin: 0 0 24px 0;
+            font-weight: 600;
         }
         .email-content p {
-            margin: 0 0 15px 0;
+            margin: 0 0 16px 0;
             font-size: 16px;
+            color: #4a5568;
         }
 
         /* Button */
         .email-button {
             display: inline-block;
-            padding: 15px 40px;
-            margin: 25px 0;
-            background-color: #20a490;
+            padding: 16px 48px;
+            margin: 28px 0;
+            background: linear-gradient(135deg, #20a490 0%, #178a78 100%);
             color: #ffffff !important;
             text-decoration: none;
-            border-radius: 8px;
-            font-weight: bold;
+            border-radius: 10px;
+            font-weight: 600;
             font-size: 16px;
             text-align: center;
-            transition: background-color 0.3s ease;
+            box-shadow: 0 4px 14px rgba(32, 164, 144, 0.35);
+            transition: all 0.3s ease;
         }
         .email-button:hover {
-            background-color: #1a8c7a;
+            background: linear-gradient(135deg, #178a78 0%, #146b5f 100%);
+            box-shadow: 0 6px 20px rgba(32, 164, 144, 0.45);
+            transform: translateY(-1px);
         }
 
         /* Info box */
         .info-box {
-            background-color: #f0f9f7;
+            background: linear-gradient(135deg, #f0f9f7 0%, #e8f5f2 100%);
             border-left: 4px solid #20a490;
-            padding: 15px 20px;
-            margin: 20px 0;
-            border-radius: 4px;
+            padding: 18px 22px;
+            margin: 24px 0;
+            border-radius: 0 8px 8px 0;
         }
         .info-box p {
             margin: 0;
             font-size: 14px;
-            color: #555555;
+            color: #2d6a5f;
         }
 
         /* Warning box */
         .warning-box {
-            background-color: #fff3e0;
+            background: linear-gradient(135deg, #fff8e1 0%, #fff3e0 100%);
             border-left: 4px solid #ff9800;
-            padding: 15px 20px;
-            margin: 20px 0;
-            border-radius: 4px;
+            padding: 18px 22px;
+            margin: 24px 0;
+            border-radius: 0 8px 8px 0;
         }
         .warning-box p {
             margin: 0;
@@ -123,8 +134,8 @@
 
         /* Footer */
         .email-footer {
-            background-color: #f5f9f8;
-            padding: 30px;
+            background: linear-gradient(180deg, #f5f9f8 0%, #e8f5f2 100%);
+            padding: 36px 30px;
             text-align: center;
             color: #666666;
             font-size: 13px;
@@ -132,35 +143,68 @@
         .email-footer a {
             color: #20a490;
             text-decoration: none;
+            font-weight: 500;
         }
-        .email-footer .social-links {
-            margin: 20px 0;
+        .email-footer a:hover {
+            text-decoration: underline;
         }
-        .email-footer .social-links a {
-            display: inline-block;
-            margin: 0 10px;
+        .email-footer .company-name {
             color: #20a490;
-            font-size: 24px;
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+        .email-footer .contact-info {
+            margin: 16px 0;
+        }
+        .email-footer .contact-info a {
+            display: inline-block;
+            padding: 0 12px;
+            border-right: 1px solid #ccc;
+        }
+        .email-footer .contact-info a:last-child {
+            border-right: none;
         }
         .email-footer .divider {
-            border-top: 1px solid #dddddd;
-            margin: 20px 0;
+            border: none;
+            border-top: 1px solid #d0e8e4;
+            margin: 24px 0;
+        }
+        .email-footer .disclaimer {
+            font-size: 12px;
+            color: #8899a6;
+            line-height: 1.6;
+        }
+        .email-footer .legal {
+            font-size: 11px;
+            color: #a0aab4;
+            margin-top: 20px;
         }
 
         /* Responsive */
         @media only screen and (max-width: 600px) {
             .email-container {
                 width: 100% !important;
+                border-radius: 0 !important;
             }
             .email-header {
-                padding: 30px 20px !important;
+                padding: 32px 20px 24px 20px !important;
+            }
+            .email-header img {
+                max-width: 150px !important;
             }
             .email-content {
-                padding: 30px 20px !important;
+                padding: 32px 24px !important;
             }
             .email-button {
                 width: 100%;
                 box-sizing: border-box;
+                padding: 16px 24px;
+            }
+            .email-footer .contact-info a {
+                display: block;
+                padding: 8px 0;
+                border-right: none;
             }
         }
     </style>
@@ -168,12 +212,14 @@
 <body>
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
         <tr>
-            <td style="padding: 20px 0;">
+            <td style="padding: 32px 16px;">
                 <table role="presentation" class="email-container" cellspacing="0" cellpadding="0" border="0" align="center">
                     <!-- Header -->
                     <tr>
                         <td class="email-header">
-                            <h1>ELOSAÚDE</h1>
+                            <img src="https://www.elosaude.com.br/wp-content/uploads/2020/12/marca-ELOSAUDE.jpg"
+                                 alt="Elosaúde Logo"
+                                 style="max-width: 180px; height: auto; display: block; margin: 0 auto;">
                             <p>{% block subtitle %}Seu plano de saúde{% endblock %}</p>
                         </td>
                     </tr>
@@ -188,23 +234,25 @@
                     <!-- Footer -->
                     <tr>
                         <td class="email-footer">
-                            <p><strong>Elosaúde - Planos de Saúde</strong></p>
-                            <p>
-                                <a href="tel:+551130000000">(11) 3000-0000</a> |
-                                <a href="mailto:contato@elosaude.com.br">contato@elosaude.com.br</a>
-                            </p>
-                            <p><a href="https://www.elosaude.com.br">www.elosaude.com.br</a></p>
+                            <p class="company-name">Elosaúde - Planos de Saúde</p>
+                            <div class="contact-info">
+                                <a href="tel:+554832985555">(48) 3298-5555</a>
+                                <a href="https://www.elosaude.com.br">www.elosaude.com.br</a>
+                            </div>
 
                             <div class="divider"></div>
 
-                            <p style="font-size: 12px; color: #999999;">
+                            <p class="disclaimer">
                                 Este é um e-mail automático, por favor não responda.<br>
-                                Em caso de dúvidas, entre em contato conosco pelos canais acima.
+                                Em caso de dúvidas, entre em contato pelo telefone (48) 3298-5555.
                             </p>
 
-                            <p style="font-size: 11px; color: #999999; margin-top: 20px;">
-                                ELOSAÚDE LTDA - CNPJ: 00.000.000/0001-00<br>
-                                Rua Exemplo, 123 - São Paulo - SP - CEP 01000-000
+                            <p class="legal">
+                                ELOSAÚDE – Associação de Assistência à Saúde – CNPJ 11.593.821/0001-03<br>
+                                Centro Empresarial Ilha do Atlântico – Rua Pres. Nereu Ramos, 146 – 1º andar – Centro<br>
+                                Florianópolis – SC – CEP: 88015-010<br>
+                                Fone: (48) 3298-5555 – Fax: (48) 3298-5550<br>
+                                Expediente ao público: Segunda à Sexta-feira: 08h – 17h
                             </p>
                         </td>
                     </tr>

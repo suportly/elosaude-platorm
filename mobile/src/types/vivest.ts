@@ -169,6 +169,9 @@ export interface VIVESTCardTemplateProps {
 
   /** Estado inicial do flip - true = verso visivel (opcional) */
   initialFlipped?: boolean;
+
+  /** Mostrar QR Code (opcional) */
+  showQR?: boolean;
 }
 
 /**

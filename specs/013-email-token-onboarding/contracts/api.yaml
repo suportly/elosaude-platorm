@@ -1,0 +1,295 @@
+openapi: 3.0.3
+info:
+  title: Elosaude - Email Token & Onboarding API
+  version: 1.0.0
+  description: API contracts for email verification token and post-login onboarding
+
+paths:
+  /accounts/first-access/request/:
+    post:
+      summary: Request verification token
+      description: Sends 6-digit verification token to beneficiary's email
+      tags:
+        - First Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cpf
+                - registration_number
+                - email
+              properties:
+                cpf:
+                  type: string
+                  pattern: '^\d{11}$'
+                  example: "12345678900"
+                registration_number:
+                  type: string
+                  example: "ELO12345678"
+                email:
+                  type: string
+                  format: email
+                  example: "beneficiario@email.com"
+      responses:
+        '200':
+          description: Token sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Código de verificação enviado para seu email"
+                  email_masked:
+                    type: string
+                    example: "b***o@email.com"
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Aguarde 45 segundos para solicitar novo código"
+                  wait_seconds:
+                    type: integer
+                    example: 45
+
+  /accounts/first-access/verify/:
+    post:
+      summary: Verify token
+      description: Validates the 6-digit verification token
+      tags:
+        - First Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cpf
+                - token
+              properties:
+                cpf:
+                  type: string
+                  pattern: '^\d{11}$'
+                token:
+                  type: string
+                  pattern: '^\d{6}$'
+                  example: "123456"
+      responses:
+        '200':
+          description: Token valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Código verificado com sucesso"
+                  valid:
+                    type: boolean
+                    example: true
+        '400':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Código inválido ou expirado"
+                  expired:
+                    type: boolean
+
+  /accounts/first-access/activate/:
+    post:
+      summary: Activate account
+      description: Sets password and activates user account
+      tags:
+        - First Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cpf
+                - token
+                - password
+              properties:
+                cpf:
+                  type: string
+                  pattern: '^\d{11}$'
+                token:
+                  type: string
+                  pattern: '^\d{6}$'
+                password:
+                  type: string
+                  minLength: 8
+                  description: "Min 8 chars, 1 uppercase, 1 lowercase, 1 digit"
+      responses:
+        '200':
+          description: Account activated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Conta ativada com sucesso"
+        '400':
+          description: Invalid request or password requirements not met
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /accounts/first-access/resend/:
+    post:
+      summary: Resend verification token
+      description: Generates and sends a new verification token
+      tags:
+        - First Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cpf
+              properties:
+                cpf:
+                  type: string
+                  pattern: '^\d{11}$'
+      responses:
+        '200':
+          description: New token sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Novo código enviado"
+                  resend_count:
+                    type: integer
+                    example: 2
+                  max_resends:
+                    type: integer
+                    example: 5
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  wait_seconds:
+                    type: integer
+                  resend_count:
+                    type: integer
+
+  /beneficiaries/beneficiaries/complete-onboarding/:
+    post:
+      summary: Complete onboarding
+      description: Updates beneficiary profile and marks onboarding as completed
+      tags:
+        - Onboarding
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phone:
+                  type: string
+                  example: "11999999999"
+                email:
+                  type: string
+                  format: email
+                  example: "novo@email.com"
+                skip:
+                  type: boolean
+                  description: "Set to true to skip onboarding without updating data"
+                  example: false
+      responses:
+        '200':
+          description: Onboarding completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Dados atualizados com sucesso"
+                  beneficiary:
+                    $ref: '#/components/schemas/Beneficiary'
+        '401':
+          description: Not authenticated
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: object
+
+    Beneficiary:
+      type: object
+      properties:
+        id:
+          type: integer
+        registration_number:
+          type: string
+        cpf:
+          type: string
+        full_name:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        phone:
+          type: string
+        email:
+          type: string
+        onboarding_completed:
+          type: boolean
+        onboarding_completed_at:
+          type: string
+          format: date-time
+          nullable: true

@@ -152,3 +152,115 @@ class ActivationToken(models.Model):
         self.is_used = True
         self.used_at = timezone.now()
         self.save()
+
+
+class VerificationToken(models.Model):
+    """6-digit verification token for first access via email"""
+
+    TOKEN_EXPIRY_MINUTES = 10
+    RESEND_COOLDOWN_SECONDS = 60
+    MAX_RESENDS = 5
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='verification_tokens',
+        verbose_name='Usuário'
+    )
+    token = models.CharField(
+        max_length=6,
+        verbose_name='Token'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Criado em'
+    )
+    expires_at = models.DateTimeField(
+        verbose_name='Expira em'
+    )
+    is_used = models.BooleanField(
+        default=False,
+        verbose_name='Usado'
+    )
+    used_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Usado em'
+    )
+    last_resent_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Último reenvio em'
+    )
+    resend_count = models.IntegerField(
+        default=0,
+        verbose_name='Contagem de reenvios'
+    )
+
+    class Meta:
+        db_table = 'accounts_verification_token'
+        verbose_name = 'Token de Verificação'
+        verbose_name_plural = 'Tokens de Verificação'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.token}"
+
+    @staticmethod
+    def generate_token():
+        """Generate a random 6-digit numeric token"""
+        return ''.join(random.choices(string.digits, k=6))
+
+    @classmethod
+    def create_for_user(cls, user):
+        """Create a new verification token for a user, invalidating previous ones"""
+        # Invalidate all previous unused tokens for this user
+        cls.objects.filter(user=user, is_used=False).update(is_used=True)
+
+        token = cls.generate_token()
+        expires_at = timezone.now() + timedelta(minutes=cls.TOKEN_EXPIRY_MINUTES)
+
+        return cls.objects.create(
+            user=user,
+            token=token,
+            expires_at=expires_at
+        )
+
+    def is_valid(self):
+        """Check if token is still valid (not used and not expired)"""
+        if self.is_used:
+            return False
+        if timezone.now() > self.expires_at:
+            return False
+        return True
+
+    def is_expired(self):
+        """Check if token has expired"""
+        return timezone.now() > self.expires_at
+
+    def is_resend_allowed(self):
+        """Check if resend is allowed (cooldown and max limit)"""
+        if self.resend_count >= self.MAX_RESENDS:
+            return False, "Limite de reenvios atingido. Aguarde 30 minutos.", 0
+
+        if self.last_resent_at:
+            cooldown_end = self.last_resent_at + timedelta(seconds=self.RESEND_COOLDOWN_SECONDS)
+            if timezone.now() < cooldown_end:
+                wait_seconds = int((cooldown_end - timezone.now()).total_seconds())
+                return False, f"Aguarde {wait_seconds} segundos para reenviar.", wait_seconds
+
+        return True, None, 0
+
+    def mark_as_used(self):
+        """Mark token as used"""
+        self.is_used = True
+        self.used_at = timezone.now()
+        self.save(update_fields=['is_used', 'used_at'])
+
+    def increment_resend(self):
+        """Increment resend counter and update new token"""
+        self.resend_count += 1
+        self.last_resent_at = timezone.now()
+        self.token = self.generate_token()
+        self.expires_at = timezone.now() + timedelta(minutes=self.TOKEN_EXPIRY_MINUTES)
+        self.save(update_fields=['resend_count', 'last_resent_at', 'token', 'expires_at'])

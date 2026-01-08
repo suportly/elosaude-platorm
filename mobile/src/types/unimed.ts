@@ -63,7 +63,7 @@ export interface UnimedCardTemplateProps {
   onPress?: () => void;
 
   /** Mostrar QR Code (opcional) */
-  showQRCode?: boolean;
+  showQR?: boolean;
 
   /** Estilo customizado do container (opcional) */
   style?: ViewStyle;
